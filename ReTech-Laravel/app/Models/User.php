@@ -18,7 +18,7 @@ class User extends Authenticatable
      * @var array<int, string>
      */
     protected $fillable = [
-        'name',
+        'username',
         'email',
         'password',
     ];
@@ -29,6 +29,7 @@ class User extends Authenticatable
      * @var array<int, string>
      */
     protected $hidden = [
+        'username',
         'password',
         'remember_token',
     ];
@@ -41,4 +42,17 @@ class User extends Authenticatable
     protected $casts = [
         'email_verified_at' => 'datetime',
     ];
+
+
+    public function admin(){
+        return $this->email === 'admin@retech.com';
+    }
+
+    public function empresa(){
+        return $this->hasOne(Empresa::class, 'user_id');
+    }
+
+    public function cliente(){
+        return $this->hasOne(Cliente::class, 'user_id');
+    }
 }
