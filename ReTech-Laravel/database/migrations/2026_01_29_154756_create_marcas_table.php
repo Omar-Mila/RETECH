@@ -13,12 +13,9 @@ return new class extends Migration
      */
     public function up()
     {
-        Schema::create('users', function (Blueprint $table) {
-            $table->id(); // user_id PK
-            $table->string('username', 30);
-            $table->string('email', 150)->unique();
-            $table->string('password', 255); // hash
-        $table->timestamps();
+        Schema::create('marcas', function (Blueprint $table) {
+            $table->id();
+            $table->string('nombre', 50)->unique();
         });
     }
 
@@ -29,6 +26,6 @@ return new class extends Migration
      */
     public function down()
     {
-        Schema::dropIfExists('users');
+        Schema::dropIfExists('marcas');
     }
 };
