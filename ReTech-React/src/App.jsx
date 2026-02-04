@@ -1,14 +1,10 @@
-import { useEffect } from "react";
-import api from "./api/api";
+import Navbar from "./front/components/Navbar"
 
-function App() {
-  useEffect(() => {
-    api.get("/marcas")
-      .then((res) => console.log("MARQUES:", res.data))
-      .catch((err) => console.error("ERROR API:", err));
-  }, []);
-
-  return <h1>Prova API</h1>;
+export default function App() {
+  return (
+    <>
+      <Navbar />
+      
+    </>
+  )
 }
-
-export default App;
