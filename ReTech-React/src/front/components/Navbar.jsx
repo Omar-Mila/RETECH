@@ -1,31 +1,57 @@
 import { Link } from "react-router-dom"
+import { useAuth } from "../../auth/AuthContext"
 import { useNavigate } from "react-router-dom"
 
 
 
 export default function Navbar() {
-    
+
+    const { user, isAuthenticated, logout } = useAuth()
     const navigate = useNavigate()
+    
     let login = false;
 
     let buttons;
 
-    if(!login){
+    if (!isAuthenticated){
         buttons = (
-            <div>
-                <button onClick={() => navigate("/login")} className="text-sm font-medium hover:underline m-3">
+            <div className="flex gap-3">
+                <button
+                    onClick={() => navigate("/login")}
+                    className="text-sm font-medium hover:underline"
+                >
                     Iniciar sessió
                 </button>
-                <button className="bg-black text-white px-4 py-2 rounded text-sm m-3">
+
+                <button
+                    onClick={() => navigate("/register")}
+                    className="bg-black text-white px-4 py-2 rounded text-sm"
+                >
                     Registre
                 </button>
             </div>
         )
     }else{
         buttons = (
-            <div>
-                <button className="bg-black text-white px-4 py-2 rounded text-sm">
-                    Tancar Sessió
+            <div className="flex items-center gap-4">
+                <span className="text-sm">
+                    Hola, <strong>{user.name}</strong>
+                </span>
+
+                {user.role === "admin" && (
+                    <button
+                        onClick={() => navigate("/admin")}
+                        className="text-sm font-medium hover:underline"
+                    >
+                        Admin - <strong>{user.name}</strong>
+                    </button>
+                )}
+
+                <button
+                    onClick={logout}
+                    className="text-sm font-medium text-red-600 hover:underline"
+                >
+                    Tancar sessió
                 </button>
             </div>
         )
