@@ -12,7 +12,7 @@ export default function Login() {
     // 🔹 SIMULACIÓ DE LOGIN (TEMPORAL)
     login({
       name: email,
-      role: "user", // prova amb "user" després
+      role: "admin", // prova amb "user" després
     })
   }
 
