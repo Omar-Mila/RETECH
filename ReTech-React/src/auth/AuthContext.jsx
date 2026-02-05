@@ -1,5 +1,7 @@
 import { createContext, useContext, useState } from "react"
 import { useNavigate } from "react-router-dom"
+import { loginRequest, logoutRequest } from "./authService"
+
 
 const AuthContext = createContext();
 
@@ -9,19 +11,20 @@ export function AuthProvider({ children }) {
 
     const [user, setUser] = useState(null); //guarda l’estat de l’usuari
 
-    const login = (userData) => {
+    const login = async (email, password) => {
+        const userData = await loginRequest(email, password);
         setUser(userData);
 
         if (userData.role === "admin") {
-            navigate("/admin")
+            navigate("/admin");
         } else {
-            navigate("/")
+            navigate("/");
         }
     }
 
     const logout = () => {
-        setUser(null)
-        navigate("/")
+        setUser(null);
+        navigate("/");
     }
 
     return (
@@ -37,9 +40,9 @@ export function AuthProvider({ children }) {
             {children}
 
         </AuthContext.Provider>
-    )
+    );
 }
 
 export function useAuth() {
-    return useContext(AuthContext)
+    return useContext(AuthContext);
 }

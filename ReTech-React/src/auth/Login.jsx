@@ -1,19 +1,26 @@
 import { useState } from "react"
 import { useAuth } from "./AuthContext"
 
+
 export default function Login() {
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
+
   const { login } = useAuth();
 
-  const handleSubmit = (e) => {
-    e.preventDefault()
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [error, setError] = useState("");
 
-    // 🔹 SIMULACIÓ DE LOGIN (TEMPORAL)
-    login({
-      name: email,
-      role: "admin", // prova amb "user" després
-    })
+  
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setError("");
+
+    try {
+      await login(email, password)
+    } catch (err) {
+      setError("Credencials incorrectes")
+    }
   }
 
   return (
@@ -45,6 +52,11 @@ export default function Login() {
           </button>
         </form>
       </div>
+      {error && (
+        <p className="text-red-600 text-sm mt-2">
+          {error}
+        </p>
+      )}
     </div>
   )
 }
