@@ -1,15 +1,17 @@
-import { Link } from "react-router-dom"
 import { useAuth } from "../../auth/AuthContext"
 import { useNavigate } from "react-router-dom"
+import { Link } from "react-router-dom"
 
 
 
 export default function Navbar() {
 
-    const { user, isAuthenticated, logout } = useAuth()
+    const { user, isAuthenticated, logout, loading } = useAuth()
     const navigate = useNavigate()
+    if (loading) {
+        return null // o un skeleton si vols
+    }
     
-    let login = false;
 
     let buttons;
 
@@ -35,10 +37,10 @@ export default function Navbar() {
         buttons = (
             <div className="flex items-center gap-4">
                 <span className="text-sm">
-                    Hola, <strong>{user.name}</strong>
+                    Hola, <strong>{user?.name}</strong>
                 </span>
 
-                {user.role === "admin" && (
+                {user?.role === "admin" && (
                     <button
                         onClick={() => navigate("/admin")}
                         className="text-sm font-medium hover:underline"
@@ -105,10 +107,10 @@ export default function Navbar() {
         <nav className="bg-gray-100 w-full">
             <div className="px-6">
             <ul className="flex gap-6 py-3 text-sm font-medium">
-                <li><a href="/">Inici</a></li>
-                <li><a href="/mobils">Mòbils</a></li>
-                <li><a href="/tablets">Tablets</a></li>
-                <li><a href="/accessoris">Accessoris</a></li>
+                <li><Link to="/">Inici</Link></li>
+                <li><Link to="/mobils">Mòbils</Link></li>
+                <li><Link to="/tablets">Tablets</Link></li>
+                <li><Link to="/accessoris">Accessoris</Link></li>
             </ul>
             </div>
         </nav>

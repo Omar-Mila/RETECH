@@ -1,48 +1,74 @@
-import { createContext, useContext, useState } from "react"
+import { createContext, useContext, useState, useEffect } from "react"
 import { useNavigate } from "react-router-dom"
-import { loginRequest, logoutRequest } from "./authService"
+import { loginRequest, logoutRequest, getCurrentUser } from "./authService"
 
-
-const AuthContext = createContext();
+const AuthContext = createContext()
 
 export function AuthProvider({ children }) {
+  const navigate = useNavigate()
 
-    const navigate = useNavigate(); //canal global
+  const [user, setUser] = useState(null)
+  const [loading, setLoading] = useState(true)
 
-    const [user, setUser] = useState(null); //guarda l’estat de l’usuari
+  useEffect(() => {
+    let mounted = true
 
-    const login = async (email, password) => {
-        const userData = await loginRequest(email, password);
-        setUser(userData);
+    const loadUser = async () => {
+      try {
+        const userData = await getCurrentUser()
 
-        if (userData.role === "admin") {
-            navigate("/admin");
+        // ✅ normalització forta
+        if (userData && userData.name) {
+          setUser(userData)
         } else {
-            navigate("/");
+          setUser(null)
         }
+      } catch {
+        setUser(null)
+      } finally {
+        setLoading(false)
+      }
     }
 
-    const logout = () => {
-        setUser(null);
-        navigate("/");
+    loadUser()
+
+    return () => {
+      mounted = false
     }
+  }, [])
 
-    return (
-        <AuthContext.Provider
-            value={{
-                user,
-                isAuthenticated: !!user,
-                login,
-                logout,
-            }}
-        >
+  const login = async (email, password) => {
+    const userData = await loginRequest(email, password)
+    setUser(userData)
 
-            {children}
+    if (userData?.role === "admin") {
+      navigate("/admin")
+    } else {
+      navigate("/")
+    }
+  }
 
-        </AuthContext.Provider>
-    );
+  const logout = async () => {
+    await logoutRequest();
+    setUser(null);
+    navigate("/");
+  }
+
+  return (
+    <AuthContext.Provider
+      value={{
+        user,
+        loading,
+        isAuthenticated: !!user,
+        login,
+        logout,
+      }}
+    >
+      {children}
+    </AuthContext.Provider>
+  )
 }
 
 export function useAuth() {
-    return useContext(AuthContext);
+  return useContext(AuthContext)
 }

@@ -19,7 +19,7 @@ export async function loginRequest(email, password) {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
-      "X-XSRF-TOKEN": decodeURIComponent(csrfToken),
+      "X-XSRF-TOKEN": decodeURIComponent(csrfToken || ""),
     },
     credentials: "include",
     body: JSON.stringify({ email, password }),
@@ -29,8 +29,9 @@ export async function loginRequest(email, password) {
     throw new Error("Credencials incorrectes")
   }
 
-  const data = await response.json()
-  return data.user
+  const data = await response.json();
+
+  return data.user ?? data
 }
 
 export async function logoutRequest() {
@@ -38,4 +39,22 @@ export async function logoutRequest() {
     method: "POST",
     credentials: "include",
   })
+}
+
+export async function getCurrentUser() {
+
+  const response = await fetch(`${API_URL}/api/user`, {
+  
+    credentials: "include",
+
+  });
+
+  if (!response.ok) {
+
+    return null;
+  
+  }
+  
+  return await response.json()
+
 }
