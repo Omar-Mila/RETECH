@@ -19,7 +19,7 @@ class EmpresaSeeder extends Seeder
     {
         //
         $user = User::create([
-            'username' => 'reco',
+            'name' => 'reco',
             'email' => 'reco@retech.com',
             'password' => Hash::make('reco'),
         ]);

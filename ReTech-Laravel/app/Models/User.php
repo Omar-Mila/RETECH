@@ -7,8 +7,9 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Laravel\Sanctum\HasApiTokens;
+use Filament\Models\Contracts\FilamentUser;
 
-class User extends Authenticatable
+class User extends Authenticatable implements FilamentUser
 {
     use HasApiTokens, HasFactory, Notifiable;
 
@@ -21,6 +22,7 @@ class User extends Authenticatable
         'username',
         'email',
         'password',
+        'role',
     ];
 
     /**
@@ -29,7 +31,7 @@ class User extends Authenticatable
      * @var array<int, string>
      */
     protected $hidden = [
-        'username',
+        'name',
         'password',
         'remember_token',
     ];
@@ -54,5 +56,10 @@ class User extends Authenticatable
 
     public function cliente(){
         return $this->hasOne(Cliente::class, 'user_id');
+    }
+
+    public function canAccessFilament(): bool
+    {
+        return $this->role === 'admin';
     }
 }
