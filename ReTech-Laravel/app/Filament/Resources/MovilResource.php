@@ -71,6 +71,11 @@ class MovilResource extends Resource
                             ->numeric()
                             ->suffix('GB')
                             ->required(),
+                        Forms\Components\Select::make('empresa_id')
+                            ->relationship('empresa', 'nombre_empresa')
+                            ->label('Empresa Reacondicionadora')
+                            ->searchable()
+                            ->required(),
                     ]),
                 ])
         ]);
@@ -113,12 +118,20 @@ class MovilResource extends Resource
             Tables\Columns\TextColumn::make('salud_bateria')
                 ->label('Batería')
                 ->suffix('%'),
+            Tables\Columns\TextColumn::make('empresa.nombre_empresa')
+                ->label('Reacondicionado por')
+                ->sortable()
+                ->searchable(),
         ])
         ->filters([
             Tables\Filters\SelectFilter::make('estado'),
             Tables\Filters\SelectFilter::make('modelo_id')
                 ->relationship('modelo', 'nombre')
                 ->label('Filtrar por Modelo'),
+            Tables\Filters\SelectFilter::make('empresa_user_id')
+                ->relationship('empresa', 'nombre_empresa')
+                ->label('Reacondicionador')
+                ->searchable()
         ])
         ->actions([
             Tables\Actions\EditAction::make(),
