@@ -39,4 +39,9 @@ class Movil extends Model
     {
         return $this->belongsTo(Color::class, 'color_id');
     }
+    
+    public function getFullDescriptionAttribute()
+    {
+        return "{$this->modelo->nombre} - {$this->almacenamiento}GB ({$this->color->nombre})";
+    }
 }
