@@ -24,47 +24,71 @@ class ClienteResource extends Resource
 
     public static function form(Form $form): Form
     {
-        return $form
-            ->schema([
-                Forms\Components\Section::make('Información del Cliente')
-                    ->description('Datos personales y vinculación de cuenta')
-                    ->schema([
-                        Forms\Components\Select::make('user_id')
-                            ->relationship('user', 'name')
-                            ->label('Usuario asociado')
-                            ->searchable()
-                            ->required()
-                            ->unique(ignorable: fn ($record) => $record)
-                            ->helperText('Selecciona la cuenta de usuario que corresponde a este cliente'),
+    return $form
+        ->schema([
+            Forms\Components\Section::make('Información del Cliente')
+                ->description('Datos personales y vinculación de cuenta')
+                ->schema([
+                    Forms\Components\Select::make('user_id')
+                        ->relationship('user', 'name')
+                        ->label('Usuario asociado')
+                        ->searchable()
+                        ->preload()
+                        ->required()
+                        ->reactive()
+                        ->unique(ignorable: fn ($record) => $record)
+                        ->afterStateUpdated(function ($state, callable $set) {
+                            $user = \App\Models\User::find($state);
+                            if ($user) {
+                                $set('nombre', $user->name);
+                            }
+                        })
+                        ->createOptionForm([
+                            Forms\Components\TextInput::make('name')
+                                ->label('Nombre de Usuario (Login)')
+                                ->required(),
+                            Forms\Components\TextInput::make('email')
+                                ->email()
+                                ->required()
+                                ->unique('users', 'email'),
+                            Forms\Components\TextInput::make('password')
+                                ->password()
+                                ->label('Contraseña')
+                                ->required()
+                                // Esto asegura que la contraseña se encripte si tu modelo no lo hace solo
+                                ->dehydrateStateUsing(fn ($state) => \Illuminate\Support\Facades\Hash::make($state)),
+                            Forms\Components\Hidden::make('role')
+                                ->default('cliente'),
+                        ]),
 
-                        Forms\Components\TextInput::make('nif')
-                            ->label('NIF / DNI')
-                            ->required()
-                            ->unique(ignorable: fn ($record) => $record)
-                            ->maxLength(9),
+                    Forms\Components\TextInput::make('nif')
+                        ->label('NIF / DNI')
+                        ->required()
+                        ->unique(ignorable: fn ($record) => $record)
+                        ->maxLength(9),
 
-                        Forms\Components\TextInput::make('nombre')
-                            ->required()
-                            ->maxLength(30),
+                    Forms\Components\TextInput::make('nombre')
+                        ->required()
+                        ->maxLength(30),
 
-                        Forms\Components\TextInput::make('apellidos')
-                            ->required()
-                            ->maxLength(50),
+                    Forms\Components\TextInput::make('apellidos')
+                        ->required()
+                        ->maxLength(50),
 
-                        Forms\Components\TextInput::make('telefono')
-                            ->label('Teléfono de contacto')
-                            ->tel()
-                            ->required()
-                            ->maxLength(15),
+                    Forms\Components\TextInput::make('telefono')
+                        ->label('Teléfono de contacto')
+                        ->tel()
+                        ->required()
+                        ->maxLength(15),
 
-                        Forms\Components\TextInput::make('direccion')
-                            ->label('Dirección de envío/facturación')
-                            ->required()
-                            ->maxLength(100)
-                            ->columnSpanFull(),
-                    ])->columns(2),
-            ]);
-    }
+                    Forms\Components\TextInput::make('direccion')
+                        ->label('Dirección de envío/facturación')
+                        ->required()
+                        ->maxLength(100)
+                        ->columnSpanFull(),
+                ])->columns(2),
+        ]);
+}
 
     public static function table(Table $table): Table
     {
