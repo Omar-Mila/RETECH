@@ -15,10 +15,10 @@ return new class extends Migration
     {
         Schema::create('users', function (Blueprint $table) {
             $table->bigIncrements('id'); // user_id PK
-            $table->string('name', 30);
+            $table->string('name', 30)->nullable();
             $table->string('email', 150)->unique();
             $table->string('password', 255); // hash
-            $table->string('role', 30);
+            $table->string('role', 30)->default('user'); // O 'admin'
             $table->timestamps();
         });
     }
