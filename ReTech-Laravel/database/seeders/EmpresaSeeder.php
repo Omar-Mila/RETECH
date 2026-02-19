@@ -18,12 +18,11 @@ class EmpresaSeeder extends Seeder
     public function run()
     {
         //
-        Empresa::create([
-            'nombre_empresa'   => 'Reco',
-            'cif'              => 'B12345678',
-            'direccion_fiscal' => 'Polígono Industrial Norte, Nave 12',
-            'telefono'         => '931234567',
-            'descripcion'      => 'Empresa especializada en reacondicionamiento de dispositivos móviles',
+        $user = User::create([
+            'name' => 'reco',
+            'email' => 'reco@retech.com',
+            'password' => Hash::make('reco'),
+            'role' => 'user',
         ]);
 
         Empresa::create([

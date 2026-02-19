@@ -22,6 +22,7 @@ class ClienteSeeder extends Seeder
             'name' => 'omar',
             'email' => 'omar@retech.com',
             'password' => Hash::make('omar'),
+            'role' => 'user',
         ]);
 
         Cliente::create([
