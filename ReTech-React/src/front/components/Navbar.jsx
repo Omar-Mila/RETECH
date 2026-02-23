@@ -1,17 +1,24 @@
+import { useState } from "react"
 import { useAuth } from "../../auth/AuthContext"
 import { useNavigate } from "react-router-dom"
 import { Link } from "react-router-dom"
-
 
 
 export default function Navbar() {
 
     const { user, isAuthenticated, logout, loading } = useAuth()
     const navigate = useNavigate()
+    const [searchQuery, setSearchQuery] = useState("")
+
     if (loading) {
         return null // o un skeleton si vols
     }
-    
+
+    const handleSearch = () => {
+        if (searchQuery.trim()) {
+            navigate(`/search?q=${encodeURIComponent(searchQuery)}`)
+        }
+    }
 
     let buttons;
 
@@ -74,18 +81,23 @@ export default function Navbar() {
                     <span>ReTech</span>
                 </div>
 
-                {/* Buscador – S’ESTIRA AL MÀXIM */}
+                {/* Buscador – S'ESTIRA AL MÀXIM */}
                 <div className="flex-1">
                     <div className="relative">
                     <input
                         type="text"
                         placeholder="Cerca productes..."
+                        value={searchQuery}
+                        onChange={(e) => setSearchQuery(e.target.value)}
+                        onKeyDown={(e) => e.key === "Enter" && handleSearch()}
                         className="w-full rounded border-gray-300 pe-10 shadow-sm sm:text-sm"
+                        name="search"
                     />
 
                     <span className="absolute inset-y-0 right-2 grid w-8 place-content-center">
                         <button
                         type="button"
+                        onClick={handleSearch}
                         aria-label="Buscar"
                         className="rounded-full p-1.5 text-gray-600 hover:bg-gray-100"
                         >
