@@ -2,22 +2,35 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
-class Compra extends Model
-{
-    use HasFactory;
+class Compra extends Model{
     protected $table = 'compras';
-    protected $fillable = ['cliente_user_id', 'movil_id', 'precio_venta', 'cantidad', 'metodo_pago'];
+
+    protected $fillable = [
+        'cliente_user_id', 
+        'items', 
+        'precio_total', 
+        'metodo_pago'
+    ];
+
+    protected $casts = [
+        'items' => 'array', 
+    ];
 
     public function cliente()
     {
         return $this->belongsTo(Cliente::class, 'cliente_user_id', 'user_id');
     }
-
-    public function movil()
+    protected static function booted()
     {
-        return $this->belongsTo(Movil::class, 'movil_id');
+        static::created(function ($compra) {
+            foreach ($compra->items as $item) {
+                $movil = \App\Models\Movil::find($item['movil_id']);
+                if ($movil) {
+                    $movil->decrement('stock', $item['cantidad']);
+                }
+            }
+        });
     }
 }

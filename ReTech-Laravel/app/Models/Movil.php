@@ -24,7 +24,7 @@ class Movil extends Model
         'empresa_id',
     ];
 
-    public $timestamps = false;
+    public $timestamps = true;
 
     public function modelo()
     {

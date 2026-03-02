@@ -22,17 +22,15 @@ class MovilResource extends Resource
     protected static ?string $navigationIcon = 'heroicon-o-collection';
 
     public static function form(Form $form): Form
-{
-    return $form
-        ->schema([
-            Forms\Components\Card::make()
-                ->schema([
-                    Forms\Components\Grid::make(2)->schema([
+    {
+        return $form
+            ->schema([
+                Forms\Components\Section::make('Especificaciones')
+                    ->schema([
                         Forms\Components\Select::make('modelo_id')
                             ->relationship('modelo', 'nombre')
-                            ->searchable()
-                            ->preload()
-                            ->required(),
+                            ->required()
+                            ->searchable(),
 
                         Forms\Components\Select::make('color_id')
                             ->relationship('color', 'nombre')
@@ -45,7 +43,6 @@ class MovilResource extends Resource
 
                         Forms\Components\TextInput::make('stock')
                             ->numeric()
-                            ->default(0)
                             ->required(),
 
                         Forms\Components\Select::make('estado')
@@ -55,91 +52,69 @@ class MovilResource extends Resource
                                 'Funcional' => 'Funcional',
                             ])->required(),
 
-                        Forms\Components\TextInput::make('salud_bateria')
-                            ->numeric()
-                            ->suffix('%')
-                            ->minValue(0)
-                            ->maxValue(100)
+                        // Configuración de batería exacta
+                        Forms\Components\Select::make('salud_bateria')
+                            ->label('Salud de Batería')
+                            ->options([
+                                100 => 'Nueva (100%)',
+                                97  => 'Excelente Estado (90-97%)',
+                                90  => 'Buen Estado (80-90%)',
+                            ])
                             ->required(),
 
-                        Forms\Components\TextInput::make('almacenamiento')
-                            ->numeric()
-                            ->suffix('GB')
-                            ->required(),
+                        Forms\Components\Select::make('almacenamiento')
+                            ->options([
+                                64 => '64 GB',
+                                128 => '128 GB',
+                                256 => '256 GB',
+                                512 => '512 GB',
+                                1024 => '1 TB',
+                            ])->required(),
 
-                        Forms\Components\TextInput::make('ram')
-                            ->numeric()
-                            ->suffix('GB')
-                            ->required(),
+                        Forms\Components\Select::make('ram')
+                            ->options([
+                                4 => '4 GB',
+                                8 => '8 GB',
+                                16 => '16 GB',
+                                32 => '32 GB',
+                            ])->required(),
+
                         Forms\Components\Select::make('empresa_id')
-                            ->relationship('empresa', 'nombre_empresa')
-                            ->label('Empresa Reacondicionadora')
-                            ->searchable()
+                            ->relationship('empresa', 'nombre_empresa') // Verifica que esta columna existe en 'empresas'
                             ->required(),
-                    ]),
-                ])
-        ]);
-}
+                    ])->columns(2)
+            ]);
+    }
 
     public static function table(Table $table): Table
-{
-    return $table
-        ->columns([
-            Tables\Columns\TextColumn::make('modelo.nombre')
-                ->label('Modelo')
-                ->searchable()
-                ->sortable(),
+    {
+        return $table
+            ->columns([
+                Tables\Columns\TextColumn::make('modelo.nombre')->label('Modelo')->sortable(),
+                
+                // Formato visual para la batería en la tabla
+                Tables\Columns\BadgeColumn::make('salud_bateria')
+                    ->label('Batería')
+                    ->formatStateUsing(fn ($state) => match ((int)$state) {
+                        100 => 'Nueva',
+                        97  => 'Excelente Estado',
+                        90  => 'Buen Estado',
+                        default => $state . '%',
+                    })
+                    ->color(fn ($state) => match ((int)$state) {
+                        100 => 'success',
+                        97  => 'primary',
+                        90  => 'warning',
+                        default => 'secondary',
+                    }),
 
-            Tables\Columns\TextColumn::make('color.nombre')
-                ->label('Color'),
-
-            Tables\Columns\TextColumn::make('precio')
-                ->money('eur')
-                ->sortable(),
-
-            Tables\Columns\BadgeColumn::make('stock')
-                ->color(static function ($state): string {
-                    if ($state <= 2) return 'danger';
-                    if ($state <= 5) return 'warning';
-                    return 'success';
-                })->sortable(),
-
-            Tables\Columns\BadgeColumn::make('estado')
-                ->colors([
-                    'success' => 'Como nuevo',
-                    'warning' => 'Buen estado',
-                    'danger' => 'Funcional',
-                ]),
-
-            Tables\Columns\TextColumn::make('almacenamiento')
-                ->suffix(' GB')
-                ->sortable(),
-
-            Tables\Columns\TextColumn::make('salud_bateria')
-                ->label('Batería')
-                ->suffix('%'),
-            Tables\Columns\TextColumn::make('empresa.nombre_empresa')
-                ->label('Reacondicionado por')
-                ->sortable()
-                ->searchable(),
-        ])
-        ->filters([
-            Tables\Filters\SelectFilter::make('estado'),
-            Tables\Filters\SelectFilter::make('modelo_id')
-                ->relationship('modelo', 'nombre')
-                ->label('Filtrar por Modelo'),
-            Tables\Filters\SelectFilter::make('empresa_user_id')
-                ->relationship('empresa', 'nombre_empresa')
-                ->label('Reacondicionador')
-                ->searchable()
-        ])
-        ->actions([
-            Tables\Actions\EditAction::make(),
-        ])
-        ->bulkActions([
-            Tables\Actions\DeleteBulkAction::make(),
-        ]);
-}
+                Tables\Columns\TextColumn::make('precio')->money('eur'),
+                Tables\Columns\TextColumn::make('stock')->sortable(),
+            ])
+            ->actions([
+                Tables\Actions\EditAction::make(),
+            ]);
+    }
     
     public static function getRelations(): array
     {

@@ -19,13 +19,10 @@ return new class extends Migration
     {
         Schema::create('compras', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('cliente_user_id')->constrained('clientes', 'user_id');
-            
-            $table->foreignId('movil_id')->constrained('moviles');
-            
-            $table->decimal('precio_venta', 10, 2);
-            $table->integer('cantidad')->default(1);
-            $table->enum('metodo_pago', ['Tarjeta', 'Transferencia', 'Efectivo'])->default('Tarjeta');
+            $table->foreignId('cliente_user_id')->constrained('users');
+            $table->json('items');
+            $table->decimal('precio_total', 10, 2)->default(0);
+            $table->string('metodo_pago');
             $table->timestamps();
         });
     }
