@@ -10,8 +10,6 @@ use Filament\Resources\Form;
 use Filament\Resources\Resource;
 use Filament\Resources\Table;
 use Filament\Tables;
-use Illuminate\Database\Eloquent\Builder;
-use Illuminate\Database\Eloquent\SoftDeletingScope;
 
 class CompraResource extends Resource
 {
@@ -19,7 +17,8 @@ class CompraResource extends Resource
 
     protected static ?string $navigationIcon = 'heroicon-o-collection';
 
-    public static function form(Form $form): Form{
+    public static function form(Form $form): Form
+    {
         return $form
             ->schema([
                 Forms\Components\Section::make('Cabecera del Pedido')
@@ -28,21 +27,30 @@ class CompraResource extends Resource
                             ->relationship('cliente', 'nombre')
                             ->searchable()
                             ->required(),
+
                         Forms\Components\Select::make('metodo_pago')
                             ->options([
-                                'Tarjeta' => 'Tarjeta',
-                                'Transferencia' => 'Transferencia',
-                                'Efectivo' => 'Efectivo',
+                                'Tarjeta'        => 'Tarjeta',
+                                'Transferencia'  => 'Transferencia',
                             ])->required(),
-                        
+
+                        // ── NUEVO: estado del pago ──────────────────────────
+                        Forms\Components\Select::make('estado')
+                            ->options([
+                                'pendiente' => 'Pendiente',
+                                'pagado'    => 'Pagado',
+                                'fallido'   => 'Fallido',
+                            ])
+                            ->default('pendiente')
+                            ->required(),
+
                         Forms\Components\TextInput::make('precio_total')
                             ->label('Total del Carrito')
                             ->numeric()
                             ->prefix('€')
-                            ->disabled() 
+                            ->disabled()
                             ->dehydrated()
                             ->placeholder(function (callable $get, callable $set) {
-                                // Lógica de suma
                                 $items = $get('items') ?? [];
                                 $total = 0;
                                 foreach ($items as $item) {
@@ -51,6 +59,15 @@ class CompraResource extends Resource
                                 $set('precio_total', $total);
                                 return $total;
                             }),
+
+                        // ── NUEVO: intent de Stripe (solo lectura) ──────────
+                        Forms\Components\TextInput::make('stripe_intent')
+                            ->label('Stripe Intent ID')
+                            ->disabled()
+                            ->dehydrated()
+                            ->placeholder('Generado automáticamente por Stripe')
+                            ->columnSpan(2),
+
                     ])->columns(3),
 
                 Forms\Components\Section::make('Carrito / Ítems')
@@ -76,7 +93,7 @@ class CompraResource extends Resource
                                     ->numeric()
                                     ->default(1)
                                     ->required()
-                                    ->reactive() // <--- Hace que al cambiar cantidad se dispare el cálculo
+                                    ->reactive()
                                     ->columnSpan(1),
 
                                 Forms\Components\TextInput::make('precio_unitario')
@@ -84,7 +101,7 @@ class CompraResource extends Resource
                                     ->numeric()
                                     ->prefix('€')
                                     ->required()
-                                    ->reactive() // <--- Por si cambias el precio a mano
+                                    ->reactive()
                                     ->columnSpan(2),
                             ])
                             ->columns(6)
@@ -102,36 +119,55 @@ class CompraResource extends Resource
                     ->label('Fecha')
                     ->dateTime()
                     ->sortable(),
+
                 Tables\Columns\TextColumn::make('cliente.nombre')
                     ->label('Cliente'),
-                Tables\Columns\TextColumn::make('movil.modelo.nombre')
-                    ->label('Móvil comprado'),
-                Tables\Columns\TextColumn::make('precio_venta')
-                    ->money('eur'),
-                Tables\Columns\BadgeColumn::make('cantidad')
-                    ->color('primary')
-                    ->label('Cantidad'),
+
+                Tables\Columns\TextColumn::make('precio_total')
+                    ->label('Total')
+                    ->money('eur')
+                    ->sortable(),
+
                 Tables\Columns\BadgeColumn::make('metodo_pago')
-                    ->color('primary'),
+                    ->colors(['primary' => 'stripe', 'success' => 'Tarjeta', 'warning' => 'Transferencia', 'secondary' => 'Efectivo']),
+
+                // ── NUEVO: badge de estado ──────────────────────────────────
+                Tables\Columns\BadgeColumn::make('estado')
+                    ->colors([
+                        'warning' => 'pendiente',
+                        'success' => 'pagado',
+                        'danger'  => 'fallido',
+                    ]),
+
+                Tables\Columns\TextColumn::make('stripe_intent')
+                    ->label('Stripe ID')
+                    ->limit(24)
+                    ->tooltip(fn ($record) => $record->stripe_intent),
             ])
             ->filters([
                 Tables\Filters\SelectFilter::make('metodo_pago'),
+
+                // ── NUEVO: filtro por estado ────────────────────────────────
+                Tables\Filters\SelectFilter::make('estado')
+                    ->options([
+                        'pendiente' => 'Pendiente',
+                        'pagado'    => 'Pagado',
+                        'fallido'   => 'Fallido',
+                    ]),
             ]);
     }
-    
+
     public static function getRelations(): array
     {
-        return [
-            //
-        ];
+        return [];
     }
-    
+
     public static function getPages(): array
     {
         return [
-            'index' => Pages\ListCompras::route('/'),
+            'index'  => Pages\ListCompras::route('/'),
             'create' => Pages\CreateCompra::route('/create'),
-            'edit' => Pages\EditCompra::route('/{record}/edit'),
+            'edit'   => Pages\EditCompra::route('/{record}/edit'),
         ];
-    }    
+    }
 }

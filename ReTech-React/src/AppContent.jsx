@@ -7,6 +7,7 @@ import Register from "./auth/Register"
 import Admin from "./admin/pages/Admin"
 import RequireAdmin from "./auth/RequireAdmin"
 import SearchResults from "./front/pages/SearchResults"
+import CartCheckoutPage from "./front/pages/Carrito";
 
 export default function AppContent() {
   const { loading } = useAuth()
@@ -30,6 +31,7 @@ export default function AppContent() {
         }
       />
       <Route path="/search" element={<SearchResults />} />
+      <Route path="/carrito" element={<CartCheckoutPage />} />
     </Routes>
   )
 }

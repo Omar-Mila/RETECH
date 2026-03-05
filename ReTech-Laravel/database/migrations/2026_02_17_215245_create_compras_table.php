@@ -23,10 +23,11 @@ return new class extends Migration
             $table->json('items');
             $table->decimal('precio_total', 10, 2)->default(0);
             $table->string('metodo_pago');
+            $table->string('stripe_intent')->nullable();
+            $table->string('estado')->default('pendiente');
             $table->timestamps();
         });
     }
-
     /**
      * Reverse the migrations.
      *

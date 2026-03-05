@@ -11,7 +11,9 @@ class Compra extends Model{
         'cliente_user_id', 
         'items', 
         'precio_total', 
-        'metodo_pago'
+        'metodo_pago',
+        'stripe_intent',
+        'estado'
     ];
 
     protected $casts = [

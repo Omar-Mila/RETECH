@@ -10,6 +10,8 @@ use App\Models\Marca;
 use App\Models\Modelo;
 use App\Models\SistemaOperativo;
 use Illuminate\Support\Facades\Auth;
+use App\Http\Controllers\Api\CheckoutApiController;
+
 
 /*
 |--------------------------------------------------------------------------
@@ -53,3 +55,11 @@ Route::get('/products/search', [ProductosController::class, 'search']);
 Route::get('/marcas', [MarcaApiController::class, 'index']);
 Route::get('/moviles', [MovilApiController::class, 'index']);
 
+
+Route::post('/checkout', [CheckoutApiController::class, 'crearSesion']);
+
+// Ahora (Stripe Elements)
+Route::prefix('checkout')->middleware('auth')->group(function () {
+    Route::post('/intent',  [CheckoutApiController::class, 'createIntent']);
+    Route::post('/confirm', [CheckoutApiController::class, 'confirm']);
+});
