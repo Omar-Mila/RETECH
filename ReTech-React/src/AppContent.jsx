@@ -9,6 +9,8 @@ import RequireAdmin from "./auth/RequireAdmin"
 import SearchResults from "./front/pages/SearchResults"
 import CartCheckoutPage from "./front/pages/Carrito";
 
+import ModelPage from "./front/pages/ModelPage"
+
 export default function AppContent() {
   const { loading } = useAuth()
 
@@ -32,6 +34,10 @@ export default function AppContent() {
       />
       <Route path="/search" element={<SearchResults />} />
       <Route path="/carrito" element={<CartCheckoutPage />} />
+
+      <Route path="/models/:id" element={<ModelPage />} />
+
+      <Route path="/models/:id" element={<ModelPage />} />
     </Routes>
   )
 }

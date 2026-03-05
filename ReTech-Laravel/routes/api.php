@@ -9,6 +9,7 @@ use App\Models\Movil;
 use App\Models\Marca;
 use App\Models\Modelo;
 use App\Models\SistemaOperativo;
+
 use Illuminate\Support\Facades\Auth;
 use App\Http\Controllers\Api\CheckoutApiController;
 
@@ -63,3 +64,13 @@ Route::prefix('checkout')->middleware('auth')->group(function () {
     Route::post('/intent',  [CheckoutApiController::class, 'createIntent']);
     Route::post('/confirm', [CheckoutApiController::class, 'confirm']);
 });
+
+
+Route::get('/products/{id}', [MovilApiController::class, 'show']);
+
+//cerca de models
+Route::get('/models', [ModeloApiController::class, 'index']);
+Route::get('/models/search', [ModeloApiController::class, 'search']);
+Route::get('/models/{id}', [ModeloApiController::class, 'show']);
+Route::get('/models/{model}/options', [ModeloApiController::class, 'options']);
+Route::get('/models/{model}/price', [ModeloApiController::class, 'price']);
