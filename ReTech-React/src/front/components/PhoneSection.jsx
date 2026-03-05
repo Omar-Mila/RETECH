@@ -42,7 +42,7 @@ export default function PhonesSection() {
                 {phones.map(phone => (
                 <PhoneCardS
                     key={phone.id}
-                    name={`${phone.modelo.nombre}`}
+                    name={`${phone.modelo?.nombre}`}
                     condition={phone.estado}
                     price={phone.precio}
                     image="https://via.placeholder.com/300"

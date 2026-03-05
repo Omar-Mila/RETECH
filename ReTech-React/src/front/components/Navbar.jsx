@@ -1,6 +1,8 @@
 import { useAuth } from "../../auth/AuthContext"
 import { useNavigate } from "react-router-dom"
 import { Link } from "react-router-dom"
+import { useState, useEffect } from "react"
+import { searchProducts } from "../../services/searchService"
 
 
 
@@ -8,6 +10,39 @@ export default function Navbar() {
 
     const { user, isAuthenticated, logout, loading } = useAuth()
     const navigate = useNavigate()
+
+    const [query, setQuery] = useState("")
+    const [results, setResults] = useState([])
+    const [open, setOpen] = useState(false)
+    const [loadingSearch, setLoadingSearch] = useState(false)
+
+    useEffect(() => {
+        if (query.length < 2) {
+            setResults([])
+            setOpen(false)
+            return
+        }
+
+        const timeout = setTimeout(async () => {
+            setLoadingSearch(true)
+            try {
+            console.log("Searching:", query)
+            const data = await searchProducts(query)
+            console.log("Search results:", data)
+            setResults(data)
+            setOpen(true)
+            } catch (err) {
+            console.error("Search error:", err)
+            setResults([])
+            setOpen(true) // para que veas "No s'han trobat..." o el estado
+            } finally {
+            setLoadingSearch(false)
+            }
+        }, 300)
+
+        return () => clearTimeout(timeout)
+    }, [query])
+
     if (loading) {
         return null // o un skeleton si vols
     }
@@ -80,6 +115,8 @@ export default function Navbar() {
                     <input
                         type="text"
                         placeholder="Cerca productes..."
+                        value={query}
+                        onChange={(e) => setQuery(e.target.value)}
                         className="w-full rounded border-gray-300 pe-10 shadow-sm sm:text-sm"
                     />
 
@@ -92,6 +129,34 @@ export default function Navbar() {
                         🔍
                         </button>
                     </span>
+                    {open && (
+                        <div className="absolute left-0 right-0 bg-white border mt-1 rounded shadow-lg z-50 text-sm">
+
+                            {loadingSearch && (
+                                <div className="px-4 py-2 text-gray-500">
+                                    Buscando...
+                                </div>
+                            )}
+
+                            {!loadingSearch && results.length === 0 && (
+                                <div className="px-4 py-2 text-gray-400">
+                                    No s'han trobat coincidències
+                                </div>
+                            )}
+
+                            {!loadingSearch && results.map((item) => (
+                                <Link
+                                    key={item.id}
+                                    to={`/models/${item.id}`}
+                                    onClick={() => setOpen(false)}
+                                    className="px-4 py-2 hover:bg-gray-100 block"
+                                >
+                                    {item.nombre}
+                                </Link>
+                            ))}
+
+                        </div>
+                    )}
                     </div>
                 </div>
 

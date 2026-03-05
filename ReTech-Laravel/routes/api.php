@@ -4,7 +4,9 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Api\MarcaApiController;
 use App\Http\Controllers\Api\MovilApiController;
+use App\Http\Controllers\Api\ModeloApiController;
 use App\Models\Movil;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Auth;
 
 /*
@@ -51,3 +53,13 @@ Route::get('/moviles', [MovilApiController::class, 'index']);
 Route::get('/moviles', function () {
     return Movil::with(['modelo', 'color'])->get();
 });
+
+
+Route::get('/products/{id}', [MovilApiController::class, 'show']);
+
+//cerca de models
+Route::get('/models', [ModeloApiController::class, 'index']);
+Route::get('/models/search', [ModeloApiController::class, 'search']);
+Route::get('/models/{id}', [ModeloApiController::class, 'show']);
+Route::get('/models/{model}/options', [ModeloApiController::class, 'options']);
+Route::get('/models/{model}/price', [ModeloApiController::class, 'price']);
