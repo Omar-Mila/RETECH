@@ -34,7 +34,6 @@ export default function AppContent() {
       />
       <Route path="/search" element={<SearchResults />} />
       <Route path="/carrito" element={<CartCheckoutPage />} />
-
       <Route path="/models/:id" element={<ModelPage />} />
 
       <Route path="/models/:id" element={<ModelPage />} />

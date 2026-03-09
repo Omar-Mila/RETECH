@@ -5,6 +5,8 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Api\MarcaApiController;
 use App\Http\Controllers\Api\MovilApiController;
 use App\Http\Controllers\ProductosController;
+use App\Http\Controllers\api\ModeloApiController;
+
 use App\Models\Movil;
 use App\Models\Marca;
 use App\Models\Modelo;

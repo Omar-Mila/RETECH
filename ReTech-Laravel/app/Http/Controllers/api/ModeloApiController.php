@@ -50,7 +50,8 @@ class ModeloApiController extends Controller
 
     public function show($id)
     {
-        return Modelo::find($id);
+        $modelo = Modelo::findOrFail($id);
+        return response()->json($modelo);
     }
 
     
