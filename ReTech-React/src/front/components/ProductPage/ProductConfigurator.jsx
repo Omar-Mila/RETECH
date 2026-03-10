@@ -161,16 +161,17 @@ export default function ProductConfigurator({ options }) {
           </select>
 
           <select
-            value={bateria}
-            onChange={(e) => setBateria(e.target.value)}
-            className="w-full border rounded p-2"
+              value={bateria}
+              onChange={(e) => setBateria(e.target.value)}
+              className="w-full border rounded p-2"
           >
-            <option value="">Bateria mínima</option>
-            <option value="80">80%</option>
-            <option value="85">85%</option>
-            <option value="90">90%</option>
-            <option value="95">95%</option>
-          </select>
+            
+              {options.baterias.map(b => (
+                <option key={b.valor} value={b.valor}>
+                  {b.label}
+                </option>
+              ))}
+            </select>
         </div>
       )}
 

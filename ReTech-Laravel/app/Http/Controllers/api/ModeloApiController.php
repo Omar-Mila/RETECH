@@ -66,13 +66,29 @@ public function options($modelId)
             'almacenamientos' => $moviles->clone()->select('almacenamiento')->distinct()->pluck('almacenamiento'),
             
             'rams' => $moviles->clone()->select('ram')->distinct()->pluck('ram'),
-
+            
             'colores' => $moviles->clone()
                 ->with('color:id,nombre')
                 ->get()
                 ->pluck('color')
                 ->unique('id')
-                ->values()
+                ->values(),
+            
+            'baterias' => $moviles->clone()
+                ->select('salud_bateria')
+                ->distinct()
+                ->orderBy('salud_bateria')
+                ->pluck('salud_bateria')
+                ->map(fn($b) => [
+                    'valor' => $b,
+                    'label' => match((int)$b) {
+                        100 => 'Nueva (100%)',
+                        90  => 'Excelente Estado (90-95%)',
+                        80  => 'Buen Estado (80-90%)',
+                        default => "{$b}%"
+                    }
+                ])->values(),
+            
         ]);
     }
 
