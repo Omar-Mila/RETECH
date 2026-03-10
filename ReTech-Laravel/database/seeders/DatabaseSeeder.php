@@ -24,6 +24,7 @@ class DatabaseSeeder extends Seeder
             MarcaSeeder::class,
             ColorSeeder::class,
             ModeloSeeder::class,
+            MovilSeeder::class,
         ]);
     }
 }

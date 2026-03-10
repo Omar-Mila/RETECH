@@ -4,8 +4,12 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Api\MarcaApiController;
 use App\Http\Controllers\Api\MovilApiController;
+use App\Http\Controllers\ProductosController;
 use App\Http\Controllers\Api\ModeloApiController;
 use App\Models\Movil;
+use App\Models\Marca;
+use App\Models\Modelo;
+use App\Models\SistemaOperativo;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Auth;
 
@@ -47,12 +51,10 @@ Route::get('/user', function (Request $request) {
     return response()->json($request->user());
 });
 
+Route::get('/products/search', [ProductosController::class, 'search']);
 Route::get('/marcas', [MarcaApiController::class, 'index']);
 Route::get('/moviles', [MovilApiController::class, 'index']);
 
-Route::get('/moviles', function () {
-    return Movil::with(['modelo', 'color'])->get();
-});
 
 
 Route::get('/products/{id}', [MovilApiController::class, 'show']);

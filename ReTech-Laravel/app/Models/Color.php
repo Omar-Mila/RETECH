@@ -11,7 +11,11 @@ class Color extends Model
     protected $table = 'colores';
 
     public $timestamps = false;
-
+    
+    protected $fillable = [
+        'nombre', 
+        'codigo_hex'
+    ];
     public function moviles()
     {
         return $this->hasMany(Movil::class, 'color_id');

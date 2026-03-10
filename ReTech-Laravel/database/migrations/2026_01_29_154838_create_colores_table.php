@@ -16,6 +16,7 @@ return new class extends Migration
         Schema::create('colores', function (Blueprint $table) {
             $table->id();
             $table->string('nombre', 30)->unique();
+            $table->string('codigo_hex', 7)->nullable();
         });
     }
 

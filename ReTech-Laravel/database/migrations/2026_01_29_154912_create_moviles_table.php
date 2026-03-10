@@ -36,7 +36,7 @@ return new class extends Migration
             $table->foreignId('color_id')
                   ->constrained('colores')
                   ->onDelete('restrict');
-
+            $table->foreignId('empresa_id')->constrained('empresas');
             $table->timestamps();
         });
     }

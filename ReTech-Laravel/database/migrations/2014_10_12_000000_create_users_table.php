@@ -18,7 +18,7 @@ return new class extends Migration
             $table->string('name', 30)->nullable();
             $table->string('email', 150)->unique();
             $table->string('password', 255); // hash
-            $table->string('role', 30);
+            $table->string('role', 30)->default('user'); // O 'admin'
             $table->timestamps();
         });
     }
