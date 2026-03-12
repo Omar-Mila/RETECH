@@ -13,7 +13,6 @@ export default function ProductConfigurator({ options }) {
   // filtros (solo se usan cuando "Personalitzar" está abierto y el user toca algo)
   const [estado, setEstado] = useState("")
   const [almacenamiento, setAlmacenamiento] = useState("")
-  const [ram, setRam] = useState("")
   const [color, setColor] = useState("")
   const [bateria, setBateria] = useState("")
 
@@ -21,12 +20,11 @@ export default function ProductConfigurator({ options }) {
   const params = useMemo(() => {
     const p = {}
     if (estado) p.estado = estado
-    if (ram) p.ram = ram
     if (almacenamiento) p.almacenamiento = almacenamiento
     if (color) p.color = color
     if (bateria) p.bateria_min = bateria
     return p
-  }, [estado, ram, almacenamiento, color, bateria])
+  }, [estado, almacenamiento, color, bateria])
 
   // 1) Al cargar: precio recomendado (sin filtros)
   useEffect(() => {
@@ -140,15 +138,6 @@ export default function ProductConfigurator({ options }) {
           >
             <option value="">Emmagatzematge</option>
             {options.almacenamientos.map(a => <option key={a} value={a}>{a} GB</option>)}
-          </select>
-
-          <select
-            value={ram}
-            onChange={(e) => setRam(e.target.value)}
-            className="w-full border rounded p-2"
-          >
-            <option value="">RAM</option>
-            {options.rams.map(r => <option key={r} value={r}>{r} GB</option>)}
           </select>
 
           <select
