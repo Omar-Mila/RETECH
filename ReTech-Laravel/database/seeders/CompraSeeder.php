@@ -18,27 +18,29 @@ class CompraSeeder extends Seeder
      */
     public function run()
     {
-        //
         $cliente = Cliente::first();
-        $movil = Movil::where('stock', '>', 0)->first();
+        $movil   = Movil::where('stock', '>', 0)->first();
 
         if ($cliente && $movil) {
-            
+
             Compra::create([
                 'cliente_user_id' => $cliente->user_id,
-                'movil_id'        => $movil->id,
-                'precio_venta'    => $movil->precio,
-                'cantidad'        => 1,
+                'items'           => [
+                    [
+                        'movil_id' => $movil->id,
+                        'cantidad' => 1,
+                        'precio'   => $movil->precio,
+                    ]
+                ],
+                'precio_total'    => $movil->precio * 1.21,
                 'metodo_pago'     => 'Tarjeta',
-                'created_at'      => now(),
+                'estado'          => 'pagado',
+                'stripe_intent'   => null,
             ]);
 
-            $movil->decrement('stock', 1);
-
-            $this->command->info("Compra manual creada con éxito para el cliente: {$cliente->nombre}");
+            $this->command->info("Compra creada para: {$cliente->nombre}");
         } else {
             $this->command->error("No se pudo crear la compra: falta un cliente o un móvil con stock.");
         }
-    
     }
 }

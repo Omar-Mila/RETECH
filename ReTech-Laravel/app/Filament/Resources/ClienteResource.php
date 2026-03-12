@@ -117,7 +117,7 @@ class ClienteResource extends Resource
                     ->copyable(),
             ])
             ->filters([
-                // Filtros si los necesitas más adelante
+
             ])
             ->actions([
                 Tables\Actions\EditAction::make(),

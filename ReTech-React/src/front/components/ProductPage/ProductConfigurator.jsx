@@ -13,7 +13,6 @@ export default function ProductConfigurator({ options }) {
   // filtros (solo se usan cuando "Personalitzar" está abierto y el user toca algo)
   const [estado, setEstado] = useState("")
   const [almacenamiento, setAlmacenamiento] = useState("")
-  const [ram, setRam] = useState("")
   const [color, setColor] = useState("")
   const [bateria, setBateria] = useState("")
 
@@ -21,12 +20,11 @@ export default function ProductConfigurator({ options }) {
   const params = useMemo(() => {
     const p = {}
     if (estado) p.estado = estado
-    if (ram) p.ram = ram
     if (almacenamiento) p.almacenamiento = almacenamiento
     if (color) p.color = color
     if (bateria) p.bateria_min = bateria
     return p
-  }, [estado, ram, almacenamiento, color, bateria])
+  }, [estado, almacenamiento, color, bateria])
 
   // 1) Al cargar: precio recomendado (sin filtros)
   useEffect(() => {
@@ -143,15 +141,6 @@ export default function ProductConfigurator({ options }) {
           </select>
 
           <select
-            value={ram}
-            onChange={(e) => setRam(e.target.value)}
-            className="w-full border rounded p-2"
-          >
-            <option value="">RAM</option>
-            {options.rams.map(r => <option key={r} value={r}>{r} GB</option>)}
-          </select>
-
-          <select
             value={color}
             onChange={(e) => setColor(e.target.value)}
             className="w-full border rounded p-2"
@@ -161,16 +150,17 @@ export default function ProductConfigurator({ options }) {
           </select>
 
           <select
-            value={bateria}
-            onChange={(e) => setBateria(e.target.value)}
-            className="w-full border rounded p-2"
+              value={bateria}
+              onChange={(e) => setBateria(e.target.value)}
+              className="w-full border rounded p-2"
           >
-            <option value="">Bateria mínima</option>
-            <option value="80">80%</option>
-            <option value="85">85%</option>
-            <option value="90">90%</option>
-            <option value="95">95%</option>
-          </select>
+            
+              {options.baterias.map(b => (
+                <option key={b.valor} value={b.valor}>
+                  {b.label}
+                </option>
+              ))}
+            </select>
         </div>
       )}
 

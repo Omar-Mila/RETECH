@@ -57,8 +57,8 @@ class MovilResource extends Resource
                             ->label('Salud de Batería')
                             ->options([
                                 100 => 'Nueva (100%)',
-                                97  => 'Excelente Estado (90-97%)',
-                                90  => 'Buen Estado (80-90%)',
+                                90  => 'Excelente Estado (90-95%)',
+                                80  => 'Buen Estado (80-90%)',
                             ])
                             ->required(),
 
@@ -97,8 +97,8 @@ class MovilResource extends Resource
                     ->label('Batería')
                     ->formatStateUsing(fn ($state) => match ((int)$state) {
                         100 => 'Nueva',
-                        97  => 'Excelente Estado',
-                        90  => 'Buen Estado',
+                        90  => 'Excelente Estado',
+                        80  => 'Buen Estado',
                         default => $state . '%',
                     })
                     ->color(fn ($state) => match ((int)$state) {
