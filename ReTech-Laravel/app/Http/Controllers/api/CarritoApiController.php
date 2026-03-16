@@ -33,41 +33,47 @@ class CarritoApiController extends Controller
     // ── POST /api/carrito ─────────────────────────────────────────────────────
     public function store(Request $request)
     {
-        $request->validate([
-            'movil_id' => 'required|exists:moviles,id',
-            'cantidad' => 'integer|min:1|max:10',
-        ]);
-
-        $movil    = Movil::findOrFail($request->movil_id);
-        $cantidad = $request->input('cantidad', 1);
-
-        if ($movil->stock < $cantidad) {
-            return response()->json(['message' => 'Stock insuficiente'], 422);
-        }
-
-        $carrito = $request->session()->get('carrito', []);
-        $key     = $movil->id;
-
-        if (isset($carrito[$key])) {
-            $nueva = $carrito[$key]['cantidad'] + $cantidad;
-            if ($nueva > $movil->stock) {
-                return response()->json(['message' => 'Stock insuficiente'], 422);
+        try {
+            // 1. Verificamos si recibimos el ID
+            $id = $request->input('movil_id');
+            
+            if (!$id) {
+                return response()->json(['message' => 'Falta el movil_id'], 422);
             }
-            $carrito[$key]['cantidad'] = $nueva;
-        } else {
-            $carrito[$key] = [
+
+            // 2. Intentamos buscar el móvil
+            // IMPORTANTE: Asegúrate de tener "use App\Models\Movil;" arriba del todo
+            $movil = \App\Models\Movil::find($id);
+
+            if (!$movil) {
+                return response()->json(['message' => "El móvil con ID {$id} no existe en la base de datos"], 404);
+            }
+
+            // 3. Acceder a la sesión
+            $carrito = $request->session()->get('carrito', []);
+            
+            $carrito[$id] = [
                 'movil_id' => $movil->id,
-                'cantidad' => $cantidad,
+                'cantidad' => ($carrito[$id]['cantidad'] ?? 0) + 1,
                 'precio'   => (float) $movil->precio,
             ];
+
+            // 4. Guardar
+            $request->session()->put('carrito', $carrito);
+
+            return response()->json([
+                'message' => 'Afegit!',
+                'total_items' => count($carrito)
+            ]);
+
+        } catch (\Throwable $e) {
+            // ESTO TE DIRÁ EL ERROR REAL EN LA PESTAÑA "PREVIEW" DE CHROME
+            return response()->json([
+                'error' => $e->getMessage(),
+                'file' => $e->getFile(),
+                'line' => $e->getLine()
+            ], 500);
         }
-
-        $request->session()->put('carrito', $carrito);
-
-        return response()->json([
-            'message' => 'Añadido al carrito',
-            'carrito' => $this->hydrateItems($carrito),
-        ], 201);
     }
 
     // ── PATCH /api/carrito/{movil_id} ─────────────────────────────────────────

@@ -7,6 +7,7 @@ export default function ProductConfigurator({ options }) {
 
   const [openAdvanced, setOpenAdvanced] = useState(false)
   const [loadingPrice, setLoadingPrice] = useState(false)
+  const [adding, setAdding] = useState(false)
 
   const [priceData, setPriceData] = useState(null) // {precio, stock, movil_id, ...}
 
@@ -77,6 +78,46 @@ export default function ProductConfigurator({ options }) {
       mounted = false
     }
   }, [openAdvanced, params, id])
+
+  const handleAddToCart = async () => {
+    if (!priceData?.movil_id) return;
+
+    setAdding(true);
+    try {
+      const response = await fetch("http://127.0.0.1:8000/api/carrito", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Accept": "application/json",
+        },
+        credentials: "include",
+        body: JSON.stringify({
+          movil_id: priceData.movil_id,
+          cantidad: 1,
+        }),
+      });
+
+      if (response.ok) {
+        window.dispatchEvent(new Event("cart-updated"));
+        alert("S'ha afegit al carret correctament!");
+      } else {
+        const error = await response.json();
+        alert(error.message || "Error al añadir");
+      }
+    } catch (err) {
+      console.error("Error de conexión:", err);
+      alert("Error de conexió amb el servidor");
+    } finally {
+      setAdding(false);
+    }
+  const handleRemove = async (movilId) => {
+    await apiFetch(`/carrito/${movilId}`, { method: "DELETE" });
+    const data = await apiFetch("/carrito");
+    setItems(data.items ?? []);
+    
+    window.dispatchEvent(new Event("cart-updated"));
+  };
+};
 
   const hasResult = priceData && priceData.precio != null && priceData.stock > 0
 
@@ -166,12 +207,13 @@ export default function ProductConfigurator({ options }) {
 
       {/* CTA */}
       <button
-        disabled={!hasResult || loadingPrice}
+        onClick={handleAddToCart}
+        disabled={!hasResult || loadingPrice || adding} // Deshabilitar si está añadiendo
         className={`w-full py-3 rounded text-white font-medium transition
-          ${(!hasResult || loadingPrice) ? "bg-gray-400 cursor-not-allowed" : "bg-black hover:bg-gray-800"}
+          ${(!hasResult || loadingPrice || adding) ? "bg-gray-400 cursor-not-allowed" : "bg-black hover:bg-gray-800"}
         `}
       >
-        Afegir al carret
+        {adding ? "Afegint..." : "Afegir al carret"} 
       </button>
 
       {/* Debug útil mientras montas */}
