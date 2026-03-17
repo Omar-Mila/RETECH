@@ -6,6 +6,8 @@ import {
   useStripe,
   useElements,
 } from "@stripe/react-stripe-js";
+import Navbar from "../components/Navbar";
+import Footer from "../components/Footer";
 
 const stripePromise = loadStripe("pk_test_51SehVv68Ge0SylH5spiVqLpHaRCt8s3RsIiwyPi2VINaXKBYxbhDyzF6YThlNyVb0WHAp16SnJ5plSMoMxswIy8S00lVuCfPjV");
 const API = "http://127.0.0.1:8000";
@@ -356,15 +358,27 @@ export default function CartCheckoutPage() {
   const handleCheckout = async () => {
     setIntentLoading(true);
     setApiError(null);
+    
     try {
-      const data = await apiFetch("/checkout/intent", { method: "POST" });
-      if (data.client_secret) {
+      // 1. Inicializamos la protección CSRF
+      await fetch(`${API}/sanctum/csrf-cookie`, { credentials: 'include' });
+
+      // 2. Realizamos la petición real para crear el pago
+      // Usamos apiFetch porque ya tiene las credentials y headers configurados
+      const data = await apiFetch("/checkout/intent", { 
+        method: "POST" 
+      });
+
+      // 3. Procesamos la respuesta del servidor
+      if (data && data.client_secret) {
         setClientSecret(data.client_secret);
         setIntentTotal(data.amount);
       } else {
-        setApiError(data.message ?? "Error al iniciar el pago.");
+        // Si el error es "Unauthenticated", es que el middleware 'auth' falló
+        setApiError(data.message ?? "No se pudo iniciar el pago. ¿Has iniciado sesión?");
       }
-    } catch {
+    } catch (err) {
+      console.error("Error en checkout:", err);
       setApiError("Error de conexión con el servidor.");
     } finally {
       setIntentLoading(false);
@@ -382,12 +396,13 @@ export default function CartCheckoutPage() {
         @keyframes fadeIn { from { opacity:0; transform:translateY(8px); } to { opacity:1; transform:translateY(0); } }
         @keyframes spin { to { transform:rotate(360deg); } }
       `}</style>
+      <Navbar />
 
       <div style={{ minHeight:"100vh",background:"#f8fafc",padding:"32px 16px 64px" }}>
         <div style={{ maxWidth:1060,margin:"0 auto" }}>
 
           <div style={{ display:"flex",alignItems:"center",gap:12,marginBottom:28 }}>
-            <div style={{ width:38,height:38,background:"linear-gradient(135deg,#6366f1,#4f46e5)",borderRadius:11,display:"flex",alignItems:"center",justifyContent:"center",boxShadow:"0 4px 10px rgba(99,102,241,.3)" }}>
+            <div style={{ width:38,height:38,background:"#0f172a",borderRadius:11,display:"flex",alignItems:"center",justifyContent:"center",boxShadow:"0 4px 10px rgba(99,102,241,.3)" }}>
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.2">
                 <path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4z"/>
                 <line x1="3" y1="6" x2="21" y2="6"/>
@@ -460,6 +475,7 @@ export default function CartCheckoutPage() {
           )}
         </div>
       </div>
+      <Footer />
     </>
   );
 }

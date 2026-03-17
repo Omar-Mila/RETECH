@@ -180,16 +180,15 @@ class CheckoutApiController extends Controller
     // ── Helper ────────────────────────────────────────────────────────────────
     private function calcularTotal(array $carrito): float
     {
-        $ids     = array_keys($carrito);
+        $ids = array_keys($carrito);
         $moviles = Movil::whereIn('id', $ids)->get()->keyBy('id');
-        $total   = 0;
+        $total = 0;
 
         foreach ($carrito as $id => $row) {
             if ($moviles->has($id)) {
-                $total += $moviles[$id]->precio * $row['cantidad'];
+                $total += ($moviles[$id]->precio * 1.21) * $row['cantidad'];
             }
         }
-
-        return round($total * 1.21, 2); // subtotal + IVA 21%
+        return round($total, 2); 
     }
 }

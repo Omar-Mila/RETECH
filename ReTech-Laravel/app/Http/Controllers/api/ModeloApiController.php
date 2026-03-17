@@ -129,7 +129,8 @@ public function price(Request $request, $modelId)
             return response()->json([
                 'precio' => null,
                 'stock' => 0,
-                'movil_id' => null
+                'movil_id' => null,
+                'modelo_id' => null
             ]);
         }
 
@@ -137,6 +138,7 @@ public function price(Request $request, $modelId)
             'precio' => $movil->precio,
             'stock' => $movil->stock,
             'movil_id' => $movil->id,
+            'modelo_id' => $movil->modelo_id,
             'estado' => $movil->estado,
             'ram' => $movil->ram,
             'almacenamiento' => $movil->almacenamiento,

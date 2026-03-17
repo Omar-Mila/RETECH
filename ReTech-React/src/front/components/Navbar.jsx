@@ -16,25 +16,37 @@ const fmt = (n) =>
   new Intl.NumberFormat("es-ES", { style: "currency", currency: "EUR" }).format(n)
 
 function CartDropdown({ onClose }) {
-  const [items, setItems]     = useState([])
+  const [items, setItems] = useState([])
   const [loading, setLoading] = useState(true)
-  const navigate              = useNavigate()
+  const navigate = useNavigate()
 
-  useEffect(() => {
+  // Función para cargar los datos reales del carrito
+  const loadCartData = () => {
+    setLoading(true)
     apiFetch("/carrito")
-      .then((data) => setItems(data.items ?? []))
+      .then((data) => {
+        // Guardamos los items para listarlos
+        setItems(data.items ?? [])
+      })
       .catch(() => setItems([]))
       .finally(() => setLoading(false))
+  }
+
+  useEffect(() => {
+    loadCartData() // Carga al abrir
+    
+    // Si se añade algo mientras está abierto, que se refresque
+    window.addEventListener("cart-updated", loadCartData)
+    return () => window.removeEventListener("cart-updated", loadCartData)
   }, [])
 
   const handleRemove = async (movilId) => {
     await apiFetch(`/carrito/${movilId}`, { method: "DELETE" })
-    const data = await apiFetch("/carrito")
-    setItems(data.items ?? [])
+    window.dispatchEvent(new Event("cart-updated")) // Avisamos al Navbar
+    loadCartData() // Refrescamos esta lista
   }
 
-  const subtotal = items.reduce((s, i) => s + i.subtotal, 0)
-  const total    = subtotal * 1.21
+  const total = items.reduce((s, i) => s + (i.subtotal || 0), 0);
 
   return (
     <div style={{
@@ -45,12 +57,12 @@ function CartDropdown({ onClose }) {
     }}>
       <div style={{ padding: "14px 18px", borderBottom: "1px solid #f1f5f9", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
         <span style={{ fontWeight: 700, fontSize: 14, color: "#0f172a" }}>
-          🛒 Carrito {items.length > 0 && <span style={{ color: "#6366f1" }}>({items.reduce((s,i) => s+i.cantidad, 0)})</span>}
+          🛒 Carrito {items.length > 0 && <span style={{ color: "#6366f1" }}>({items.reduce((s, i) => s + i.cantidad, 0)})</span>}
         </span>
         <button onClick={onClose} style={{ background: "none", border: "none", cursor: "pointer", color: "#94a3b8", fontSize: 18 }}>×</button>
       </div>
 
-      <div style={{ maxHeight: 280, overflowY: "auto", padding: "8px 0" }}>
+      <div style={{ maxHeight: 350, overflowY: "auto", padding: "8px 0" }}>
         {loading ? (
           <div style={{ textAlign: "center", padding: 32, color: "#94a3b8", fontSize: 13 }}>Cargando…</div>
         ) : items.length === 0 ? (
@@ -60,27 +72,32 @@ function CartDropdown({ onClose }) {
           </div>
         ) : (
           items.map((item) => (
-            <div key={item.movil_id} style={{ display: "flex", alignItems: "center", gap: 10, padding: "10px 18px", borderBottom: "1px solid #f8fafc" }}>
-              <div style={{ width: 36, height: 36, borderRadius: 10, background: `${item.color_hex}22`, border: `2px solid ${item.color_hex}55`, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
-                <div style={{ width: 10, height: 10, borderRadius: "50%", background: item.color_hex }}/>
+            /* --- ESTA ES LA CARTA DEL PRODUCTO QUE ME PEDISTE --- */
+            <div key={item.movil_id} style={{ display: "flex", alignItems: "center", gap: 12, padding: "12px 18px", borderBottom: "1px solid #f8fafc" }}>
+              {/* Imagen del móvil */}
+              <div style={{ width: 48, height: 48, borderRadius: 8, background: "#f1f5f9", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, overflow: 'hidden' }}>
+                <img 
+                  src={item.imagen_url || `https://via.placeholder.com/48?text=Phone`} 
+                  style={{ width: '80%', height: '80%', objectFit: 'contain' }} 
+                  alt="movil"
+                />
               </div>
+              
+              {/* Info: Nombre, Precio y Unidades */}
               <div style={{ flex: 1, minWidth: 0 }}>
-                <p style={{ margin: 0, fontSize: 13, fontWeight: 600, color: "#0f172a", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
+                <p style={{ margin: 0, fontSize: 13, fontWeight: 700, color: "#0f172a", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
                   {item.marca} {item.modelo}
                 </p>
-                <p style={{ margin: 0, fontSize: 11, color: "#94a3b8" }}>{item.almacenamiento}GB · x{item.cantidad}</p>
+                <p style={{ margin: 0, fontSize: 12, color: "#4f46e5", fontWeight: 600 }}>
+                  {fmt(item.precio)} <span style={{ color: "#94a3b8", fontWeight: 400 }}>x{item.cantidad}</span>
+                </p>
               </div>
-              <div style={{ display: "flex", alignItems: "center", gap: 8, flexShrink: 0 }}>
-                <span style={{ fontSize: 13, fontWeight: 700, color: "#0f172a" }}>{fmt(item.subtotal)}</span>
-                <button onClick={() => handleRemove(item.movil_id)}
-                  style={{ background: "none", border: "none", cursor: "pointer", color: "#cbd5e1", lineHeight: 1, padding: 2 }}
-                  onMouseEnter={(e) => e.currentTarget.style.color = "#ef4444"}
-                  onMouseLeave={(e) => e.currentTarget.style.color = "#cbd5e1"}>
-                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
-                    <path d="M18 6L6 18M6 6l12 12"/>
-                  </svg>
-                </button>
-              </div>
+
+              {/* Botón borrar */}
+              <button onClick={() => handleRemove(item.movil_id)}
+                style={{ background: "#fee2e2", border: "none", cursor: "pointer", color: "#ef4444", width: 24, height: 24, borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 14 }}>
+                ×
+              </button>
             </div>
           ))
         )}
@@ -143,10 +160,18 @@ export default function Navbar() {
 
   // Contador del carrito al montar
   useEffect(() => {
-    apiFetch("/carrito")
-      .then((data) => setCartCount(data.total_items ?? 0))
-      .catch(() => {})
-  }, [])
+    const fetchCount = () => {
+      apiFetch("/carrito")
+        .then((data) => setCartCount(data.total_items ?? 0))
+        .catch(() => setCartCount(0));
+    };
+
+    // Escuchar cuando alguien añade algo al carrito
+    window.addEventListener("cart-updated", fetchCount);
+    fetchCount(); // Carga inicial
+
+    return () => window.removeEventListener("cart-updated", fetchCount);
+  }, []);
 
   // Cerrar carrito al click fuera
   useEffect(() => {

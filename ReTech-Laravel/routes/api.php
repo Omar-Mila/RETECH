@@ -5,6 +5,8 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Api\MarcaApiController;
 use App\Http\Controllers\Api\MovilApiController;
 use App\Http\Controllers\ProductosController;
+use App\Http\Controllers\api\ModeloApiController;
+use App\Http\Controllers\api\CarritoApiController;
 
 use App\Models\Marca;
 use App\Models\Modelo;
@@ -58,11 +60,6 @@ Route::get('/products/search', [ProductosController::class, 'search']);
 Route::get('/marcas', [MarcaApiController::class, 'index']);
 Route::get('/moviles', [MovilApiController::class, 'index']);
 
-Route::get('/moviles', function () {
-    return Movil::with(['modelo', 'color'])->get();
-});
-
-
 Route::get('/products/{id}', [MovilApiController::class, 'show']);
 
 //cerca de models
@@ -71,3 +68,16 @@ Route::get('/models/search', [ModeloApiController::class, 'search']);
 Route::get('/models/{id}', [ModeloApiController::class, 'show']);
 Route::get('/models/{model}/options', [ModeloApiController::class, 'options']);
 Route::get('/models/{model}/price', [ModeloApiController::class, 'price']);
+
+Route::middleware(['web'])->group(function () {
+    Route::get('/carrito', [CarritoApiController::class, 'index']);
+    Route::post('/carrito', [CarritoApiController::class, 'store']);
+    Route::patch('/carrito/{movil_id}', [CarritoApiController::class, 'update']);
+    Route::delete('/carrito/{movil_id}', [CarritoApiController::class, 'destroy']);
+    Route::delete('/carrito/vaciar', [CarritoApiController::class, 'clear']);
+});
+
+Route::prefix('checkout')->middleware(['web', 'auth:sanctum'])->group(function () {
+    Route::post('/intent',  [CheckoutApiController::class, 'createIntent']);
+    Route::post('/confirm', [CheckoutApiController::class, 'confirm']);
+});
