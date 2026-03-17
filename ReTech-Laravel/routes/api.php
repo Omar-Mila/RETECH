@@ -5,17 +5,13 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Api\MarcaApiController;
 use App\Http\Controllers\Api\MovilApiController;
 use App\Http\Controllers\ProductosController;
-use App\Http\Controllers\api\ModeloApiController;
 
-use App\Models\Movil;
 use App\Models\Marca;
 use App\Models\Modelo;
 use App\Models\SistemaOperativo;
-=========
 use App\Http\Controllers\Api\ModeloApiController;
 use App\Models\Movil;
 use Illuminate\Database\Eloquent\Model;
->>>>>>>>> Temporary merge branch 2
 use Illuminate\Support\Facades\Auth;
 use App\Http\Controllers\Api\CheckoutApiController;
 
@@ -62,8 +58,6 @@ Route::get('/products/search', [ProductosController::class, 'search']);
 Route::get('/marcas', [MarcaApiController::class, 'index']);
 Route::get('/moviles', [MovilApiController::class, 'index']);
 
-<<<<<<<<< Temporary merge branch 1
-=========
 Route::get('/moviles', function () {
     return Movil::with(['modelo', 'color'])->get();
 });
