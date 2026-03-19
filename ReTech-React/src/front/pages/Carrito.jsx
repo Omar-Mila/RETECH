@@ -12,12 +12,24 @@ import Footer from "../components/Footer";
 const stripePromise = loadStripe("pk_test_51SehVv68Ge0SylH5spiVqLpHaRCt8s3RsIiwyPi2VINaXKBYxbhDyzF6YThlNyVb0WHAp16SnJ5plSMoMxswIy8S00lVuCfPjV");
 const API = "http://127.0.0.1:8000";
 
-const apiFetch = (path, opts = {}) =>
-  fetch(`${API}/api${path}`, {
-    credentials: "include",
-    headers: { "Content-Type": "application/json", Accept: "application/json" },
-    ...opts,
-  }).then((r) => r.json());
+const apiFetch = async (path, opts = {}) => {
+    const response = await fetch(`${API}/api${path}`, {
+      credentials: "include",
+      headers: { 
+        "Content-Type": "application/json", 
+        "Accept": "application/json" 
+      },
+      ...opts,
+    });
+
+    // Si el servidor da error (401, 500, etc), lanzamos error antes de hacer .json()
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      throw new Error(errorData.message || `Error ${response.status}`);
+    }
+
+    return response.json();
+};
 
 const fmt = (n) =>
   new Intl.NumberFormat("es-ES", { style: "currency", currency: "EUR" }).format(n);
@@ -121,21 +133,33 @@ function PaymentForm({ total, onSuccess, onCancel }) {
   const [loading, setLoading] = useState(false);
 
   const handlePay = async () => {
-    if (!stripe || !elements) return;
+    if (!stripe || !elements) {
+      console.log("Stripe no listo:", { stripe, elements });
+      return;
+    }
     setLoading(true);
     setError(null);
-
     const { error: stripeError, paymentIntent } = await stripe.confirmPayment({
       elements,
       redirect: "if_required",
+        confirmParams: {
+          return_url: window.location.href,
+          payment_method_data: {
+            billing_details: {
+              address: {
+                country: "ES",
+              },
+            },
+          },
+        },
     });
-
+    console.log("Confirmando pago...", stripeError, paymentIntent);
     if (stripeError) {
       setError(stripeError.message);
       setLoading(false);
       return;
     }
-
+    console.log("Pago confirmado:", paymentIntent);
     if (paymentIntent?.status === "succeeded") {
       const res = await apiFetch("/checkout/confirm", {
         method: "POST",
@@ -379,7 +403,7 @@ export default function CartCheckoutPage() {
       }
     } catch (err) {
       console.error("Error en checkout:", err);
-      setApiError("Error de conexión con el servidor.");
+      setApiError(err.message || "Error desconocido: " + err);
     } finally {
       setIntentLoading(false);
     }

@@ -80,3 +80,8 @@ Route::prefix('checkout')->middleware(['web', 'auth:sanctum'])->group(function (
     Route::post('/intent',  [CheckoutApiController::class, 'createIntent']);
     Route::post('/confirm', [CheckoutApiController::class, 'confirm']);
 });
+
+Route::middleware('auth:sanctum')->group(function () {
+    Route::post('/checkout/intent', [CheckoutApiController::class, 'createIntent']);
+    Route::post('/checkout/confirm', [CheckoutApiController::class, 'confirm']);
+});
