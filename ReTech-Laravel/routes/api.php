@@ -7,11 +7,9 @@ use App\Http\Controllers\Api\MovilApiController;
 use App\Http\Controllers\ProductosController;
 use App\Http\Controllers\api\ModeloApiController;
 use App\Http\Controllers\api\CarritoApiController;
-
 use App\Models\Marca;
 use App\Models\Modelo;
 use App\Models\SistemaOperativo;
-use App\Http\Controllers\Api\ModeloApiController;
 use App\Models\Movil;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Auth;
@@ -29,6 +27,21 @@ use App\Http\Controllers\Api\CheckoutApiController;
 |
 */
 
+// Route::post('/login', function (Request $request) {
+//     $credentials = $request->validate([
+//         'email' => ['required', 'email'],
+//         'password' => ['required'],
+//     ]);
+
+//     if (!Auth::attempt($credentials)) {
+//         return response()->json(['message' => 'Credencials incorrectes'], 401);
+//     }
+
+//     $request->session()->regenerate();
+
+//     return response()->json(Auth::user());
+// })->withoutMiddleware(['throttle:api']);
+
 Route::post('/login', function (Request $request) {
     $credentials = $request->validate([
         'email' => ['required', 'email'],
@@ -41,8 +54,15 @@ Route::post('/login', function (Request $request) {
 
     $request->session()->regenerate();
 
-    return response()->json(Auth::user());
-})->withoutMiddleware(['throttle:api']);
+    $user = Auth::user();
+
+    return response()->json([
+        'id' => $user->id,
+        'name' => $user->name, // 👈 CLAVE
+        'email' => $user->email,
+        'role' => $user->role ?? 'user'
+    ]);
+});
 
 Route::post('/logout', function (Request $request) {
     Auth::logout();
