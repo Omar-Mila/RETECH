@@ -8,6 +8,8 @@ import Admin from "./admin/pages/Admin"
 import RequireAdmin from "./auth/RequireAdmin"
 import SearchResults from "./front/pages/SearchResults"
 import CartCheckoutPage from "./front/pages/Carrito";
+import UserProfile from "./front/pages/User/UserProfile";
+import OrdersPage from "./front/pages/User/OrdersPage";
 
 import ModelPage from "./front/pages/ModelPage"
 
@@ -37,6 +39,8 @@ export default function AppContent() {
       <Route path="/models/:id" element={<ModelPage />} />
 
       <Route path="/models/:id" element={<ModelPage />} />
+      <Route path="/perfil" element={<UserProfile />} />
+      <Route path="/mis-pedidos" element={<OrdersPage />} />
     </Routes>
   )
 }

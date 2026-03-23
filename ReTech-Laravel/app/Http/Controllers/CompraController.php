@@ -9,6 +9,7 @@ use App\Models\Movil;
 
 class CompraController extends Controller
 {
+
     public function registrarCompra(Request $request)
     {
         return DB::transaction(function () use ($request) {

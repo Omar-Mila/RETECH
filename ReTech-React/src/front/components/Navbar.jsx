@@ -15,35 +15,30 @@ const apiFetch = (path, opts = {}) =>
 const fmt = (n) =>
   new Intl.NumberFormat("es-ES", { style: "currency", currency: "EUR" }).format(n)
 
+// --- DROP-DOWN DEL CARRITO (TU DISEÑO ORIGINAL) ---
 function CartDropdown({ onClose }) {
   const [items, setItems] = useState([])
   const [loading, setLoading] = useState(true)
   const navigate = useNavigate()
 
-  // Función para cargar los datos reales del carrito
   const loadCartData = () => {
     setLoading(true)
     apiFetch("/carrito")
-      .then((data) => {
-        // Guardamos los items para listarlos
-        setItems(data.items ?? [])
-      })
+      .then((data) => { setItems(data.items ?? []) })
       .catch(() => setItems([]))
       .finally(() => setLoading(false))
   }
 
   useEffect(() => {
-    loadCartData() // Carga al abrir
-    
-    // Si se añade algo mientras está abierto, que se refresque
+    loadCartData()
     window.addEventListener("cart-updated", loadCartData)
     return () => window.removeEventListener("cart-updated", loadCartData)
   }, [])
 
   const handleRemove = async (movilId) => {
     await apiFetch(`/carrito/${movilId}`, { method: "DELETE" })
-    window.dispatchEvent(new Event("cart-updated")) // Avisamos al Navbar
-    loadCartData() // Refrescamos esta lista
+    window.dispatchEvent(new Event("cart-updated"))
+    loadCartData()
   }
 
   const total = items.reduce((s, i) => s + (i.subtotal || 0), 0);
@@ -72,32 +67,15 @@ function CartDropdown({ onClose }) {
           </div>
         ) : (
           items.map((item) => (
-            /* --- ESTA ES LA CARTA DEL PRODUCTO QUE ME PEDISTE --- */
             <div key={item.movil_id} style={{ display: "flex", alignItems: "center", gap: 12, padding: "12px 18px", borderBottom: "1px solid #f8fafc" }}>
-              {/* Imagen del móvil */}
               <div style={{ width: 48, height: 48, borderRadius: 8, background: "#f1f5f9", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, overflow: 'hidden' }}>
-                <img 
-                  src={item.imagen_url || `https://via.placeholder.com/48?text=Phone`} 
-                  style={{ width: '80%', height: '80%', objectFit: 'contain' }} 
-                  alt="movil"
-                />
+                <img src={item.imagen_url || `https://via.placeholder.com/48?text=Phone`} style={{ width: '80%', height: '80%', objectFit: 'contain' }} alt="movil" />
               </div>
-              
-              {/* Info: Nombre, Precio y Unidades */}
               <div style={{ flex: 1, minWidth: 0 }}>
-                <p style={{ margin: 0, fontSize: 13, fontWeight: 700, color: "#0f172a", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
-                  {item.marca} {item.modelo}
-                </p>
-                <p style={{ margin: 0, fontSize: 12, color: "#4f46e5", fontWeight: 600 }}>
-                  {fmt(item.precio)} <span style={{ color: "#94a3b8", fontWeight: 400 }}>x{item.cantidad}</span>
-                </p>
+                <p style={{ margin: 0, fontSize: 13, fontWeight: 700, color: "#0f172a", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{item.marca} {item.modelo}</p>
+                <p style={{ margin: 0, fontSize: 12, color: "#4f46e5", fontWeight: 600 }}>{fmt(item.precio)} <span style={{ color: "#94a3b8", fontWeight: 400 }}>x{item.cantidad}</span></p>
               </div>
-
-              {/* Botón borrar */}
-              <button onClick={() => handleRemove(item.movil_id)}
-                style={{ background: "#fee2e2", border: "none", cursor: "pointer", color: "#ef4444", width: 24, height: 24, borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 14 }}>
-                ×
-              </button>
+              <button onClick={() => handleRemove(item.movil_id)} style={{ background: "#fee2e2", border: "none", cursor: "pointer", color: "#ef4444", width: 24, height: 24, borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 14 }}>×</button>
             </div>
           ))
         )}
@@ -109,9 +87,7 @@ function CartDropdown({ onClose }) {
             <span style={{ fontSize: 12, color: "#64748b" }}>Total (IVA inc.)</span>
             <span style={{ fontSize: 16, fontWeight: 800, color: "#4f46e5" }}>{fmt(total)}</span>
           </div>
-          <button
-            onClick={() => { onClose(); navigate("/carrito") }}
-            style={{ width: "100%", padding: "11px", background: "linear-gradient(135deg,#6366f1,#4f46e5)", color: "#fff", border: "none", borderRadius: 10, fontSize: 13.5, fontWeight: 700, cursor: "pointer" }}>
+          <button onClick={() => { onClose(); navigate("/carrito") }} style={{ width: "100%", padding: "11px", background: "linear-gradient(135deg,#6366f1,#4f46e5)", color: "#fff", border: "none", borderRadius: 10, fontSize: 13.5, fontWeight: 700, cursor: "pointer" }}>
             Ir al carrito →
           </button>
         </div>
@@ -120,65 +96,71 @@ function CartDropdown({ onClose }) {
   )
 }
 
+// --- NUEVO DROP-DOWN DE USUARIO (MISMO ESTILO QUE EL CARRITO) ---
+function UserDropdown({ user, logout, onClose }) {
+  return (
+    <div style={{
+      position: "absolute", top: "calc(100% + 10px)", right: 0,
+      width: 240, background: "#fff", borderRadius: 16,
+      border: "1px solid #e2e8f0", boxShadow: "0 8px 32px rgba(15,23,42,.12)",
+      zIndex: 999, overflow: "hidden", padding: "8px 0"
+    }}>
+      <div style={{ padding: "12px 18px", background: "#f8fafc", marginBottom: 8, borderBottom: "1px solid #f1f5f9" }}>
+        <p style={{ margin: 0, fontSize: 13, fontWeight: 700, color: "#0f172a" }}>{user?.name}</p>
+        <p style={{ margin: 0, fontSize: 11, color: "#64748b" }}>{user?.email}</p>
+      </div>
+      <Link to="/perfil" onClick={onClose} className="dropdown-link">👤 El meu perfil</Link>
+      <Link to="/mis-pedidos" onClick={onClose} className="dropdown-link">📦 Les meves comandes</Link>
+      <div style={{ borderTop: "1px solid #f1f5f9", marginTop: 8, paddingTop: 8 }}>
+        <button onClick={() => { logout(); onClose(); }} style={{ width: "100%", textAlign: "left", padding: "10px 18px", background: "none", border: "none", color: "#ef4444", fontSize: 13, cursor: "pointer", fontWeight: 600 }}>
+          🚪 Tancar sessió
+        </button>
+      </div>
+    </div>
+  )
+}
+
 export default function Navbar() {
   const { user, isAuthenticated, logout, loading } = useAuth()
   const navigate = useNavigate()
 
-  // ── Buscador ──
-  const [query,         setQuery]         = useState("")
-  const [results,       setResults]       = useState([])
-  const [searchOpen,    setSearchOpen]    = useState(false)
+  const [query, setQuery] = useState("")
+  const [results, setResults] = useState([])
+  const [searchOpen, setSearchOpen] = useState(false)
   const [loadingSearch, setLoadingSearch] = useState(false)
 
-  // ── Carrito ──
-  const [cartOpen,  setCartOpen]  = useState(false)
+  const [cartOpen, setCartOpen] = useState(false)
+  const [userOpen, setUserOpen] = useState(false)
   const [cartCount, setCartCount] = useState(0)
   const cartRef = useRef(null)
+  const userRef = useRef(null)
 
-  // Buscador con debounce
   useEffect(() => {
-    if (query.length < 2) {
-      setResults([])
-      setSearchOpen(false)
-      return
-    }
+    if (query.length < 2) { setResults([]); setSearchOpen(false); return; }
     const timeout = setTimeout(async () => {
       setLoadingSearch(true)
       try {
         const data = await searchProducts(query)
-        setResults(data)
-        setSearchOpen(true)
-      } catch {
-        setResults([])
-        setSearchOpen(true)
-      } finally {
-        setLoadingSearch(false)
-      }
+        setResults(data); setSearchOpen(true)
+      } catch { setResults([]); setSearchOpen(true) } 
+      finally { setLoadingSearch(false) }
     }, 300)
     return () => clearTimeout(timeout)
   }, [query])
 
-  // Contador del carrito al montar
   useEffect(() => {
     const fetchCount = () => {
-      apiFetch("/carrito")
-        .then((data) => setCartCount(data.total_items ?? 0))
-        .catch(() => setCartCount(0));
+      apiFetch("/carrito").then((data) => setCartCount(data.total_items ?? 0)).catch(() => setCartCount(0));
     };
-
-    // Escuchar cuando alguien añade algo al carrito
     window.addEventListener("cart-updated", fetchCount);
-    fetchCount(); // Carga inicial
-
+    fetchCount();
     return () => window.removeEventListener("cart-updated", fetchCount);
   }, []);
 
-  // Cerrar carrito al click fuera
   useEffect(() => {
     const handler = (e) => {
-      if (cartRef.current && !cartRef.current.contains(e.target)) {
-        setCartOpen(false)
-      }
+      if (cartRef.current && !cartRef.current.contains(e.target)) setCartOpen(false)
+      if (userRef.current && !userRef.current.contains(e.target)) setUserOpen(false)
     }
     document.addEventListener("mousedown", handler)
     return () => document.removeEventListener("mousedown", handler)
@@ -186,78 +168,32 @@ export default function Navbar() {
 
   if (loading) return null
 
-  let buttons
-  if (!isAuthenticated) {
-    buttons = (
-      <div className="flex gap-3">
-        <button onClick={() => navigate("/login")} className="text-sm font-medium hover:underline">Iniciar sessió</button>
-        <button onClick={() => navigate("/register")} className="bg-black text-white px-4 py-2 rounded text-sm">Registre</button>
-      </div>
-    )
-  } else {
-    buttons = (
-      <div className="flex items-center gap-4">
-        <span className="text-sm">Hola, <strong>{user?.name}</strong></span>
-        {user?.role === "admin" && (
-          <button onClick={() => navigate("/admin")} className="text-sm font-medium hover:underline">
-            Admin - <strong>{user.name}</strong>
-          </button>
-        )}
-        <button onClick={logout} className="text-sm font-medium text-red-600 hover:underline">Tancar sessió</button>
-      </div>
-    )
-  }
-
   return (
     <header className="border-b">
       <div className="bg-white w-full flex items-center justify-between">
         <div className="px-6 py-4 flex items-center gap-6 w-full">
 
           {/* Logo */}
-          <div className="flex items-center gap-2 text-xl font-bold shrink-0">
+          <Link to="/" style={{ textDecoration: 'none', color: 'inherit' }} className="flex items-center gap-2 text-xl font-bold shrink-0">
             <div className="w-8 h-8 bg-black text-white flex items-center justify-center rounded">R</div>
             <span>ReTech</span>
-          </div>
+          </Link>
 
-          {/* Buscador con autocompletado */}
+          {/* Buscador */}
           <div className="flex-1">
             <div className="relative">
-              <input
-                type="text"
-                placeholder="Cerca productes..."
-                value={query}
-                onChange={(e) => setQuery(e.target.value)}
-                className="w-full rounded border-gray-300 pe-10 shadow-sm sm:text-sm"
-              />
+              <input type="text" placeholder="Cerca productes..." value={query} onChange={(e) => setQuery(e.target.value)}
+                className="w-full rounded border-gray-300 pe-10 shadow-sm sm:text-sm" />
               <span className="absolute inset-y-0 right-2 grid w-8 place-content-center">
-                  <button
-                      type="button"
-                      aria-label="Buscar"
-                      className="rounded-full p-1.5 text-gray-600 hover:bg-gray-100"
-                      onClick={() => {
-                        if (query.trim()) navigate(`/search?q=${encodeURIComponent(query.trim())}`)
-                      }}
-                    >
-                    🔍
-                  </button>             
+                  <button type="button" className="rounded-full p-1.5 text-gray-600 hover:bg-gray-100"
+                    onClick={() => { if (query.trim()) navigate(`/search?q=${encodeURIComponent(query.trim())}`) }}>🔍</button> 
               </span>
-
-              {/* Dropdown resultados búsqueda */}
               {searchOpen && (
                 <div className="absolute left-0 right-0 bg-white border mt-1 rounded shadow-lg z-50 text-sm">
-                  {loadingSearch && (
-                    <div className="px-4 py-2 text-gray-500">Buscando...</div>
-                  )}
-                  {!loadingSearch && results.length === 0 && (
-                    <div className="px-4 py-2 text-gray-400">No s'han trobat coincidències</div>
-                  )}
-                  {!loadingSearch && results.map((item) => (
-                    <Link
-                      key={item.id}
-                      to={`/models/${item.id}`}
-                      onClick={() => { setSearchOpen(false); setQuery("") }}
-                      className="px-4 py-2 hover:bg-gray-100 block"
-                    >
+                  {loadingSearch ? <div className="px-4 py-2 text-gray-500">Buscando...</div> : 
+                   results.length === 0 ? <div className="px-4 py-2 text-gray-400">No s'han trobat coincidències</div> :
+                   results.map((item) => (
+                    <Link key={item.id} to={`/models/${item.id}`} onClick={() => { setSearchOpen(false); setQuery("") }} className="px-4 py-2 hover:bg-gray-100 block no-underline text-gray-700">
                       {item.nombre}
                     </Link>
                   ))}
@@ -266,18 +202,33 @@ export default function Navbar() {
             </div>
           </div>
 
-          {/* Botones + carrito */}
           <div className="flex items-center gap-4 shrink-0">
-            {buttons}
+            {/* --- SECCIÓN LOGIN / USER --- */}
+            {!isAuthenticated ? (
+              <div className="flex gap-3">
+                <button onClick={() => navigate("/login")} className="text-sm font-medium hover:underline">Iniciar sessió</button>
+                <button onClick={() => navigate("/register")} className="bg-black text-white px-4 py-2 rounded text-sm">Registre</button>
+              </div>
+            ) : (
+              <div ref={userRef} style={{ position: "relative" }}>
+                <button onClick={() => setUserOpen(!userOpen)} 
+                  style={{ background: userOpen ? "#f1f5f9" : "none", border: "1px solid #e2e8f0", borderRadius: 10, padding: "8px 12px", cursor: "pointer", display: "flex", alignItems: "center", gap: 8 }}>
+                  <span style={{ fontSize: 13, fontWeight: 700 }}>{user?.name}</span>
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#0f172a" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                    <circle cx="12" cy="7" r="4"></circle>
+                  </svg>
+                </button>
+                {userOpen && <UserDropdown user={user} logout={logout} onClose={() => setUserOpen(false)} />}
+              </div>
+            )}
 
-            {/* Icono carrito */}
+            {/* --- SECCIÓN CARRITO --- */}
             <div ref={cartRef} style={{ position: "relative" }}>
               <button onClick={() => setCartOpen((v) => !v)}
                 style={{ position: "relative", background: cartOpen ? "#f1f5f9" : "none", border: "1px solid #e2e8f0", borderRadius: 10, padding: "8px 10px", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center" }}>
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#0f172a" strokeWidth="2">
-                  <path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4z"/>
-                  <line x1="3" y1="6" x2="21" y2="6"/>
-                  <path d="M16 10a4 4 0 01-8 0"/>
+                  <path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 01-8 0"/>
                 </svg>
                 {cartCount > 0 && (
                   <span style={{ position: "absolute", top: -6, right: -6, background: "linear-gradient(135deg,#6366f1,#4f46e5)", color: "#fff", fontSize: 10, fontWeight: 700, width: 18, height: 18, borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center", border: "2px solid #fff" }}>
@@ -294,14 +245,29 @@ export default function Navbar() {
 
       <nav className="bg-gray-100 w-full">
         <div className="px-6">
-          <ul className="flex gap-6 py-3 text-sm font-medium">
-            <li><Link to="/">Inici</Link></li>
-            <li><Link to="/mobils">Mòbils</Link></li>
-            <li><Link to="/tablets">Tablets</Link></li>
-            <li><Link to="/accessoris">Accessoris</Link></li>
+          <ul className="flex gap-6 py-3 text-sm font-medium list-none m-0">
+            <li><Link to="/" className="text-gray-700 no-underline">Inici</Link></li>
+            <li><Link to="/mobils" className="text-gray-700 no-underline">Mòbils</Link></li>
+            <li><Link to="/tablets" className="text-gray-700 no-underline">Tablets</Link></li>
+            <li><Link to="/accessoris" className="text-gray-700 no-underline">Accessoris</Link></li>
           </ul>
         </div>
       </nav>
+
+      {/* Estilos locales para los links del dropdown */}
+      <style>{`
+        .dropdown-link {
+          display: block;
+          padding: 10px 18px;
+          text-decoration: none;
+          color: #334155;
+          font-size: 13px;
+          font-weight: 500;
+        }
+        .dropdown-link:hover {
+          background-color: #f8fafc;
+        }
+      `}</style>
     </header>
   )
 }

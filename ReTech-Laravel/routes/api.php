@@ -2,11 +2,13 @@
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
-use App\Http\Controllers\Api\MarcaApiController;
-use App\Http\Controllers\Api\MovilApiController;
+use App\Http\Controllers\api\MarcaApiController;
+use App\Http\Controllers\api\MovilApiController;
 use App\Http\Controllers\ProductosController;
 use App\Http\Controllers\api\ModeloApiController;
 use App\Http\Controllers\api\CarritoApiController;
+use App\Http\Controllers\CompraController;
+use App\Http\Controllers\api\PedidosApiController;
 
 use App\Models\Movil;
 use App\Models\Marca;
@@ -81,7 +83,4 @@ Route::prefix('checkout')->middleware(['web', 'auth:sanctum'])->group(function (
     Route::post('/confirm', [CheckoutApiController::class, 'confirm']);
 });
 
-Route::middleware('auth:sanctum')->group(function () {
-    Route::post('/checkout/intent', [CheckoutApiController::class, 'createIntent']);
-    Route::post('/checkout/confirm', [CheckoutApiController::class, 'confirm']);
-});
+Route::middleware('auth:sanctum')->get('/pedidos', [PedidosApiController::class, 'index']);

@@ -80,10 +80,19 @@ export default function ProductConfigurator({ options }) {
   }, [openAdvanced, params, id])
 
   const handleAddToCart = async () => {
-    if (!priceData?.movil_id) return;
+    if (!priceData?.movil_id) {
+      alert("Selecciona una combinació válida");
+      return;
+    }
 
     setAdding(true);
     try {
+      // 1. OBLIGATORIO en Laravel 9/Sanctum para proyectos separados:
+      // Pedimos permiso para establecer la sesión/cookies
+      await fetch("http://127.0.0.1:8000/sanctum/csrf-cookie", { 
+        credentials: "include" 
+      });
+
       const response = await fetch("http://127.0.0.1:8000/api/carrito", {
         method: "POST",
         headers: {
@@ -99,28 +108,18 @@ export default function ProductConfigurator({ options }) {
 
       if (response.ok) {
         window.dispatchEvent(new Event("cart-updated"));
-        window.scrollTo({
-        top: 0,
-        behavior: "smooth" // Esto hace que suba con un deslizamiento suave, no de golpe
-      });
+        window.scrollTo({ top: 0, behavior: "smooth" });
       } else {
         const error = await response.json();
-        alert(error.message || "Error al añadir");
+        alert(error.message || "Error al afegir");
       }
     } catch (err) {
-      console.error("Error de conexión:", err);
-      alert("Error de conexió amb el servidor");
+      console.error("Error de conexió:", err);
+      alert("No se ha pogut connectar con el servidor");
     } finally {
       setAdding(false);
     }
-  const handleRemove = async (movilId) => {
-    await apiFetch(`/carrito/${movilId}`, { method: "DELETE" });
-    const data = await apiFetch("/carrito");
-    setItems(data.items ?? []);
-    
-    window.dispatchEvent(new Event("cart-updated"));
   };
-};
 
   const hasResult = priceData && priceData.precio != null && priceData.stock > 0
 
