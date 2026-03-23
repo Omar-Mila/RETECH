@@ -99,7 +99,10 @@ export default function ProductConfigurator({ options }) {
 
       if (response.ok) {
         window.dispatchEvent(new Event("cart-updated"));
-        alert("S'ha afegit al carret correctament!");
+        window.scrollTo({
+        top: 0,
+        behavior: "smooth" // Esto hace que suba con un deslizamiento suave, no de golpe
+      });
       } else {
         const error = await response.json();
         alert(error.message || "Error al añadir");
