@@ -85,6 +85,5 @@ Route::prefix('checkout')->middleware(['web', 'auth:sanctum'])->group(function (
 });
 
 Route::middleware('auth:sanctum')->group(function () {
-    Route::get('/pedidos', [PedidosApiController::class, 'index']);
-    Route::post('/registrar-compra', [CompraController::class, 'registrarCompra']);
+    Route::get('/compras', [CompraController::class, 'index']);
 });

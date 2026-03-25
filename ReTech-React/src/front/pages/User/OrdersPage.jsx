@@ -8,10 +8,9 @@ export default function OrdersPage() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-  // Solo disparamos el fetch si tenemos la API definida
   const fetchOrders = async () => {
       try {
-        const response = await fetch(`${API}/api/pedidos`, {
+        const response = await fetch(`${API}/api/compras`, {
           credentials: "include",
           headers: {
             "Accept": "application/json",

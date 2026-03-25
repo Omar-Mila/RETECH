@@ -104,9 +104,9 @@ export default function ProductConfigurator({ options }) {
           "Content-Type": "application/json",
           "Accept": "application/json",
           "X-Requested-With": "XMLHttpRequest",
-          "X-XSRF-TOKEN": decodeURIComponent(xsrfToken || ""), // <--- CLAVE PARA EL ERROR 419
+          "X-XSRF-TOKEN": decodeURIComponent(xsrfToken || ""),
         },
-        credentials: "include", // <--- CLAVE PARA MANTENER LA SESIÓN DE OMAR
+        credentials: "include",
         body: JSON.stringify({
           movil_id: priceData.movil_id,
           cantidad: 1,
@@ -116,9 +116,6 @@ export default function ProductConfigurator({ options }) {
       if (response.ok) {
         // Si el Navbar escucha este evento, se actualizará el numerito del carrito
         window.dispatchEvent(new Event("cart-updated"));
-        
-        // Feedback visual (puedes usar un toast aquí)
-        alert("S'ha afegit al carret!"); 
         window.scrollTo({ top: 0, behavior: "smooth" });
       } else {
         const error = await response.json();

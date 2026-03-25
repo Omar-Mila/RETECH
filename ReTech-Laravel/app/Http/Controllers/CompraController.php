@@ -46,4 +46,21 @@ class CompraController extends Controller
             ], 201);
         });
     }
+
+    public function index(Request $request) {
+        try {
+            $user = $request->user();
+            if (!$user) {
+                return response()->json(['message' => 'Usuario no encontrado'], 401);
+            }
+            $compras = \App\Models\Compra::where('user_id', $user->id)
+                        ->with('movil.modelo')
+                        ->orderBy('created_at', 'desc')
+                        ->get();
+
+            return response()->json($compras);
+        } catch (\Exception $e) {
+            return response()->json(['error' => $e->getMessage()], 500);
+        }
+    }
 }

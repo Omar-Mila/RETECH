@@ -62,4 +62,8 @@ class User extends Authenticatable implements FilamentUser
     {
         return $this->role === 'admin';
     }
+    
+    public function compras() {
+        return $this->hasMany(Compra::class, 'user_id');
+    }
 }
