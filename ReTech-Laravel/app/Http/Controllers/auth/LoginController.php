@@ -22,39 +22,40 @@ class LoginController extends Controller
             'password' => 'required'
         ]);
 
+        // 1. Intentamos el login
         if (Auth::attempt($request->only('email', 'password'))) {
+            // 2. IMPORTANTE: Limpiar cualquier rastro de sesión anterior
             $request->session()->regenerate();
-
             $user = Auth::user();
 
-            if ($user->email === 'admin@retech.com') {
-                return redirect()->route('admin.dashboard');
-            }
-
-            if ($user->empresa()->exists()) {
-                return redirect()->route('productos.index');
-            }
-
-            if ($user->cliente()->exists()) {
-                return redirect()->route('productos.index');
-            }
-
-            return redirect()->route('productos.index');
+            // 3. Devolvemos SOLO JSON. React decidirá a dónde ir.
+            return response()->json([
+                'authenticated' => true,
+                'user' => [
+                    'id'    => $user->id,
+                    'name'  => $user->name,
+                    'email' => $user->email,
+                    'role'  => $user->role
+                ]
+            ]);
         }
 
-        return back()->withErrors([
-            'email' => 'Credenciales incorrectas'
-        ]);
+        return response()->json(['message' => 'Credenciales incorrectas'], 401);
     }
 
     public function logout(Request $request)
     {
-        Auth::logout();
+        Auth::guard('web')->logout();
 
         $request->session()->invalidate();
         $request->session()->regenerateToken();
 
-        return redirect()->route('login');
+        // IMPORTANTE: Devolver JSON para que React sepa que ha terminado
+        if ($request->wantsJson() || $request->ajax()) {
+            return response()->json(['message' => 'Logged out']);
+        }
+
+        return redirect('/login');
     }
 
 }

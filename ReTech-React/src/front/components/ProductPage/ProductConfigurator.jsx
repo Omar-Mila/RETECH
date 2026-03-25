@@ -87,19 +87,26 @@ export default function ProductConfigurator({ options }) {
 
     setAdding(true);
     try {
-      // 1. OBLIGATORIO en Laravel 9/Sanctum para proyectos separados:
-      // Pedimos permiso para establecer la sesión/cookies
-      await fetch("http://127.0.0.1:8000/sanctum/csrf-cookie", { 
+      // 1. Obtener la cookie de protección
+      await fetch("http://localhost:8000/sanctum/csrf-cookie", { 
         credentials: "include" 
       });
 
-      const response = await fetch("http://127.0.0.1:8000/api/carrito", {
+      // 2. Extraer el token de las cookies del navegador (necesario para POST)
+      const xsrfToken = document.cookie
+        .split("; ")
+        .find((row) => row.startsWith("XSRF-TOKEN="))
+        ?.split("=")[1];
+
+      const response = await fetch("http://localhost:8000/api/carrito", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
           "Accept": "application/json",
+          "X-Requested-With": "XMLHttpRequest",
+          "X-XSRF-TOKEN": decodeURIComponent(xsrfToken || ""), // <--- CLAVE PARA EL ERROR 419
         },
-        credentials: "include",
+        credentials: "include", // <--- CLAVE PARA MANTENER LA SESIÓN DE OMAR
         body: JSON.stringify({
           movil_id: priceData.movil_id,
           cantidad: 1,
@@ -107,7 +114,11 @@ export default function ProductConfigurator({ options }) {
       });
 
       if (response.ok) {
+        // Si el Navbar escucha este evento, se actualizará el numerito del carrito
         window.dispatchEvent(new Event("cart-updated"));
+        
+        // Feedback visual (puedes usar un toast aquí)
+        alert("S'ha afegit al carret!"); 
         window.scrollTo({ top: 0, behavior: "smooth" });
       } else {
         const error = await response.json();
@@ -115,7 +126,7 @@ export default function ProductConfigurator({ options }) {
       }
     } catch (err) {
       console.error("Error de conexió:", err);
-      alert("No se ha pogut connectar con el servidor");
+      alert("No se ha pogut connectar amb el servidor");
     } finally {
       setAdding(false);
     }

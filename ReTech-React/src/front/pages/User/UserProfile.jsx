@@ -40,14 +40,6 @@ export default function UserProfile() {
               </div>
             </section>
 
-            <section>
-              <label style={{ fontSize: 11, color: "#94a3b8", textTransform: "uppercase", fontWeight: 800, letterSpacing: "0.05em" }}>Rol d'usuari</label>
-              <div style={{ marginTop: 6 }}>
-                <span style={{ padding: "6px 12px", background: "#e0e7ff", color: "#4338ca", borderRadius: 20, fontSize: 12, fontWeight: 700 }}>
-                  {user?.role === 'admin' ? 'Administrador' : 'Client Standard'}
-                </span>
-              </div>
-            </section>
           </div>
         </div>
       </div>

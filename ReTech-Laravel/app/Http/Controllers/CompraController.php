@@ -6,10 +6,11 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use App\Models\Compra;
 use App\Models\Movil;
+use Illuminate\Support\Facades\Auth;
 
 class CompraController extends Controller
 {
-
+    
     public function registrarCompra(Request $request)
     {
         return DB::transaction(function () use ($request) {
@@ -33,7 +34,7 @@ class CompraController extends Controller
             }
 
             $compra = Compra::create([
-                'cliente_user_id' => $request->cliente_user_id,
+                'cliente_user_id' => Auth::id(),
                 'items'           => $items,
                 'precio_total'    => $precioTotalAcumulado,
                 'metodo_pago'     => $request->metodo_pago,

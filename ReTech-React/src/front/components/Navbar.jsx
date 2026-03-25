@@ -3,7 +3,7 @@ import { useAuth } from "../../auth/AuthContext"
 import { useNavigate, Link } from "react-router-dom"
 import { searchProducts } from "../../services/searchService"
 
-const API = "http://127.0.0.1:8000"
+const API = "http://localhost:8000"
 
 const apiFetch = (path, opts = {}) =>
   fetch(`${API}/api${path}`, {

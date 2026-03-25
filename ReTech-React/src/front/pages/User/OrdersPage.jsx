@@ -1,34 +1,39 @@
 import { useState, useEffect } from "react";
 import Navbar from "../../components/Navbar";
 
-const API = "http://127.0.0.1:8000";
+const API = "http://localhost:8000";
 
 export default function OrdersPage() {
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // IMPORTANTE: Asegúrate de que el usuario esté logueado antes de entrar aquí
-    fetch(`${API}/api/pedidos`, {
-      credentials: "include", 
-      headers: { 
-        "Accept": "application/json",
-        "Content-Type": "application/json"
+  // Solo disparamos el fetch si tenemos la API definida
+  const fetchOrders = async () => {
+      try {
+        const response = await fetch(`${API}/api/pedidos`, {
+          credentials: "include",
+          headers: {
+            "Accept": "application/json",
+            "Content-Type": "application/json"
+          }
+        });
+
+        if (response.ok) {
+          const data = await response.json();
+          setOrders(data);
+        } else {
+          console.error("Error en la respuesta:", response.status);
+          setOrders([]);
+        }
+      } catch (error) {
+        console.error("Error de conexión:", error);
+      } finally {
+        setLoading(false);
       }
-    })
-    .then(r => {
-      if (r.status === 401) throw new Error("No estas logueado");
-      return r.json();
-    })
-    .then(data => {
-      // data ahora viene del PedidosApiController
-      setOrders(Array.isArray(data) ? data : []);
-    })
-    .catch((err) => {
-      console.error("Error cargando pedidos:", err);
-      setOrders([]);
-    })
-    .finally(() => setLoading(false));
+    };
+
+    fetchOrders();
   }, []);
 
   const fmt = (n) => new Intl.NumberFormat("es-ES", { style: "currency", currency: "EUR" }).format(n);
