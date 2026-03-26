@@ -49,7 +49,8 @@ export function AuthProvider({ children }) {
         }
       }
     } catch (error) {
-      alert("Error de login: " + error.message);
+      console.log("Error de login: " + error.message);
+      throw error;
     }
   };
 
@@ -87,6 +88,7 @@ export function AuthProvider({ children }) {
     <AuthContext.Provider
       value={{
         user,
+        setUser,
         loading,
         isAuthenticated: !!user,
         login,

@@ -109,8 +109,8 @@ function UserDropdown({ user, logout, onClose }) {
         <p style={{ margin: 0, fontSize: 13, fontWeight: 700, color: "#0f172a" }}>{user?.name}</p>
         <p style={{ margin: 0, fontSize: 11, color: "#64748b" }}>{user?.email}</p>
       </div>
-      <Link to="/perfil" onClick={onClose} className="dropdown-link">👤 El meu perfil</Link>
-      <Link to="/mis-pedidos" onClick={onClose} className="dropdown-link">📦 Les meves comandes</Link>
+      <Link to="/perfil" onClick={onClose} className="dropdown-link">👤 Mi perfil</Link>
+      <Link to="/mis-pedidos" onClick={onClose} className="dropdown-link">📦 Mis comandes</Link>
       <div style={{ borderTop: "1px solid #f1f5f9", marginTop: 8, paddingTop: 8 }}>
         <button onClick={() => { logout(); onClose(); }} style={{ width: "100%", textAlign: "left", padding: "10px 18px", background: "none", border: "none", color: "#ef4444", fontSize: 13, cursor: "pointer", fontWeight: 600 }}>
           🚪 Tancar sessió
@@ -182,8 +182,13 @@ export default function Navbar() {
           {/* Buscador */}
           <div className="flex-1">
             <div className="relative">
-              <input type="text" placeholder="Cerca productes..." value={query} onChange={(e) => setQuery(e.target.value)}
-                className="w-full rounded border-gray-300 pe-10 shadow-sm sm:text-sm" />
+              <input 
+                type="text" 
+                placeholder="Cerca productes..." 
+                value={query} 
+                onChange={(e) => setQuery(e.target.value)}
+                className="w-full rounded border-gray-300 ps-4 py-2 pe-12 shadow-sm sm:text-sm focus:ring-2 focus:black focus:border-black"
+              />
               <span className="absolute inset-y-0 right-2 grid w-8 place-content-center">
                   <button type="button" className="rounded-full p-1.5 text-gray-600 hover:bg-gray-100"
                     onClick={() => { if (query.trim()) navigate(`/search?q=${encodeURIComponent(query.trim())}`) }}>🔍</button> 

@@ -10,10 +10,17 @@ use App\Http\Controllers\Api\CarritoApiController;
 use App\Http\Controllers\CompraController;
 use App\Http\Controllers\Api\PedidosApiController;
 use App\Http\Controllers\Api\CheckoutApiController;
+use App\Http\Controllers\ClienteController;
+use App\Http\Controllers\Auth\RegisterController;
+use App\Http\Controllers\Auth\LoginController;
 
 use App\Models\Movil;
 use App\Models\Marca;
 use App\Models\Modelo;
+use App\Models\Producto;
+use App\Models\Compra;
+use App\Models\Pedido;
+use App\Models\Cliente;
 use App\Models\SistemaOperativo;
 
 use Illuminate\Support\Facades\Auth;
@@ -54,8 +61,28 @@ Route::middleware(['web'])->group(function () {
 });
 
 Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
-    return $request->user();
+    return $request->user()->load('cliente');
 });
+
+Route::middleware('auth:sanctum')->put('/user/cliente', function (Request $request) {
+    $user = $request->user();
+    $data = $request->validate([
+        'nombre'    => 'nullable|string|max:100',
+        'apellidos' => 'nullable|string|max:100',
+        'nif'       => 'nullable|string|max:20',
+        'direccion' => 'nullable|string|max:255',
+        'telefono'  => 'nullable|string|max:20',
+    ]);
+
+    $user->cliente()->updateOrCreate(
+        ['user_id' => $user->id],
+        $data
+    );
+
+    return $user->load('cliente');
+});
+
+Route::post('/register', [RegisterController::class, 'store']);
 
 Route::get('/products/search', [ProductosController::class, 'search']);
 Route::get('/marcas', [MarcaApiController::class, 'index']);
