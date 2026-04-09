@@ -32,11 +32,9 @@ export default function Register() {
         body: JSON.stringify({ name, email, password }),
       });
 
-      // Leemos la respuesta como JSON directamente
       const data = await response.json();
 
       if (!response.ok) {
-        // Aquí es donde aparecerá el error de la base de datos
         throw new Error(data.message || "Error desconegut al servidor");
       }
 

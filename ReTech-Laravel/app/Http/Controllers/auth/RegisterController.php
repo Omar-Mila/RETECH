@@ -16,7 +16,7 @@ class RegisterController extends Controller
         $request->validate([
             'name'     => 'required|string|max:255',
             'email'    => 'required|string|email|max:255|unique:users',
-            'password' => 'required|string|min:8',
+            'password' => 'required|string',
         ]);
 
         try {
@@ -30,13 +30,6 @@ class RegisterController extends Controller
                     'role'     => 'cliente', 
                 ]);
 
-                // 2. Crear Cliente
-                // Solo enviamos nombre y user_id. 
-                // Si esto falla, el error dirá exactamente qué columna falta.
-                Cliente::create([
-                    'user_id' => $user->id,
-                    'nombre'  => $request->name,
-                ]);
 
                 return response()->json([
                     'status'  => 'success',
