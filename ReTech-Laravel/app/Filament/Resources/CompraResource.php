@@ -20,6 +20,7 @@ class CompraResource extends Resource
     public static function form(Form $form): Form
     {
         return $form
+            
             ->schema([
                 Forms\Components\Section::make('Cabecera del Pedido')
                     ->schema([
@@ -50,15 +51,7 @@ class CompraResource extends Resource
                             ->prefix('€')
                             ->disabled()
                             ->dehydrated()
-                            ->placeholder(function (callable $get, callable $set) {
-                                $items = $get('items') ?? [];
-                                $total = 0;
-                                foreach ($items as $item) {
-                                    $total += (float)($item['precio_unitario'] ?? 0) * (int)($item['cantidad'] ?? 1);
-                                }
-                                $set('precio_total', $total);
-                                return $total;
-                            }),
+                            ->default(0),
 
                         // ── NUEVO: intent de Stripe (solo lectura) ──────────
                         Forms\Components\TextInput::make('stripe_intent')
@@ -75,6 +68,24 @@ class CompraResource extends Resource
                         Forms\Components\Repeater::make('items')
                             ->label('Productos en el carrito')
                             ->reactive()
+                            ->afterStateUpdated(function (callable $get, callable $set) {
+                                $items = $get('items') ?? [];
+                                $total = 0;
+                                foreach ($items as $item) {
+                                    $total += (float)($item['precio'] ?? 0) * (int)($item['cantidad'] ?? 1);
+                                }
+                                $set('precio_total', $total);
+                            })
+                            ->afterStateHydrated(function ($component, $state) {
+                                if (is_string($state)) {
+                                    $decoded = json_decode($state, true) ?? [];
+                                    $component->state(array_map(function ($item) {
+                                        $item['precio'] = (float) ($item['precio'] ?? 0);
+                                        $item['cantidad'] = (int) ($item['cantidad'] ?? 1);
+                                        return $item;
+                                    }, $decoded));
+                                }
+                            })
                             ->schema([
                                 Forms\Components\Select::make('movil_id')
                                     ->label('Móvil')
@@ -96,12 +107,16 @@ class CompraResource extends Resource
                                     ->reactive()
                                     ->columnSpan(1),
 
-                                Forms\Components\TextInput::make('precio_unitario')
+                                Forms\Components\TextInput::make('precio')
                                     ->label('Precio/u')
                                     ->numeric()
                                     ->prefix('€')
                                     ->required()
                                     ->reactive()
+                                    ->dehydrated()
+                                    ->afterStateHydrated(function ($component, $state) {
+                                        $component->state((float) $state);
+                                    })
                                     ->columnSpan(2),
                             ])
                             ->columns(6)
