@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api;
 use Illuminate\Http\Request;
 use App\Models\Compra;
 use Illuminate\Support\Facades\Auth;
+use App\Http\Controllers\Controller;
 
 class PedidosApiController extends Controller
 {

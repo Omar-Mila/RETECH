@@ -53,8 +53,7 @@ class CompraController extends Controller
             if (!$user) {
                 return response()->json(['message' => 'Usuario no encontrado'], 401);
             }
-            $compras = \App\Models\Compra::where('user_id', $user->id)
-                        ->with('movil.modelo')
+            $compras = Compra::where('cliente_user_id', $user->id)
                         ->orderBy('created_at', 'desc')
                         ->get();
 
