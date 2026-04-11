@@ -35,4 +35,11 @@ class Compra extends Model{
             }
         });
     }
+    public function getItemsAttribute($value)
+    {
+        if (is_string($value)) {
+            return json_decode($value, true) ?? [];
+        }
+        return $value;
+    }
 }

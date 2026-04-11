@@ -5,15 +5,25 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Api\MarcaApiController;
 use App\Http\Controllers\Api\MovilApiController;
 use App\Http\Controllers\ProductosController;
-use App\Http\Controllers\api\ModeloApiController;
-use App\Http\Controllers\api\CarritoApiController;
+use App\Http\Controllers\Api\ModeloApiController;
+use App\Http\Controllers\Api\CarritoApiController;
+use App\Http\Controllers\CompraController;
+use App\Http\Controllers\Api\PedidosApiController;
+use App\Http\Controllers\Api\CheckoutApiController;
+use App\Http\Controllers\ClienteController;
+use App\Http\Controllers\Auth\RegisterController;
+use App\Http\Controllers\Auth\LoginController;
+
 use App\Models\Marca;
 use App\Models\Modelo;
+use App\Models\Producto;
+use App\Models\Compra;
+use App\Models\Pedido;
+use App\Models\Cliente;
 use App\Models\SistemaOperativo;
 use App\Models\Movil;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Auth;
-use App\Http\Controllers\Api\CheckoutApiController;
 
 
 /*
@@ -27,54 +37,52 @@ use App\Http\Controllers\Api\CheckoutApiController;
 |
 */
 
-// Route::post('/login', function (Request $request) {
-//     $credentials = $request->validate([
-//         'email' => ['required', 'email'],
-//         'password' => ['required'],
-//     ]);
+Route::middleware(['web'])->group(function () {
+    Route::post('/login', function (Request $request) {
+        $credentials = $request->validate([
+            'email' => ['required', 'email'],
+            'password' => ['required'],
+        ]);
 
-//     if (!Auth::attempt($credentials)) {
-//         return response()->json(['message' => 'Credencials incorrectes'], 401);
-//     }
+        if (Auth::attempt($credentials)) {
+            $request->session()->regenerate();
+            return response()->json(Auth::user());
+        }
 
-//     $request->session()->regenerate();
-
-//     return response()->json(Auth::user());
-// })->withoutMiddleware(['throttle:api']);
-
-Route::post('/login', function (Request $request) {
-    $credentials = $request->validate([
-        'email' => ['required', 'email'],
-        'password' => ['required'],
-    ]);
-
-    if (!Auth::attempt($credentials)) {
         return response()->json(['message' => 'Credencials incorrectes'], 401);
-    }
+    });
 
-    $request->session()->regenerate();
+    Route::post('/logout', function (Request $request) {
+        Auth::guard('web')->logout();
+        $request->session()->invalidate();
+        $request->session()->regenerateToken();
+        return response()->json(['message' => 'Logout OK']);
+    });
+});
 
-    $user = Auth::user();
+Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
+    return $request->user()->load('cliente');
+});
 
-    return response()->json([
-        'id' => $user->id,
-        'name' => $user->name, // 👈 CLAVE
-        'email' => $user->email,
-        'role' => $user->role ?? 'user'
+Route::middleware('auth:sanctum')->put('/user/cliente', function (Request $request) {
+    $user = $request->user();
+    $data = $request->validate([
+        'nombre'    => 'nullable|string|max:100',
+        'apellidos' => 'nullable|string|max:100',
+        'nif'       => 'nullable|string|max:20',
+        'direccion' => 'nullable|string|max:255',
+        'telefono'  => 'nullable|string|max:20',
     ]);
+
+    $user->cliente()->updateOrCreate(
+        ['user_id' => $user->id],
+        $data
+    );
+
+    return $user->load('cliente');
 });
 
-Route::post('/logout', function (Request $request) {
-    Auth::logout();
-    $request->session()->invalidate();
-    $request->session()->regenerateToken();
-
-    return response()->json(['message' => 'Logout OK']);
-});
-
-Route::get('/user', function (Request $request) {
-    return response()->json($request->user());
-});
+Route::post('/register', [RegisterController::class, 'store']);
 
 Route::get('/products/search', [ProductosController::class, 'search']);
 Route::get('/marcas', [MarcaApiController::class, 'index']);
@@ -89,7 +97,8 @@ Route::get('/models/{id}', [ModeloApiController::class, 'show']);
 Route::get('/models/{model}/options', [ModeloApiController::class, 'options']);
 Route::get('/models/{model}/price', [ModeloApiController::class, 'price']);
 
-Route::middleware(['web'])->group(function () {
+
+Route::middleware(['auth:sanctum'])->group(function () {
     Route::get('/carrito', [CarritoApiController::class, 'index']);
     Route::post('/carrito', [CarritoApiController::class, 'store']);
     Route::patch('/carrito/{movil_id}', [CarritoApiController::class, 'update']);
@@ -103,10 +112,5 @@ Route::prefix('checkout')->middleware(['web', 'auth:sanctum'])->group(function (
 });
 
 Route::middleware('auth:sanctum')->group(function () {
-    Route::post('/checkout/intent', [CheckoutApiController::class, 'createIntent']);
-    Route::post('/checkout/confirm', [CheckoutApiController::class, 'confirm']);
+    Route::get('/compras', [CompraController::class, 'index']);
 });
-
-//imagenes de modelos
-Route::post('/models/upload-image', [ModeloApiController::class, 'uploadImage']);
-Route::get('/models/{id}/images', [ModeloApiController::class, 'images']);

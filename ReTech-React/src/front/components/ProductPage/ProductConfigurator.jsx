@@ -80,15 +80,31 @@ export default function ProductConfigurator({ options }) {
   }, [openAdvanced, params, id])
 
   const handleAddToCart = async () => {
-    if (!priceData?.movil_id) return;
+    if (!priceData?.movil_id) {
+      alert("Selecciona una combinació válida");
+      return;
+    }
 
     setAdding(true);
     try {
-      const response = await fetch("http://127.0.0.1:8000/api/carrito", {
+      // 1. Obtener la cookie de protección
+      await fetch("http://localhost:8000/sanctum/csrf-cookie", { 
+        credentials: "include" 
+      });
+
+      // 2. Extraer el token de las cookies del navegador (necesario para POST)
+      const xsrfToken = document.cookie
+        .split("; ")
+        .find((row) => row.startsWith("XSRF-TOKEN="))
+        ?.split("=")[1];
+
+      const response = await fetch("http://localhost:8000/api/carrito", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
           "Accept": "application/json",
+          "X-Requested-With": "XMLHttpRequest",
+          "X-XSRF-TOKEN": decodeURIComponent(xsrfToken || ""),
         },
         credentials: "include",
         body: JSON.stringify({
@@ -98,29 +114,20 @@ export default function ProductConfigurator({ options }) {
       });
 
       if (response.ok) {
+        // Si el Navbar escucha este evento, se actualizará el numerito del carrito
         window.dispatchEvent(new Event("cart-updated"));
-        window.scrollTo({
-        top: 0,
-        behavior: "smooth" // Esto hace que suba con un deslizamiento suave, no de golpe
-      });
+        window.scrollTo({ top: 0, behavior: "smooth" });
       } else {
         const error = await response.json();
-        alert(error.message || "Error al añadir");
+        alert(error.message || "Error al afegir");
       }
     } catch (err) {
-      console.error("Error de conexión:", err);
-      alert("Error de conexió amb el servidor");
+      console.error("Error de conexió:", err);
+      alert("No se ha pogut connectar amb el servidor");
     } finally {
       setAdding(false);
     }
-  const handleRemove = async (movilId) => {
-    await apiFetch(`/carrito/${movilId}`, { method: "DELETE" });
-    const data = await apiFetch("/carrito");
-    setItems(data.items ?? []);
-    
-    window.dispatchEvent(new Event("cart-updated"));
   };
-};
 
   const hasResult = priceData && priceData.precio != null && priceData.stock > 0
 

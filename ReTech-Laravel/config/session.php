@@ -128,7 +128,7 @@ return [
 
     'cookie' => env(
         'SESSION_COOKIE',
-        Str::slug(env('APP_NAME', 'laravel'), '_').'_session'
+        'retech_session'
     ),
 
     /*
@@ -196,7 +196,7 @@ return [
     |
     */
 
-    'same_site' => 'none',
-    'secure' => true,
+    'same_site' => 'lax',
+    'secure' => false,
 
 ];

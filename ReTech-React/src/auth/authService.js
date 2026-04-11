@@ -8,53 +8,59 @@ function getCookie(name) {
 }
 
 export async function loginRequest(email, password) {
-  
-  await fetch(`${API_URL}/sanctum/csrf-cookie`, {// CSRF cookie (Sanctum)
+  await fetch(`${API_URL}/sanctum/csrf-cookie`, {
     credentials: "include",
   })
 
   const csrfToken = getCookie("XSRF-TOKEN");
 
-  const response = await fetch(`${API_URL}/api/login`, { // Login
+  const response = await fetch(`${API_URL}/api/login`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
+      "Accept": "application/json",
       "X-XSRF-TOKEN": decodeURIComponent(csrfToken || ""),
     },
     credentials: "include",
     body: JSON.stringify({ email, password }),
   })
 
-  if (!response.ok) {
-    throw new Error("Credencials incorrectes")
-  }
+  if (!response.ok) throw new Error("Credencials incorrectes")
 
   const data = await response.json();
-
   return data.user ?? data
 }
 
 export async function logoutRequest() {
-  await fetch(`${API_URL}/api/logout`, {
+  const csrfToken = getCookie("XSRF-TOKEN");
+
+  return await fetch(`${API_URL}/api/logout`, {
     method: "POST",
     credentials: "include",
-  })
+    headers: { 
+      "Accept": "application/json",
+      "X-XSRF-TOKEN": decodeURIComponent(csrfToken || ""),
+    },
+  });
 }
 
-export async function getCurrentUser() {
+export const getCurrentUser = async () => {
+  try {
+    const res = await fetch(`${API_URL}/api/user`, {
+      method: "GET",
+      credentials: "include",
+      headers: { 
+        "Accept": "application/json",
+        "Content-Type": "application/json"
+      },
+    });
 
-  const response = await fetch(`${API_URL}/api/user`, {
-  
-    credentials: "include",
+    if (res.status === 401) return null;
+    if (!res.ok) throw new Error("Error en el servidor");
 
-  });
-
-  if (!response.ok) {
-
+    return await res.json();
+  } catch (error) {
+    console.error("Error cargando usuario:", error);
     return null;
-  
   }
-  
-  return await response.json()
-
 }

@@ -32,7 +32,6 @@ class User extends Authenticatable implements FilamentUser
      * @var array<int, string>
      */
     protected $hidden = [
-        'name',
         'password',
         'remember_token',
     ];
@@ -62,5 +61,9 @@ class User extends Authenticatable implements FilamentUser
     public function canAccessFilament(): bool
     {
         return $this->role === 'admin';
+    }
+    
+    public function compras() {
+        return $this->hasMany(Compra::class, 'user_id');
     }
 }

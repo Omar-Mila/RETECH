@@ -7,20 +7,11 @@ use App\Models\Compra;
 use App\Models\Movil;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 use Stripe\Stripe;
 use Stripe\PaymentIntent;
 use Stripe\Exception\ApiErrorException;
 
-/**
- * Funciona en los dos entornos automáticamente:
- *
- * LOCAL  → STRIPE_WEBHOOK_SECRET vacío en .env
- *          /confirm verifica el pago y crea la Compra con estado='pagado'
- *
- * PROD   → STRIPE_WEBHOOK_SECRET relleno en .env
- *          /confirm crea la Compra con estado='pendiente'
- *          El webhook la confirma cuando Stripe lo notifica
- */
 class CheckoutApiController extends Controller
 {
     private bool $hasWebhook;
@@ -31,16 +22,15 @@ class CheckoutApiController extends Controller
         $this->hasWebhook = !empty(config('services.stripe.webhook_secret'));
     }
 
-    // ── POST /api/checkout/intent ─────────────────────────────────────────────
     public function createIntent(Request $request)
     {
-        $carrito = $request->session()->get('carrito', []);
+        $rows = DB::table('carrito_items')->where('user_id', Auth::id())->get();
 
-        if (empty($carrito)) {
+        if ($rows->isEmpty()) {
             return response()->json(['message' => 'El carrito está vacío'], 422);
         }
 
-        $total = $this->calcularTotal($carrito);
+        $total = $this->calcularTotal($rows);
 
         if ($total <= 0) {
             return response()->json(['message' => 'Total inválido'], 422);
@@ -48,15 +38,12 @@ class CheckoutApiController extends Controller
 
         try {
             $intent = PaymentIntent::create([
-                'amount'   => (int) round($total * 100), // en céntimos
+                'amount'   => (int) round($total * 100),
                 'currency' => 'eur',
-                'metadata' => [
-                    'user_id' => Auth::id() ?? 'guest',
-                ],
+                'metadata' => ['user_id' => Auth::id()],
                 'automatic_payment_methods' => ['enabled' => true],
             ]);
 
-            // Guardamos el intent en sesión para verificarlo en /confirm
             $request->session()->put('stripe_intent_id', $intent->id);
 
             return response()->json([
@@ -68,14 +55,10 @@ class CheckoutApiController extends Controller
         }
     }
 
-    // ── POST /api/checkout/confirm ────────────────────────────────────────────
     public function confirm(Request $request)
     {
-        $request->validate([
-            'payment_intent_id' => 'required|string',
-        ]);
+        $request->validate(['payment_intent_id' => 'required|string']);
 
-        // Verificar que el intent pertenece a esta sesión
         if ($request->session()->get('stripe_intent_id') !== $request->payment_intent_id) {
             return response()->json(['message' => 'PaymentIntent no válido'], 403);
         }
@@ -87,37 +70,32 @@ class CheckoutApiController extends Controller
         }
 
         if ($intent->status !== 'succeeded') {
-            return response()->json([
-                'message' => 'El pago no se ha completado',
-                'status'  => $intent->status,
-            ], 422);
+            return response()->json(['message' => 'El pago no se ha completado', 'status' => $intent->status], 422);
         }
 
-        $carrito = $request->session()->get('carrito', []);
+        $rows = DB::table('carrito_items')->where('user_id', Auth::id())->get();
 
-        if (empty($carrito)) {
-            return response()->json(['message' => 'Carrito vacío'], 422);
+        if ($rows->isEmpty()) {
+            return response()->json(['message' => 'El carrito está vacío'], 422);
         }
 
-        // Verificar stock antes de registrar
-        foreach ($carrito as $id => $row) {
-            $movil = Movil::find($id);
-            if (!$movil || $movil->stock < $row['cantidad']) {
-                return response()->json([
-                    'message' => "Stock insuficiente para el móvil ID {$id}",
-                ], 422);
+        // Verificar stock
+        foreach ($rows as $row) {
+            $movil = Movil::find($row->movil_id);
+            if (!$movil || $movil->stock < $row->cantidad) {
+                return response()->json(['message' => "Stock insuficiente para móvil ID {$row->movil_id}"], 422);
             }
         }
 
-        $total = $this->calcularTotal($carrito);
+        $moviles = Movil::whereIn('id', $rows->pluck('movil_id'))->get()->keyBy('id');
+        $total   = $this->calcularTotal($rows);
 
-        $items = array_values(array_map(fn($row) => [
-            'movil_id' => $row['movil_id'],
-            'cantidad' => $row['cantidad'],
-            'precio'   => $row['precio'],
-        ], $carrito));
+        $items = $rows->map(fn($row) => [
+            'movil_id' => $row->movil_id,
+            'cantidad' => $row->cantidad,
+            'precio'   => (float) $moviles[$row->movil_id]->precio,
+        ])->values()->toArray();
 
-        // LOCAL → 'pagado' directamente | PROD → 'pendiente' hasta que llegue el webhook
         $estado = $this->hasWebhook ? 'pendiente' : 'pagado';
 
         $compra = Compra::create([
@@ -129,7 +107,9 @@ class CheckoutApiController extends Controller
             'estado'          => $estado,
         ]);
 
-        $request->session()->forget(['carrito', 'stripe_intent_id']);
+        // Vaciar carrito de BD
+        DB::table('carrito_items')->where('user_id', Auth::id())->delete();
+        $request->session()->forget('stripe_intent_id');
 
         return response()->json([
             'message'   => '¡Pago completado!',
@@ -138,15 +118,10 @@ class CheckoutApiController extends Controller
         ], 201);
     }
 
-    // ── POST /stripe/webhook ──────────────────────────────────────────────────
-    // Solo activo en producción (cuando STRIPE_WEBHOOK_SECRET está en .env)
     public function webhook(Request $request)
     {
         $secret = config('services.stripe.webhook_secret');
-
-        if (empty($secret)) {
-            return response()->json(['received' => true]);
-        }
+        if (empty($secret)) return response()->json(['received' => true]);
 
         try {
             $event = \Stripe\Webhook::constructEvent(
@@ -159,17 +134,13 @@ class CheckoutApiController extends Controller
         }
 
         if ($event->type === 'payment_intent.succeeded') {
-            $intent = $event->data->object;
-
-            Compra::where('stripe_intent', $intent->id)
+            Compra::where('stripe_intent', $event->data->object->id)
                 ->where('estado', 'pendiente')
                 ->update(['estado' => 'pagado']);
         }
 
         if ($event->type === 'payment_intent.payment_failed') {
-            $intent = $event->data->object;
-
-            Compra::where('stripe_intent', $intent->id)
+            Compra::where('stripe_intent', $event->data->object->id)
                 ->where('estado', 'pendiente')
                 ->update(['estado' => 'fallido']);
         }
@@ -177,18 +148,15 @@ class CheckoutApiController extends Controller
         return response()->json(['received' => true]);
     }
 
-    // ── Helper ────────────────────────────────────────────────────────────────
-    private function calcularTotal(array $carrito): float
+    private function calcularTotal($rows): float
     {
-        $ids = array_keys($carrito);
-        $moviles = Movil::whereIn('id', $ids)->get()->keyBy('id');
-        $total = 0;
-
-        foreach ($carrito as $id => $row) {
-            if ($moviles->has($id)) {
-                $total += ($moviles[$id]->precio * 1.21) * $row['cantidad'];
+        $moviles = Movil::whereIn('id', $rows->pluck('movil_id'))->get()->keyBy('id');
+        $total   = 0;
+        foreach ($rows as $row) {
+            if ($moviles->has($row->movil_id)) {
+                $total += ($moviles[$row->movil_id]->precio * 1.21) * $row->cantidad;
             }
         }
-        return round($total, 2); 
+        return round($total, 2);
     }
 }

@@ -10,9 +10,12 @@ import Navbar from "../components/Navbar";
 import Footer from "../components/Footer";
 
 const stripePromise = loadStripe("pk_test_51SehVv68Ge0SylH5spiVqLpHaRCt8s3RsIiwyPi2VINaXKBYxbhDyzF6YThlNyVb0WHAp16SnJ5plSMoMxswIy8S00lVuCfPjV");
-const API = "http://127.0.0.1:8000";
+const API = "http://localhost:8000";
 
 const apiFetch = async (path, opts = {}) => {
+    if (opts.method && opts.method !== 'GET') {
+        await fetch(`${API}/sanctum/csrf-cookie`, { credentials: "include" });
+    }
     const response = await fetch(`${API}/api${path}`, {
       credentials: "include",
       headers: { 
