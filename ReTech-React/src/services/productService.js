@@ -39,3 +39,8 @@ export async function getModelPrice(id, params) {
 
   return res.json()
 }
+
+export async function getModelImages(id) {
+  const res = await fetch(`http://localhost:8000/api/models/${id}/images`);
+  return res.json();
+}

@@ -106,3 +106,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/checkout/intent', [CheckoutApiController::class, 'createIntent']);
     Route::post('/checkout/confirm', [CheckoutApiController::class, 'confirm']);
 });
+
+//imagenes de modelos
+Route::post('/models/upload-image', [ModeloApiController::class, 'uploadImage']);
+Route::get('/models/{id}/images', [ModeloApiController::class, 'images']);

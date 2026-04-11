@@ -8,6 +8,7 @@ use Illuminate\Database\Eloquent\Model;
 class Color extends Model
 {
     use HasFactory;
+    
     protected $table = 'colores';
 
     public $timestamps = false;
@@ -16,8 +17,14 @@ class Color extends Model
         'nombre', 
         'codigo_hex'
     ];
+
     public function moviles()
     {
         return $this->hasMany(Movil::class, 'color_id');
+    }
+
+    public function images()
+    {
+        return $this->hasMany(ModeloImage::class, 'color_id');
     }
 }

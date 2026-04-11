@@ -6,6 +6,8 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Models\Modelo;
 use App\Models\Movil;
+use App\Models\ModeloImage;
+use CloudinaryLabs\CloudinaryLaravel\Facades\Cloudinary;
 
 class ModeloApiController extends Controller
 {
@@ -56,7 +58,7 @@ class ModeloApiController extends Controller
 
     
 
-public function options($modelId)
+    public function options($modelId)
     {
         $moviles = Movil::where('modelo_id', $modelId);
 
@@ -94,7 +96,7 @@ public function options($modelId)
 
  
 
-public function price(Request $request, $modelId)
+    public function price(Request $request, $modelId)
     {
         $query = Movil::where('modelo_id', $modelId)
             ->where('stock', '>', 0);
@@ -145,5 +147,47 @@ public function price(Request $request, $modelId)
             'color_id' => $movil->color_id,
             'salud_bateria' => $movil->salud_bateria,
         ]);
+    }
+
+    public function uploadImage(Request $request)
+    {
+        $request->validate([
+            'image' => 'required|image',
+            'modelo_id' => 'required|exists:modelos,id',
+            'color_id' => 'nullable|exists:colores,id'
+        ]);
+
+        // subir a Cloudinary
+        $uploaded = Cloudinary::upload(
+            $request->file('image')->getRealPath(),
+            [
+                'folder' => 'modelos'
+            ]
+        );
+
+        $url = $uploaded->getSecurePath();
+
+        // guardar en DB
+        $image = ModeloImage::create([
+            'modelo_id' => $request->modelo_id,
+            'color_id' => $request->color_id,
+            'path' => $url
+        ]);
+
+        return response()->json($image);
+    }
+
+    public function images($modelId)
+    {
+        $images = ModeloImage::where('modelo_id', $modelId)
+            ->get()
+            ->map(function ($img) {
+                return [
+                    'color_id' => $img->color_id,
+                    'url' => $img->path // ya es URL completa
+                ];
+            });
+
+        return response()->json($images);
     }
 }

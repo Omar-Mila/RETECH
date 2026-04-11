@@ -42,4 +42,9 @@ class Modelo extends Model
     {
         return $this->hasMany(Movil::class, 'modelo_id');
     }
+
+    public function images()
+    {
+        return $this->hasMany(ModeloImage::class, 'modelo_id');
+    }
 }
