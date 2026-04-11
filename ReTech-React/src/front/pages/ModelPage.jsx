@@ -9,7 +9,7 @@ import Footer from "../components/Footer"
 import ProductGallery from "../components/ProductPage/ProductGallery"
 import ProductInfo from "../components/ProductPage/ProductInfo"
 import ProductConfigurator from "../components/ProductPage/ProductConfigurator"
-import ColorSelector from "../components/ProductPage/ColorSelector"
+import StateImage from "../components/ProductPage/StateImage"
 
 export default function ModelPage() {
 
@@ -19,7 +19,8 @@ export default function ModelPage() {
   const [options, setOptions] = useState(null)
   const [loading, setLoading] = useState(true)
   const [images, setImages] = useState([]);
-  const [selectedColor, setSelectedColor] = useState(null)
+  const [selectedColor, setSelectedColor] = useState("")
+  const [selectedState, setSelectedState] = useState("")
 
   useEffect(() => {
     let mounted = true
@@ -53,8 +54,6 @@ export default function ModelPage() {
 
   }, [id])
 
-  console.info(images)
-
   return (
     <div className="min-h-screen flex flex-col">
 
@@ -74,11 +73,14 @@ export default function ModelPage() {
           <div className="max-w-6xl mx-auto px-6 py-10 grid grid-cols-1 lg:grid-cols-2 gap-12">
 
             {/* IZQUIERDA */}
-            <div className="lg:sticky lg:top-24 h-fit">
+            <div className="lg:top-24 h-fit">
                 <ProductGallery 
                     images={images} 
                     selectedColor={selectedColor} 
                 />
+
+                <StateImage selectedState={selectedState} />
+                
             </div>
 
             {/* DERECHA */}
@@ -86,20 +88,19 @@ export default function ModelPage() {
 
                 <ProductInfo product={model} />
 
-                <ColorSelector 
-                  colors={options.colores} 
+                <ProductConfigurator
+                  options={options}
                   selectedColor={selectedColor}
-                  setColor={setSelectedColor}
+                  setSelectedColor={setSelectedColor}
+                  selectedState={selectedState}
+                  setSelectedState={setSelectedState}
                 />
-
-                {/* <ProductConfigurator 
-                    options={options} 
-                    setColor={setSelectedColor} 
-                /> */}
 
             </div>
 
           </div>
+          
+        
         )}
 
       </main>

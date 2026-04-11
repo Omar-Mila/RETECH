@@ -96,6 +96,7 @@ Route::get('/models/search', [ModeloApiController::class, 'search']);
 Route::get('/models/{id}', [ModeloApiController::class, 'show']);
 Route::get('/models/{model}/options', [ModeloApiController::class, 'options']);
 Route::get('/models/{model}/price', [ModeloApiController::class, 'price']);
+Route::get('/models/{model}/images', [ModeloApiController::class, 'images']);
 
 
 Route::middleware(['auth:sanctum'])->group(function () {

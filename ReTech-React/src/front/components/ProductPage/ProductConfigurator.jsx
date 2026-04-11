@@ -2,7 +2,11 @@ import { useEffect, useMemo, useState } from "react"
 import { useParams } from "react-router-dom"
 import { getModelPrice } from "../../../services/productService"
 
-export default function ProductConfigurator({ options }) {
+export default function ProductConfigurator({
+  options,
+  selectedColor,
+  setSelectedColor,
+}) {
   const { id } = useParams()
 
   const [openAdvanced, setOpenAdvanced] = useState(false)
@@ -22,7 +26,7 @@ export default function ProductConfigurator({ options }) {
     const p = {}
     if (estado) p.estado = estado
     if (almacenamiento) p.almacenamiento = almacenamiento
-    if (color) p.color = color
+    if (selectedColor) p.color = selectedColor
     if (bateria) p.bateria_min = bateria
     return p
   }, [estado, almacenamiento, color, bateria])
@@ -191,14 +195,31 @@ export default function ProductConfigurator({ options }) {
             {options.almacenamientos.map(a => <option key={a} value={a}>{a} GB</option>)}
           </select>
 
-          <select
+          {/* <select
             value={color}
             onChange={(e) => setColor(e.target.value)}
             className="w-full border rounded p-2"
           >
             <option value="">Color</option>
-            {options.colores.map(c => <option key={c.id} value={c.id}>{c.nombre}</option>)}
-          </select>
+            {options.colores.map((c) => (
+            <option key={c.id} value={c.id}>
+                {c.nombre}
+              </option>
+            ))}
+          </select> */}
+
+          <select
+  value={selectedColor}
+  onChange={(e) => setSelectedColor(e.target.value)}
+  className="w-full border rounded p-2"
+>
+  <option value="">Color</option>
+  {options.colores.map((c) => (
+    <option key={c.id} value={c.id}>
+      {c.nombre}
+    </option>
+  ))}
+</select>
 
           <select
               value={bateria}

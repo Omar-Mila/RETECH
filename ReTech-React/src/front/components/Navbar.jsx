@@ -134,6 +134,7 @@ export default function Navbar() {
   const [cartCount, setCartCount] = useState(0)
   const cartRef = useRef(null)
   const userRef = useRef(null)
+  const searchRef = useRef(null)
 
   useEffect(() => {
     if (query.length < 2) { setResults([]); setSearchOpen(false); return; }
@@ -161,6 +162,7 @@ export default function Navbar() {
     const handler = (e) => {
       if (cartRef.current && !cartRef.current.contains(e.target)) setCartOpen(false)
       if (userRef.current && !userRef.current.contains(e.target)) setUserOpen(false)
+      if (searchRef.current && !searchRef.current.contains(e.target)) setSearchOpen(false)
     }
     document.addEventListener("mousedown", handler)
     return () => document.removeEventListener("mousedown", handler)
@@ -181,12 +183,21 @@ export default function Navbar() {
 
           {/* Buscador */}
           <div className="flex-1">
-            <div className="relative">
+            <div className="relative" ref={searchRef}>
               <input 
                 type="text" 
                 placeholder="Cerca productes..." 
                 value={query} 
                 onChange={(e) => setQuery(e.target.value)}
+                onFocus={() => { {/* focus en la caja de búsqueda */}
+                  if (query.length >= 2) setSearchOpen(true)
+                }}
+                onKeyDown={(e) => { {/* usar enter para buscar */}
+                  if (e.key === "Enter" && query.trim()) {
+                    setSearchOpen(false)
+                    navigate(`/search?q=${encodeURIComponent(query.trim())}`)
+                  }
+                }}
                 className="w-full rounded border-gray-300 ps-4 py-2 pe-12 shadow-sm sm:text-sm focus:ring-2 focus:black focus:border-black"
               />
               <span className="absolute inset-y-0 right-2 grid w-8 place-content-center">
@@ -198,7 +209,7 @@ export default function Navbar() {
                   {loadingSearch ? <div className="px-4 py-2 text-gray-500">Buscando...</div> : 
                    results.length === 0 ? <div className="px-4 py-2 text-gray-400">No s'han trobat coincidències</div> :
                    results.map((item) => (
-                    <Link key={item.id} to={`/models/${item.id}`} onClick={() => { setSearchOpen(false); setQuery("") }} className="px-4 py-2 hover:bg-gray-100 block no-underline text-gray-700">
+                    <Link key={item.id} to={`/models/${item.modelo_id}`} onClick={() => { setSearchOpen(false); setQuery("") }} className="px-4 py-2 hover:bg-gray-100 block no-underline text-gray-700">
                       {item.nombre}
                     </Link>
                   ))}
