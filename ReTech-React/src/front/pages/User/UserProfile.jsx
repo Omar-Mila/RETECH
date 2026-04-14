@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { useAuth } from "../../../auth/AuthContext";
 import Navbar from "../../components/Navbar";
+import Footer from "../../components/Footer";
 
 // Fuera del componente para evitar re-renders que quitan el focus
 const ReadField = ({ label, value }) => (
@@ -223,9 +224,9 @@ export default function UserProfile() {
               )}
             </div>
           </div>
-
         </div>
       </div>
+      <Footer />
     </div>
   );
 }
