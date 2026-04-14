@@ -214,37 +214,47 @@ function Row({ label, value, muted, bold, large }) {
 }
 
 function OrderSummary({ items, onCheckout, loadingIntent }) {
-  const subtotal   = items.reduce((s, i) => s + i.subtotal, 0);
-  const iva        = subtotal * 0.21;
-  const total      = subtotal + iva;
+  const total = items.reduce((s, i) => s + i.subtotal, 0);
   const totalItems = items.reduce((s, i) => s + i.cantidad, 0);
 
   return (
-    <div style={{ position:"sticky",top:24,background:"#fff",border:"1px solid #e2e8f0",borderRadius:20,padding:26,boxShadow:"0 4px 24px rgba(15,23,42,.07)" }}>
-      <h2 style={{ margin:"0 0 22px",fontSize:17,fontWeight:800,color:"#0f172a",fontFamily:"'Sora',sans-serif",letterSpacing:"-.3px" }}>
+    <div style={{ position: "sticky", top: 24, background: "#fff", border: "1px solid #e2e8f0", borderRadius: 20, padding: 26, boxShadow: "0 4px 24px rgba(15,23,42,.07)" }}>
+      <h2 style={{ margin: "0 0 22px", fontSize: 17, fontWeight: 800, color: "#0f172a", fontFamily: "'Sora',sans-serif", letterSpacing: "-.3px" }}>
         Resumen del pedido
       </h2>
-      <div style={{ display:"flex",flexDirection:"column",gap:11 }}>
-        <Row label={`Subtotal (${totalItems} art.)`} value={fmt(subtotal)}/>
-        <Row label="IVA (21%)" value={fmt(iva)} muted/>
-        <div style={{ borderTop:"2px dashed #e2e8f0",margin:"2px 0" }}/>
-        <Row label="Total" value={fmt(total)} bold large/>
+      
+      <div style={{ display: "flex", flexDirection: "column", gap: 11 }}>
+        <Row label={`Subtotal (${totalItems} art.)`} value={fmt(total)} />
+        <Row label="Total" value={fmt(total)} bold large />
       </div>
-      <div style={{ margin:"18px 0",background:"#f0fdf4",border:"1px solid #bbf7d0",borderRadius:10,padding:"9px 13px",display:"flex",alignItems:"center",gap:7 }}>
+
+      <div style={{ margin: "18px 0", background: "#f0fdf4", border: "1px solid #bbf7d0", borderRadius: 10, padding: "9px 13px", display: "flex", alignItems: "center", gap: 7 }}>
         <span>🚚</span>
-        <span style={{ fontSize:12,color:"#15803d",fontWeight:600 }}>¡Envío gratuito incluido!</span>
+        <span style={{ fontSize: 12, color: "#15803d", fontWeight: 600 }}>¡Envío gratuito incluido!</span>
       </div>
-      <button onClick={onCheckout} disabled={loadingIntent || items.length === 0}
-        style={{ width:"100%",padding:"15px",background:loadingIntent||items.length===0?"#94a3b8":"linear-gradient(135deg,#6366f1,#4f46e5)",color:"#fff",border:"none",borderRadius:12,fontSize:14.5,fontWeight:700,cursor:loadingIntent?"not-allowed":"pointer",fontFamily:"'Sora',sans-serif",boxShadow:loadingIntent?"none":"0 4px 14px rgba(99,102,241,.4)",display:"flex",alignItems:"center",justifyContent:"center",gap:9,transition:"transform .15s" }}
+
+      <button 
+        onClick={onCheckout} 
+        disabled={loadingIntent || items.length === 0}
+        style={{ 
+          width: "100%", padding: "15px", 
+          background: loadingIntent || items.length === 0 ? "#94a3b8" : "linear-gradient(135deg,#6366f1,#4f46e5)", 
+          color: "#fff", border: "none", borderRadius: 12, fontSize: 14.5, fontWeight: 700, 
+          cursor: loadingIntent ? "not-allowed" : "pointer", fontFamily: "'Sora',sans-serif", 
+          boxShadow: loadingIntent ? "none" : "0 4px 14px rgba(99,102,241,.4)", 
+          display: "flex", alignItems: "center", justifyContent: "center", gap: 9, transition: "transform .15s" 
+        }}
         onMouseEnter={(e) => { if (!loadingIntent) e.currentTarget.style.transform = "translateY(-1px)"; }}
-        onMouseLeave={(e) => { e.currentTarget.style.transform = "translateY(0)"; }}>
-        {loadingIntent ? <><Spinner/> Preparando pago…</> : <><LockIcon/> Proceder al pago</>}
+        onMouseLeave={(e) => { e.currentTarget.style.transform = "translateY(0)"; }}
+      >
+        {loadingIntent ? <><Spinner /> Preparando pago…</> : <><LockIcon /> Proceder al pago</>}
       </button>
-      <div style={{ marginTop:12,display:"flex",alignItems:"center",justifyContent:"center",gap:5 }}>
+
+      <div style={{ marginTop: 12, display: "flex", alignItems: "center", justifyContent: "center", gap: 5 }}>
         <svg width="34" height="14" viewBox="0 0 60 25">
           <text x="0" y="18" fontFamily="Arial" fontSize="18" fontWeight="bold" fill="#635bff">stripe</text>
         </svg>
-        <span style={{ fontSize:10.5,color:"#94a3b8" }}>Pago 100% seguro con Stripe</span>
+        <span style={{ fontSize: 10.5, color: "#94a3b8" }}>Pago 100% seguro con Stripe</span>
       </div>
     </div>
   );

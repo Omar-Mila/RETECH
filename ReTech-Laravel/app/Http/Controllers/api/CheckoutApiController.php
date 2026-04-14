@@ -107,7 +107,6 @@ class CheckoutApiController extends Controller
             'estado'          => $estado,
         ]);
 
-        // Vaciar carrito de BD
         DB::table('carrito_items')->where('user_id', Auth::id())->delete();
         $request->session()->forget('stripe_intent_id');
 
@@ -154,7 +153,7 @@ class CheckoutApiController extends Controller
         $total   = 0;
         foreach ($rows as $row) {
             if ($moviles->has($row->movil_id)) {
-                $total += ($moviles[$row->movil_id]->precio * 1.21) * $row->cantidad;
+                $total += ($moviles[$row->movil_id]->precio) * $row->cantidad;
             }
         }
         return round($total, 2);
