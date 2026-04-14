@@ -57,7 +57,11 @@ export default function UserProfile() {
   const [error, setError] = useState("");
 
   const [form, setForm] = useState({
-    nombre: "", apellidos: "", nif: "", direccion: "", telefono: "",
+    nombre:    user?.cliente?.nombre    || "",
+    apellidos: user?.cliente?.apellidos || "",
+    nif:       user?.cliente?.nif       || "",
+    direccion: user?.cliente?.direccion || "",
+    telefono:  user?.cliente?.telefono  || "",
   });
 
   useEffect(() => {
