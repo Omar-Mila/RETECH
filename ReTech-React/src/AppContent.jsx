@@ -12,6 +12,7 @@ import CartCheckoutPage from "./front/pages/Carrito";
 import UserProfile from "./front/pages/User/UserProfile";
 import OrdersPage from "./front/pages/User/OrdersPage";
 import ModelPage from "./front/pages/ModelPage";
+import Contact from "./front/pages/Contact";
 
 export default function AppContent() {
   const { loading, user } = useAuth();
@@ -37,6 +38,8 @@ export default function AppContent() {
       <Route path="/search" element={<SearchResults />} />
       <Route path="/carrito" element={<CartCheckoutPage />} />
       <Route path="/models/:id" element={<ModelPage />} />
+
+      <Route path="/contact" element={<Contact />} />
 
       <Route
         path="/admin"

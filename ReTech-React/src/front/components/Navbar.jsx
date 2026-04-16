@@ -259,17 +259,6 @@ export default function Navbar() {
         </div>
       </div>
 
-      <nav className="bg-gray-100 w-full">
-        <div className="px-6">
-          <ul className="flex gap-6 py-3 text-sm font-medium list-none m-0">
-            <li><Link to="/" className="text-gray-700 no-underline">Inici</Link></li>
-            <li><Link to="/mobils" className="text-gray-700 no-underline">Mòbils</Link></li>
-            <li><Link to="/tablets" className="text-gray-700 no-underline">Tablets</Link></li>
-            <li><Link to="/accessoris" className="text-gray-700 no-underline">Accessoris</Link></li>
-          </ul>
-        </div>
-      </nav>
-
       {/* Estilos locales para los links del dropdown */}
       <style>{`
         .dropdown-link {

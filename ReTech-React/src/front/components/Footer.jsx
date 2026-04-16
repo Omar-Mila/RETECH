@@ -1,3 +1,5 @@
+import { Link } from "react-router-dom";
+
 export default function Footer() {
   return (
     <footer className="bg-black text-white py-16">
@@ -22,7 +24,9 @@ export default function Footer() {
         <div>
           <h4 className="font-semibold mb-4">Suport</h4>
           <ul className="space-y-2 text-gray-400 text-sm">
-            <li>Contacte</li>
+            <Link to="/contact">
+                Contacto
+            </Link>
             <li>Garantia</li>
             <li>Enviaments</li>
           </ul>

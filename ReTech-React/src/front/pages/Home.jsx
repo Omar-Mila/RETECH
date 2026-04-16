@@ -6,7 +6,7 @@ import FAQSection from "../components/FAQSection";
 import Footer from "../components/Footer";
 export default function Home() {
   return (
-    <div className="w-[80%] mx-auto">
+    <div className="mx-auto">
       <Navbar />
       <Carousel />
       <PhonesSection />

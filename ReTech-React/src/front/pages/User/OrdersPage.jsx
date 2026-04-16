@@ -190,9 +190,6 @@ function OrderCard({ order, movilsCache, onToggle, isOpen }) {
                   <div style={{ display: "flex", justifyContent: "space-between", fontSize: 13, color: "#475569", marginBottom: 6 }}>
                     <span>Subtotal</span><span>{fmt(subtotal)}</span>
                   </div>
-                  <div style={{ display: "flex", justifyContent: "space-between", fontSize: 13, color: "#94a3b8", marginBottom: 10 }}>
-                    <span>IVA (21%)</span><span>{fmt(iva)}</span>
-                  </div>
                   <div style={{ borderTop: "1px dashed #e2e8f0", paddingTop: 10, display: "flex", justifyContent: "space-between" }}>
                     <span style={{ fontWeight: 800, fontSize: 15, color: "#0f172a", fontFamily: "'Sora', sans-serif" }}>Total</span>
                     <span style={{ fontWeight: 800, fontSize: 17, color: "#4f46e5", fontFamily: "'Sora', sans-serif" }}>{fmt(order.precio_total)}</span>
