@@ -1,4 +1,4 @@
-import { useEffect, useState, useMemo } from "react"
+import { useEffect, useState, useMemo, useRef } from "react"
 import { useSearchParams, Link } from "react-router-dom"
 import Navbar from "../components/Navbar"
 import Footer from "../components/Footer"
@@ -10,11 +10,43 @@ const ESTADO_LABELS = {
     "aceptable":    { label: "Acceptable",  color: "bg-orange-100 text-orange-700" },
 }
 
-function FilterPanel({ products, filters, onChange, onClose }) {
-    const modelos      = useMemo(() => [...new Set(products.map(p => p.modelo))].sort(), [products])
-    const colores      = useMemo(() => [...new Set(products.map(p => p.color))].sort(), [products])
+function FunnelIcon({ size = 15, color = "currentColor" }) {
+    return (
+        <svg width={size} height={size} viewBox="0 0 24 24" fill={color} xmlns="http://www.w3.org/2000/svg">
+            <path d="M3 4.5A1.5 1.5 0 0 1 4.5 3h15A1.5 1.5 0 0 1 21 4.5v1.086a1.5 1.5 0 0 1-.44 1.06L15 12.208V18.75a1.5 1.5 0 0 1-2.1 1.374l-3-1.5A1.5 1.5 0 0 1 9 17.25v-5.043L3.44 6.646A1.5 1.5 0 0 1 3 5.586V4.5z" />
+        </svg>
+    )
+}
+
+function SortButton({ label, sort, onClick }) {
+    const icon = sort === "asc" ? "↑" : sort === "desc" ? "↓" : "↕"
+    return (
+        <button
+            onClick={onClick}
+            style={{
+                display: "inline-flex", alignItems: "center", gap: 4,
+                padding: "5px 10px",
+                border: "1px solid",
+                borderColor: sort ? "#0f172a" : "#e2e8f0",
+                borderRadius: 8,
+                background: sort ? "#0f172a" : "#fff",
+                color: sort ? "#fff" : "#475569",
+                fontSize: 12, fontWeight: 600,
+                cursor: "pointer",
+                whiteSpace: "nowrap",
+            }}
+        >
+            {label}
+            <span style={{ fontSize: 10, opacity: sort ? 1 : 0.4 }}>{icon}</span>
+        </button>
+    )
+}
+
+function FilterPanel({ products, filters, onChange, collapsed, onToggleCollapse }) {
+    const modelos         = useMemo(() => [...new Set(products.map(p => p.modelo))].sort(), [products])
+    const colores         = useMemo(() => [...new Set(products.map(p => p.color))].sort(), [products])
     const almacenamientos = useMemo(() => [...new Set(products.map(p => p.almacenamiento))].sort((a, b) => a - b), [products])
-    const maxPrice     = useMemo(() => Math.ceil(Math.max(...products.map(p => p.precio), 0)), [products])
+    const maxPrice        = useMemo(() => Math.ceil(Math.max(...products.map(p => p.precio), 0)), [products])
 
     const toggle = (key, value) => {
         const current = filters[key]
@@ -25,97 +57,116 @@ function FilterPanel({ products, filters, onChange, onClose }) {
     const activeCount = filters.modelos.length + filters.colores.length + filters.almacenamientos.length + (filters.precioMax < maxPrice ? 1 : 0)
 
     return (
-        <>
-            {/* Backdrop */}
-            <div
-                onClick={onClose}
-                style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.25)", zIndex: 40 }}
-            />
-
-            {/* Panel */}
+        <aside style={{
+            width: collapsed ? 44 : 236,
+            minWidth: collapsed ? 44 : 236,
+            flexShrink: 0,
+            transition: "width 0.2s, min-width 0.2s",
+            background: "#fff",
+            border: "1px solid #f1f5f9",
+            borderRadius: 12,
+            alignSelf: "flex-start",
+            position: "sticky",
+            top: 16,
+            overflow: "hidden",
+            maxHeight: "calc(100vh - 96px)",
+            display: "flex",
+            flexDirection: "column",
+            boxShadow: "0 1px 4px rgba(0,0,0,0.04)"
+        }}>
+            {/* Header */}
             <div style={{
-                position: "fixed", top: 0, right: 0, bottom: 0, width: 320,
-                background: "#fff", zIndex: 50, display: "flex", flexDirection: "column",
-                boxShadow: "-4px 0 24px rgba(0,0,0,0.1)"
+                padding: collapsed ? "12px 0" : "12px 14px",
+                borderBottom: collapsed ? "none" : "1px solid #f1f5f9",
+                display: "flex",
+                justifyContent: collapsed ? "center" : "space-between",
+                alignItems: "center",
+                flexShrink: 0
             }}>
-                {/* Header */}
-                <div style={{ padding: "18px 20px", borderBottom: "1px solid #f1f5f9", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                    <span style={{ fontWeight: 700, fontSize: 15, color: "#0f172a" }}>
-                        Filtres {activeCount > 0 && <span style={{ background: "#0f172a", color: "#fff", borderRadius: "50%", fontSize: 11, fontWeight: 700, padding: "1px 6px", marginLeft: 6 }}>{activeCount}</span>}
-                    </span>
-                    <div style={{ display: "flex", gap: 10, alignItems: "center" }}>
-                        {activeCount > 0 && (
-                            <button
-                                onClick={() => onChange({ modelos: [], colores: [], almacenamientos: [], precioMax: maxPrice })}
-                                style={{ fontSize: 12, color: "#64748b", background: "none", border: "none", cursor: "pointer", textDecoration: "underline" }}
-                            >
-                                Netejar
-                            </button>
-                        )}
-                        <button onClick={onClose} style={{ background: "none", border: "none", cursor: "pointer", fontSize: 20, color: "#94a3b8", lineHeight: 1 }}>×</button>
-                    </div>
-                </div>
+                <button
+                    onClick={onToggleCollapse}
+                    title={collapsed ? "Mostrar filtres" : "Ocultar filtres"}
+                    style={{
+                        background: activeCount > 0 ? "#0f172a" : "transparent",
+                        border: "1px solid",
+                        borderColor: activeCount > 0 ? "#0f172a" : "#e2e8f0",
+                        borderRadius: 8,
+                        padding: collapsed ? "7px" : "6px 10px",
+                        cursor: "pointer",
+                        display: "flex",
+                        alignItems: "center",
+                        gap: 6,
+                        color: activeCount > 0 ? "#fff" : "#334155",
+                        position: "relative",
+                        flexShrink: 0
+                    }}
+                >
+                    <FunnelIcon size={15} color={activeCount > 0 ? "#fff" : "#334155"} />
+                    {!collapsed && <span style={{ fontSize: 12, fontWeight: 700, letterSpacing: "0.02em" }}>Filtres</span>}
+                    {activeCount > 0 && (
+                        <span style={{
+                            background: "#6366f1", color: "#fff", fontSize: 9, fontWeight: 700,
+                            width: 15, height: 15, borderRadius: "50%",
+                            display: "flex", alignItems: "center", justifyContent: "center",
+                            border: "2px solid #fff",
+                            position: "absolute", top: -6, right: -6
+                        }}>
+                            {activeCount}
+                        </span>
+                    )}
+                </button>
 
-                <div style={{ flex: 1, overflowY: "auto", padding: "8px 0" }}>
+                {!collapsed && activeCount > 0 && (
+                    <button
+                        onClick={() => onChange({ modelos: [], colores: [], almacenamientos: [], precioMax: maxPrice })}
+                        style={{ fontSize: 11, color: "#64748b", background: "none", border: "none", cursor: "pointer", textDecoration: "underline" }}
+                    >
+                        Netejar
+                    </button>
+                )}
+            </div>
 
-                    {/* Modelo */}
+            {/* Content */}
+            {!collapsed && (
+                <div style={{ flex: 1, overflowY: "auto" }}>
                     <Section title="Model">
                         {modelos.map(m => (
                             <CheckRow key={m} label={m} checked={filters.modelos.includes(m)} onChange={() => toggle("modelos", m)} />
                         ))}
                     </Section>
-
-                    {/* Color */}
                     <Section title="Color">
                         {colores.map(c => (
                             <CheckRow key={c} label={c} checked={filters.colores.includes(c)} onChange={() => toggle("colores", c)} />
                         ))}
                     </Section>
-
-                    {/* Almacenamiento */}
                     <Section title="Emmagatzematge">
                         {almacenamientos.map(a => (
                             <CheckRow key={a} label={`${a} GB`} checked={filters.almacenamientos.includes(a)} onChange={() => toggle("almacenamientos", a)} />
                         ))}
                     </Section>
-
-                    {/* Precio */}
                     <Section title="Preu màxim">
-                        <div style={{ padding: "4px 20px 12px" }}>
+                        <div style={{ padding: "4px 14px 14px" }}>
                             <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 8 }}>
-                                <span style={{ fontSize: 12, color: "#64748b" }}>0 €</span>
-                                <span style={{ fontSize: 13, fontWeight: 700, color: "#0f172a" }}>{filters.precioMax} €</span>
+                                <span style={{ fontSize: 11, color: "#64748b" }}>0 €</span>
+                                <span style={{ fontSize: 12, fontWeight: 700, color: "#0f172a" }}>{filters.precioMax} €</span>
                             </div>
                             <input
-                                type="range"
-                                min={0}
-                                max={maxPrice}
-                                value={filters.precioMax}
+                                type="range" min={0} max={maxPrice} value={filters.precioMax}
                                 onChange={e => onChange({ ...filters, precioMax: Number(e.target.value) })}
                                 style={{ width: "100%", accentColor: "#0f172a" }}
                             />
                         </div>
                     </Section>
-
                 </div>
-
-                <div style={{ padding: "16px 20px", borderTop: "1px solid #f1f5f9" }}>
-                    <button
-                        onClick={onClose}
-                        style={{ width: "100%", padding: "11px", background: "#0f172a", color: "#fff", border: "none", borderRadius: 10, fontSize: 14, fontWeight: 700, cursor: "pointer" }}
-                    >
-                        Aplicar filtres
-                    </button>
-                </div>
-            </div>
-        </>
+            )}
+        </aside>
     )
 }
 
 function Section({ title, children }) {
     return (
         <div style={{ borderBottom: "1px solid #f1f5f9" }}>
-            <p style={{ margin: 0, padding: "14px 20px 8px", fontSize: 12, fontWeight: 700, color: "#64748b", textTransform: "uppercase", letterSpacing: "0.06em" }}>{title}</p>
+            <p style={{ margin: 0, padding: "10px 14px 5px", fontSize: 10, fontWeight: 700, color: "#94a3b8", textTransform: "uppercase", letterSpacing: "0.07em" }}>{title}</p>
             {children}
         </div>
     )
@@ -123,27 +174,35 @@ function Section({ title, children }) {
 
 function CheckRow({ label, checked, onChange }) {
     return (
-        <label style={{ display: "flex", alignItems: "center", gap: 10, padding: "7px 20px", cursor: "pointer" }}>
-            <input type="checkbox" checked={checked} onChange={onChange} style={{ accentColor: "#0f172a", width: 15, height: 15 }} />
-            <span style={{ fontSize: 13, color: "#334155" }}>{label}</span>
+        <label style={{ display: "flex", alignItems: "center", gap: 8, padding: "5px 14px", cursor: "pointer" }}>
+            <input type="checkbox" checked={checked} onChange={onChange} style={{ accentColor: "#0f172a", width: 13, height: 13 }} />
+            <span style={{ fontSize: 12, color: "#334155" }}>{label}</span>
         </label>
     )
 }
 
+const LIMITE = 8
+
 export default function SearchResults() {
-    const [searchParams] = useSearchParams()
-    const query = searchParams.get("q")
-    const [products, setProducts] = useState([])
-    const [loading, setLoading] = useState(true)
-    const [error, setError] = useState(null)
-    const [filterOpen, setFilterOpen] = useState(false)
-    const [filters, setFilters] = useState({ modelos: [], colores: [], almacenamientos: [], precioMax: Infinity })
+    const [searchParams]   = useSearchParams()
+    const query             = searchParams.get("q")
+    const [productos, setProductos]             = useState([])
+    const [cargando, setCargando]               = useState(true)
+    const [error, setError]                     = useState(null)
+    const [filtroColapsado, setFiltroColapsado] = useState(window.innerWidth < 768)
+    const [filtros, setFiltros]                 = useState({ modelos: [], colores: [], almacenamientos: [], precioMax: Infinity })
+    const [ordenPrecio, setOrdenPrecio]         = useState(null)
+    const [ordenNombre, setOrdenNombre]         = useState(null)
+    const [cantidad, setCantidad]               = useState(LIMITE)
+    const centinelaRef                          = useRef(null)
 
     useEffect(() => {
         if (!query) return
-        setLoading(true)
+        setCargando(true)
         setError(null)
-        setFilters({ modelos: [], colores: [], almacenamientos: [], precioMax: Infinity })
+        setFiltros({ modelos: [], colores: [], almacenamientos: [], precioMax: Infinity })
+        setOrdenPrecio(null)
+        setOrdenNombre(null)
 
         fetch(`http://localhost:8000/api/products/search?q=${encodeURIComponent(query)}`)
             .then(res => {
@@ -151,124 +210,198 @@ export default function SearchResults() {
                 return res.json()
             })
             .then(data => {
-                setProducts(data)
-                setFilters(f => ({ ...f, precioMax: Math.ceil(Math.max(...data.map(p => p.precio), 0)) }))
-                setLoading(false)
+                setProductos(data)
+                setFiltros(f => ({ ...f, precioMax: Math.ceil(Math.max(...data.map(p => p.precio), 0)) }))
+                setCargando(false)
             })
             .catch(err => {
                 setError(err.message)
-                setLoading(false)
+                setCargando(false)
             })
     }, [query])
 
-    const maxPrice = useMemo(() => Math.ceil(Math.max(...products.map(p => p.precio), 0)), [products])
+    const precioMaximo = useMemo(() => Math.ceil(Math.max(...productos.map(p => p.precio), 0)), [productos])
 
-    const filtered = useMemo(() => {
-        return products.filter(p => {
-            if (filters.modelos.length && !filters.modelos.includes(p.modelo)) return false
-            if (filters.colores.length && !filters.colores.includes(p.color)) return false
-            if (filters.almacenamientos.length && !filters.almacenamientos.includes(p.almacenamiento)) return false
-            if (p.precio > filters.precioMax) return false
+    const filtrados = useMemo(() => {
+        let resultado = productos.filter(p => {
+            if (filtros.modelos.length && !filtros.modelos.includes(p.modelo)) return false
+            if (filtros.colores.length && !filtros.colores.includes(p.color)) return false
+            if (filtros.almacenamientos.length && !filtros.almacenamientos.includes(p.almacenamiento)) return false
+            if (p.precio > filtros.precioMax) return false
             return true
         })
-    }, [products, filters])
+        if (ordenPrecio) {
+            resultado = [...resultado].sort((a, b) => ordenPrecio === "asc" ? a.precio - b.precio : b.precio - a.precio)
+        } else if (ordenNombre) {
+            resultado = [...resultado].sort((a, b) => {
+                const na = `${a.marca} ${a.modelo}`, nb = `${b.marca} ${b.modelo}`
+                return ordenNombre === "asc" ? na.localeCompare(nb) : nb.localeCompare(na)
+            })
+        }
+        return resultado
+    }, [productos, filtros, ordenPrecio, ordenNombre])
 
-    const activeCount = filters.modelos.length + filters.colores.length + filters.almacenamientos.length + (filters.precioMax < maxPrice ? 1 : 0)
+    // Resetear paginacion cuando cambian filtros u ordenacion
+    useEffect(() => {
+        setCantidad(LIMITE)
+    }, [filtrados])
+
+    // Scroll infinito: cuando el centinela entra en pantalla, cargamos mas
+    const hayMas = cantidad < filtrados.length
+    useEffect(() => {
+        const el = centinelaRef.current
+        if (!el) return
+        const observador = new IntersectionObserver(
+            (entradas) => {
+                if (entradas[0].isIntersecting && hayMas) {
+                    setCantidad(c => c + LIMITE)
+                }
+            },
+            { rootMargin: "150px" }
+        )
+        observador.observe(el)
+        return () => observador.disconnect()
+    }, [hayMas])
+
+    const visibles = filtrados.slice(0, cantidad)
+
+    const alternarOrdenPrecio = () => {
+        setOrdenNombre(null)
+        setOrdenPrecio(s => s === null ? "asc" : s === "asc" ? "desc" : null)
+    }
+    const alternarOrdenNombre = () => {
+        setOrdenPrecio(null)
+        setOrdenNombre(s => s === null ? "asc" : s === "asc" ? "desc" : null)
+    }
+
+    const etiquetasFiltrosActivos = [
+        ...filtros.modelos.map(m => ({ label: m, quitar: () => setFiltros(f => ({ ...f, modelos: f.modelos.filter(v => v !== m) })) })),
+        ...filtros.colores.map(c => ({ label: c, quitar: () => setFiltros(f => ({ ...f, colores: f.colores.filter(v => v !== c) })) })),
+        ...filtros.almacenamientos.map(a => ({ label: `${a} GB`, quitar: () => setFiltros(f => ({ ...f, almacenamientos: f.almacenamientos.filter(v => v !== a) })) })),
+        ...(filtros.precioMax < precioMaximo ? [{ label: `≤ ${filtros.precioMax} €`, quitar: () => setFiltros(f => ({ ...f, precioMax: precioMaximo })) }] : [])
+    ]
 
     return (
         <div className="min-h-screen flex flex-col">
             <Navbar />
 
-            <main className="flex-1 p-6 max-w-7xl mx-auto w-full">
+            <main className="flex-1 flex flex-col md:flex-row gap-6 max-w-7xl mx-auto w-full px-6 py-6 items-start">
 
-                {loading && (
-                    <div className="flex justify-center py-16">
-                        <p className="text-gray-500 animate-pulse">Cercant "{query}"...</p>
+                {cargando && (
+                    <div className="flex justify-center py-16 w-full">
+                        <p className="text-gray-400 animate-pulse">Cercant "{query}"...</p>
                     </div>
                 )}
 
                 {error && (
-                    <div className="p-6 text-red-500">Error: {error}</div>
+                    <div className="p-6 text-red-500 w-full">Error: {error}</div>
                 )}
 
-                {!loading && !error && (
+                {!cargando && !error && (
                     <>
-                        <div className="flex items-center justify-between mb-1">
-                            <h1 className="text-xl font-bold">
-                                Resultats per: <span className="text-gray-500">"{query}"</span>
-                            </h1>
-                            <button
-                                onClick={() => setFilterOpen(true)}
-                                style={{
-                                    display: "flex", flexDirection: "column", justifyContent: "center", gap: 4,
-                                    padding: "8px 12px", border: "1px solid #e2e8f0", borderRadius: 8,
-                                    background: activeCount > 0 ? "#0f172a" : "#fff", cursor: "pointer", position: "relative"
-                                }}
-                            >
-                                {[0,1,2].map(i => (
-                                    <span key={i} style={{ display: "block", width: 18, height: 2, background: activeCount > 0 ? "#fff" : "#334155", borderRadius: 2 }} />
-                                ))}
-                                {activeCount > 0 && (
-                                    <span style={{ position: "absolute", top: -6, right: -6, background: "#6366f1", color: "#fff", fontSize: 10, fontWeight: 700, width: 18, height: 18, borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center", border: "2px solid #fff" }}>
-                                        {activeCount}
-                                    </span>
-                                )}
-                            </button>
-                        </div>
+                        <FilterPanel
+                            products={productos}
+                            filters={filtros}
+                            onChange={setFiltros}
+                            collapsed={filtroColapsado}
+                            onToggleCollapse={() => setFiltroColapsado(c => !c)}
+                        />
 
-                        <p className="text-sm text-gray-400 mb-6">{filtered.length} productes trobats</p>
+                        <div style={{ flex: 1, minWidth: 0 }}>
+                            {/* Cabecera */}
+                            <div style={{ display: "flex", flexWrap: "wrap", alignItems: "center", gap: 8, marginBottom: 4 }}>
+                                <h1 style={{ fontSize: 17, fontWeight: 700, margin: 0, whiteSpace: "nowrap" }}>
+                                    Resultats per: <span style={{ color: "#94a3b8" }}>"{query}"</span>
+                                </h1>
 
-                        {filterOpen && (
-                            <FilterPanel
-                                products={products}
-                                filters={filters}
-                                onChange={setFilters}
-                                onClose={() => setFilterOpen(false)}
-                            />
-                        )}
+                                <div style={{ display: "flex", gap: 6, alignItems: "center" }}>
+                                    <SortButton label="Preu" sort={ordenPrecio} onClick={alternarOrdenPrecio} />
+                                    <SortButton label="Nom" sort={ordenNombre} onClick={alternarOrdenNombre} />
+                                </div>
 
-                        {filtered.length === 0 ? (
-                            <div className="text-center py-16 text-gray-400">
-                                <p className="text-4xl mb-3">🔍</p>
-                                <p className="text-lg">No s'han trobat mòbils per "{query}"</p>
-                            </div>
-                        ) : (
-                            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-                                {filtered.map(product => {
-                                    const estat = ESTADO_LABELS[product.estado] ?? { label: product.estado, color: "bg-gray-100 text-gray-600" }
-
-                                    return (
-                                        <Link
-                                            to={`/models/${product.modelo_id}`}
-                                            key={product.id}
-                                            className="border rounded-xl p-3 hover:shadow-lg transition flex flex-col"
-                                        >
-                                            <div className="bg-gray-50 rounded-lg flex items-center justify-center h-44 mb-3">
-                                                <img
-                                                    src={product.image_url}
-                                                    alt={`${product.marca} ${product.modelo}`}
-                                                    className="h-40 object-contain"
-                                                    onError={(e) => { e.target.src = "/images/no-image.png" }}
-                                                />
-                                            </div>
-
-                                            <p className="text-xs text-gray-400 uppercase tracking-wide">{product.marca}</p>
-                                            <p className="font-semibold text-sm leading-tight">{product.modelo}</p>
-                                            <p className="text-xs text-gray-500 mt-1">
-                                                {product.almacenamiento}GB · {product.ram}GB RAM · {product.color}
-                                            </p>
-
-                                            <span className={`mt-2 text-xs px-2 py-0.5 rounded-full w-fit ${estat.color}`}>
-                                                {estat.label}
+                                {/* Burbujas de filtros activos */}
+                                {etiquetasFiltrosActivos.length > 0 && (
+                                    <div style={{ display: "flex", flexWrap: "wrap", gap: 4, alignItems: "center" }}>
+                                        {etiquetasFiltrosActivos.map((chip, i) => (
+                                            <span key={i} style={{
+                                                display: "inline-flex", alignItems: "center", gap: 3,
+                                                background: "#f8fafc", color: "#475569",
+                                                fontSize: 11, fontWeight: 500,
+                                                padding: "3px 6px 3px 9px", borderRadius: 999,
+                                                border: "1px solid #e2e8f0"
+                                            }}>
+                                                {chip.label}
+                                                <button
+                                                    onClick={chip.quitar}
+                                                    style={{ background: "none", border: "none", cursor: "pointer", color: "#94a3b8", fontSize: 14, lineHeight: 1, padding: "0 2px", display: "flex", alignItems: "center" }}
+                                                >
+                                                    ×
+                                                </button>
                                             </span>
-
-                                            <p className="text-xs text-gray-400 mt-1">🔋 {product.salud_bateria}% bateria</p>
-                                            <p className="text-lg font-bold mt-auto pt-2">{product.precio} €</p>
-                                        </Link>
-                                    )
-                                })}
+                                        ))}
+                                    </div>
+                                )}
                             </div>
-                        )}
+
+                            <p style={{ fontSize: 12, color: "#94a3b8", marginBottom: 20, marginTop: 2 }}>{filtrados.length} productes trobats</p>
+
+                            {filtrados.length === 0 ? (
+                                <div className="text-center py-16 text-gray-400">
+                                    <p className="text-4xl mb-3">🔍</p>
+                                    <p className="text-lg">No s'han trobat mòbils per "{query}"</p>
+                                </div>
+                            ) : (
+                                <>
+                                    <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+                                        {visibles.map(producto => {
+                                            const estat = ESTADO_LABELS[producto.estado] ?? { label: producto.estado, color: "bg-gray-100 text-gray-600" }
+
+                                            return (
+                                                <Link
+                                                    to={`/models/${producto.modelo_id}`}
+                                                    key={producto.id}
+                                                    className="border rounded-xl p-3 hover:shadow-lg transition flex flex-col"
+                                                >
+                                                    <div className="bg-gray-50 rounded-lg flex items-center justify-center h-44 mb-3">
+                                                        <img
+                                                            src={producto.image_url}
+                                                            alt={`${producto.marca} ${producto.modelo}`}
+                                                            className="h-40 object-contain"
+                                                            onError={(e) => { e.target.src = "/images/no-image.png" }}
+                                                        />
+                                                    </div>
+                                                    <p className="text-xs text-gray-400 uppercase tracking-wide">{producto.marca}</p>
+                                                    <p className="font-semibold text-sm leading-tight">{producto.modelo}</p>
+                                                    <p className="text-xs text-gray-500 mt-1">
+                                                        {producto.almacenamiento}GB · {producto.ram}GB RAM · {producto.color}
+                                                    </p>
+                                                    <span className={`mt-2 text-xs px-2 py-0.5 rounded-full w-fit ${estat.color}`}>
+                                                        {estat.label}
+                                                    </span>
+                                                    <p className="text-xs text-gray-400 mt-1">🔋 {producto.salud_bateria}% bateria</p>
+                                                    <p className="text-lg font-bold mt-auto pt-2">{producto.precio} €</p>
+                                                </Link>
+                                            )
+                                        })}
+                                    </div>
+
+                                    {/* Centinela para el scroll infinito */}
+                                    <div ref={centinelaRef} style={{ height: 1 }} />
+
+                                    {hayMas && (
+                                        <div style={{ textAlign: "center", padding: "24px 0 8px", color: "#94a3b8", fontSize: 13 }}>
+                                            Carregant més productes...
+                                        </div>
+                                    )}
+
+                                    {!hayMas && filtrados.length > LIMITE && (
+                                        <div style={{ textAlign: "center", padding: "24px 0 8px", color: "#cbd5e1", fontSize: 12 }}>
+                                            Tots els productes carregats · {filtrados.length} en total
+                                        </div>
+                                    )}
+                                </>
+                            )}
+                        </div>
                     </>
                 )}
             </main>
