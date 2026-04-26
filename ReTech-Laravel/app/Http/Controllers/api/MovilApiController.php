@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Models\Movil;
+use App\Models\Compra;
 use Illuminate\Http\Request;
 
 class MovilApiController extends Controller
@@ -54,13 +55,51 @@ class MovilApiController extends Controller
         return response()->json($moviles);
     }
 
+    public function bestSellers()
+    {
+        $counts = [];
+        Compra::all()->each(function ($compra) use (&$counts) {
+            foreach ($compra->items as $item) {
+                $id = $item['movil_id'];
+                $counts[$id] = ($counts[$id] ?? 0) + $item['cantidad'];
+            }
+        });
+
+        arsort($counts);
+        $topIds = array_slice(array_keys($counts), 0, 4);
+
+        if (empty($topIds)) {
+            $moviles = Movil::with(['modelo.marca', 'color'])->where('stock', '>', 0)->latest()->limit(4)->get();
+        } else {
+            $moviles = Movil::with(['modelo.marca', 'color'])
+                ->whereIn('id', $topIds)
+                ->get()
+                ->sortBy(fn($m) => array_search($m->id, $topIds))
+                ->values();
+        }
+
+        return response()->json($moviles->map(function ($movil) {
+            return [
+                'id'             => $movil->id,
+                'modelo'         => $movil->modelo?->nombre,
+                'precio'         => $movil->precio,
+                'estado'         => $movil->estado,
+                'almacenamiento' => $movil->almacenamiento,
+                'ram'            => $movil->ram,
+                'color'          => $movil->color?->nombre,
+                'stock'          => $movil->stock,
+            ];
+        })->values());
+    }
+
     public function show($id)
     {
-        $movil = Movil::with(['modelo', 'color', 'empresa'])
+        $movil = Movil::with(['modelo.marca', 'color', 'empresa'])
             ->findOrFail($id);
 
         return response()->json([
             'id' => $movil->id,
+            'marca' => $movil->modelo->marca->nombre ?? null,
             'modelo' => $movil->modelo->nombre,
             'precio' => $movil->precio,
             'estado' => $movil->estado,

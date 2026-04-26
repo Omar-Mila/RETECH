@@ -18,7 +18,7 @@ export default function CartItem({ item, onRemove }) {
         display: "flex", alignItems: "center", justifyContent: "center"
       }}>
         <img 
-          src={item.imagen_url || `https://via.placeholder.com/50?text=${item.marca}`} 
+          src={item.imagen_url || `https://via.placeholder.com/50?text=${item.modelo}`}
           alt={item.modelo}
           style={{ width: "90%", height: "90%", objectFit: "contain" }}
         />
@@ -27,7 +27,7 @@ export default function CartItem({ item, onRemove }) {
       {/* Detalles */}
       <div style={{ flex: 1, minWidth: 0 }}>
         <p style={{ margin: 0, fontSize: 13, fontWeight: 700, color: "#1e293b", lineHeight: 1.2 }}>
-          {item.marca} {item.modelo}
+          {item.modelo}
         </p>
         <p style={{ margin: "2px 0 0", fontSize: 11, color: "#64748b" }}>
           {item.almacenamiento}GB · {item.color}

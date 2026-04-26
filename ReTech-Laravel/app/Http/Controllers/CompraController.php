@@ -47,6 +47,14 @@ class CompraController extends Controller
         });
     }
 
+    public function show(Request $request, $id) {
+        $user = $request->user();
+        $compra = Compra::where('id', $id)
+                    ->where('cliente_user_id', $user->id)
+                    ->firstOrFail();
+        return response()->json($compra);
+    }
+
     public function index(Request $request) {
         try {
             $user = $request->user();

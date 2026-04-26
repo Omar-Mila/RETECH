@@ -86,7 +86,7 @@ function CartItem({ item, onRemove, onQty, disabled }) {
         <div style={{ display:"flex",justifyContent:"space-between",alignItems:"flex-start",gap:8 }}>
           <div>
             <p style={{ margin:0,fontWeight:700,fontSize:14.5,color:"#0f172a",fontFamily:"'Sora',sans-serif" }}>
-              {item.marca} {item.modelo}
+              {item.modelo}
             </p>
             <p style={{ margin:"2px 0 0",fontSize:12,color:"#64748b" }}>
               {item.almacenamiento} GB · {item.ram} GB RAM ·{" "}
@@ -260,21 +260,163 @@ function OrderSummary({ items, onCheckout, loadingIntent }) {
   );
 }
 
+function generateInvoiceHTML(compraId, items, total) {
+  const date = new Date().toLocaleDateString("es-ES", { day: "numeric", month: "long", year: "numeric" });
+  const invoiceNum = `FAC-${String(compraId).padStart(5, "0")}`;
+  const rows = items.map(item => `
+    <tr>
+      <td><strong>${item.modelo}</strong><br><small>${item.almacenamiento} GB · ${item.ram} GB RAM · ${item.color} · ${item.estado}</small></td>
+      <td>${item.cantidad}</td>
+      <td>${fmt(item.precio)}</td>
+      <td>${fmt(item.subtotal)}</td>
+    </tr>
+  `).join("");
+
+  return `<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Factura ${invoiceNum}</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: Arial, Helvetica, sans-serif; color: #1e293b; padding: 48px; font-size: 13px; }
+    .header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 40px; }
+    .brand { font-size: 26px; font-weight: 900; letter-spacing: -1px; color: #0f172a; }
+    .brand span { color: #6366f1; }
+    .meta { text-align: right; }
+    .meta h2 { font-size: 22px; font-weight: 800; color: #0f172a; margin-bottom: 4px; }
+    .meta p { color: #64748b; font-size: 12px; line-height: 1.7; }
+    hr { border: none; border-top: 2px solid #e2e8f0; margin: 28px 0; }
+    table { width: 100%; border-collapse: collapse; }
+    thead th { background: #0f172a; color: #fff; padding: 10px 14px; font-size: 11px; text-transform: uppercase; letter-spacing: .5px; text-align: left; }
+    th:nth-child(2), th:nth-child(3), th:nth-child(4) { text-align: right; }
+    tbody td { padding: 12px 14px; border-bottom: 1px solid #f1f5f9; vertical-align: top; }
+    tbody td:nth-child(2), tbody td:nth-child(3), tbody td:nth-child(4) { text-align: right; white-space: nowrap; }
+    small { color: #64748b; font-size: 11px; }
+    .totals { margin-top: 24px; display: flex; justify-content: flex-end; }
+    .totals-inner { width: 260px; }
+    .total-final { display: flex; justify-content: space-between; padding: 12px 0; font-size: 17px; font-weight: 800; color: #0f172a; border-top: 2px solid #0f172a; margin-top: 8px; }
+    .footer { margin-top: 52px; padding-top: 20px; border-top: 1px solid #e2e8f0; text-align: center; color: #94a3b8; font-size: 11px; line-height: 1.8; }
+    @media print { body { padding: 20px; } }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <div>
+      <div class="brand">Re<span>Tech</span></div>
+      <p style="color:#64748b;font-size:12px;margin-top:6px;">Tecnologia reacondicionada de confiança</p>
+    </div>
+    <div class="meta">
+      <h2>${invoiceNum}</h2>
+      <p>Data: ${date}</p>
+      <p>Comanda #${compraId}</p>
+    </div>
+  </div>
+  <hr>
+  <table>
+    <thead>
+      <tr>
+        <th>Producte</th>
+        <th>Quantitat</th>
+        <th>Preu unit.</th>
+        <th>Total</th>
+      </tr>
+    </thead>
+    <tbody>${rows}</tbody>
+  </table>
+  <div class="totals">
+    <div class="totals-inner">
+      <div class="total-final"><span>Total</span><span>${fmt(total)}</span></div>
+    </div>
+  </div>
+  <div class="footer">
+    <p>Gràcies per la teva compra a ReTech</p>
+    <p>Aquest document és la teva factura simplificada</p>
+  </div>
+</body>
+</html>`;
+}
+
 function SuccessScreen({ compraId }) {
+  const [items, setItems] = useState([]);
+  const [total, setTotal] = useState(0);
+  const [loadingOrder, setLoadingOrder] = useState(true);
+
+  useEffect(() => {
+    const load = async () => {
+      try {
+        const res = await fetch(`/api/compras/${compraId}`, {
+          credentials: "include",
+          headers: { "Accept": "application/json" },
+        });
+        if (!res.ok) throw new Error();
+        const order = await res.json();
+
+        const ids = [...new Set((order.items || []).map(i => i.movil_id))];
+        const results = await Promise.all(
+          ids.map(id =>
+            fetch(`/api/products/${id}`, { headers: { "Accept": "application/json" } })
+              .then(r => r.ok ? r.json() : null).catch(() => null)
+          )
+        );
+        const cache = {};
+        ids.forEach((id, i) => { if (results[i]) cache[id] = results[i]; });
+
+        const merged = (order.items || []).map(item => {
+          const movil = cache[item.movil_id] || {};
+          const precio = item.precio ?? item.precio_unitario ?? movil.precio ?? 0;
+          return { ...movil, cantidad: item.cantidad, precio, subtotal: precio * item.cantidad };
+        });
+
+        setItems(merged);
+        setTotal(order.precio_total ?? merged.reduce((s, i) => s + i.subtotal, 0));
+      } catch {
+        // Si falla la carga, se muestran los botones igual sin items
+      } finally {
+        setLoadingOrder(false);
+      }
+    };
+    load();
+  }, [compraId]);
+
+  const handleInvoice = () => {
+    const html = generateInvoiceHTML(compraId, items, total);
+    const win = window.open("", "_blank");
+    if (!win) return;
+    win.document.write(html);
+    win.document.close();
+    win.focus();
+    win.print();
+  };
+
   return (
     <div style={{ minHeight:"100vh",background:"#f8fafc",display:"flex",alignItems:"center",justifyContent:"center",padding:24 }}>
-      <div style={{ background:"#fff",borderRadius:24,padding:"52px 40px",textAlign:"center",maxWidth:420,width:"100%",border:"1px solid #e2e8f0",boxShadow:"0 8px 32px rgba(15,23,42,.08)" }}>
-        <div style={{ width:72,height:72,borderRadius:"50%",background:"linear-gradient(135deg,#6366f1,#4f46e5)",margin:"0 auto 20px",display:"flex",alignItems:"center",justifyContent:"center",boxShadow:"0 8px 20px rgba(99,102,241,.35)" }}>
+      <div style={{ background:"#fff",borderRadius:24,padding:"40px",textAlign:"center",maxWidth:480,width:"100%",border:"1px solid #e2e8f0",boxShadow:"0 8px 32px rgba(15,23,42,.08)" }}>
+        <div style={{ width:72,height:72,borderRadius:"50%",background:"#0f172a",margin:"0 auto 20px",display:"flex",alignItems:"center",justifyContent:"center",boxShadow:"0 8px 20px rgba(15,23,42,.2)" }}>
           <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5">
             <polyline points="20 6 9 17 4 12"/>
           </svg>
         </div>
         <h1 style={{ margin:"0 0 8px",fontSize:24,fontWeight:800,color:"#0f172a",fontFamily:"'Sora',sans-serif" }}>¡Pedido confirmado!</h1>
-        <p style={{ margin:"0 0 6px",color:"#64748b",fontSize:14 }}>Tu pago se ha procesado correctamente.</p>
-        <p style={{ margin:"0 0 28px",color:"#94a3b8",fontSize:12.5 }}>Pedido #{compraId}</p>
-        <a href="/" style={{ display:"inline-block",padding:"12px 28px",background:"linear-gradient(135deg,#6366f1,#4f46e5)",color:"#fff",borderRadius:10,textDecoration:"none",fontSize:13.5,fontWeight:700,fontFamily:"'Sora',sans-serif",boxShadow:"0 4px 12px rgba(99,102,241,.35)" }}>
-          Seguir comprando
-        </a>
+        <p style={{ margin:"0 0 4px",color:"#64748b",fontSize:14 }}>Tu pago se ha procesado correctamente.</p>
+        <p style={{ margin:"0 0 24px",color:"#94a3b8",fontSize:12.5 }}>Pedido #{compraId}</p>
+
+        {loadingOrder && (
+          <div style={{ marginBottom:24 }}><Spinner size={22} color="#6366f1"/></div>
+        )}
+
+        <div style={{ display:"flex",gap:12,justifyContent:"center",flexWrap:"wrap" }}>
+          <button
+            onClick={handleInvoice}
+            disabled={loadingOrder || items.length === 0}
+            style={{ padding:"12px 22px",background:"#f8fafc",border:"1px solid #e2e8f0",borderRadius:10,fontSize:13.5,fontWeight:700,cursor:loadingOrder||items.length===0?"not-allowed":"pointer",color:"#0f172a",fontFamily:"'Sora',sans-serif",opacity:loadingOrder||items.length===0?0.5:1 }}
+          >
+              Descargar factura
+          </button>
+          <a href="/" style={{ padding:"12px 22px",background:"linear-gradient(135deg,#6366f1,#4f46e5)",color:"#fff",borderRadius:10,textDecoration:"none",fontSize:13.5,fontWeight:700,fontFamily:"'Sora',sans-serif",boxShadow:"0 4px 12px rgba(99,102,241,.35)" }}>
+            Seguir comprando →
+          </a>
+        </div>
       </div>
     </div>
   );

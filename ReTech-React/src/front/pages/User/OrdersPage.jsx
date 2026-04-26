@@ -5,6 +5,78 @@ import Footer from "../../components/Footer";
 const fmt = (n) =>
   new Intl.NumberFormat("es-ES", { style: "currency", currency: "EUR" }).format(n);
 
+function generateInvoiceHTML(compraId, items, total) {
+  const date = new Date().toLocaleDateString("es-ES", { day: "numeric", month: "long", year: "numeric" });
+  const invoiceNum = `FAC-${String(compraId).padStart(5, "0")}`;
+  const rows = items.map(item => `
+    <tr>
+      <td><strong>${item.modelo ?? ""}</strong><br><small>${item.almacenamiento ?? ""} GB · ${item.ram ?? ""} GB RAM · ${item.color ?? ""} · ${item.estado ?? ""}</small></td>
+      <td>${item.cantidad}</td>
+      <td>${fmt(item.precio)}</td>
+      <td>${fmt(item.subtotal)}</td>
+    </tr>
+  `).join("");
+
+  return `<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Factura ${invoiceNum}</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: Arial, Helvetica, sans-serif; color: #1e293b; padding: 48px; font-size: 13px; }
+    .header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 40px; }
+    .brand { font-size: 26px; font-weight: 900; letter-spacing: -1px; color: #0f172a; }
+    .brand span { color: #6366f1; }
+    .meta { text-align: right; }
+    .meta h2 { font-size: 22px; font-weight: 800; color: #0f172a; margin-bottom: 4px; }
+    .meta p { color: #64748b; font-size: 12px; line-height: 1.7; }
+    hr { border: none; border-top: 2px solid #e2e8f0; margin: 28px 0; }
+    table { width: 100%; border-collapse: collapse; }
+    thead th { background: #0f172a; color: #fff; padding: 10px 14px; font-size: 11px; text-transform: uppercase; letter-spacing: .5px; text-align: left; }
+    th:nth-child(2), th:nth-child(3), th:nth-child(4) { text-align: right; }
+    tbody td { padding: 12px 14px; border-bottom: 1px solid #f1f5f9; vertical-align: top; }
+    tbody td:nth-child(2), tbody td:nth-child(3), tbody td:nth-child(4) { text-align: right; white-space: nowrap; }
+    small { color: #64748b; font-size: 11px; }
+    .totals { margin-top: 24px; display: flex; justify-content: flex-end; }
+    .totals-inner { width: 260px; }
+    .total-final { display: flex; justify-content: space-between; padding: 12px 0; font-size: 17px; font-weight: 800; color: #0f172a; border-top: 2px solid #0f172a; margin-top: 8px; }
+    .footer { margin-top: 52px; padding-top: 20px; border-top: 1px solid #e2e8f0; text-align: center; color: #94a3b8; font-size: 11px; line-height: 1.8; }
+    @media print { body { padding: 20px; } }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <div>
+      <div class="brand">Re<span>Tech</span></div>
+      <p style="color:#64748b;font-size:12px;margin-top:6px;">Tecnologia reacondicionada de confiança</p>
+    </div>
+    <div class="meta">
+      <h2>${invoiceNum}</h2>
+      <p>Data: ${date}</p>
+      <p>Comanda #${compraId}</p>
+    </div>
+  </div>
+  <hr>
+  <table>
+    <thead>
+      <tr><th>Producte</th><th>Quantitat</th><th>Preu unit.</th><th>Total</th></tr>
+    </thead>
+    <tbody>${rows}</tbody>
+  </table>
+  <div class="totals">
+    <div class="totals-inner">
+      <div class="total-final"><span>Total</span><span>${fmt(total)}</span></div>
+    </div>
+  </div>
+  <div class="footer">
+    <p>Gràcies per la teva compra a ReTech</p>
+    <p>Aquest document és la teva factura simplificada</p>
+  </div>
+</body>
+</html>`;
+}
+
 const ESTADO_COLORS = {
   "Como nuevo":  { bg: "#d1fae5", text: "#065f46" },
   "Excelente":   { bg: "#d1fae5", text: "#065f46" },
@@ -91,6 +163,20 @@ function OrderItem({ item, movil }) {
 }
 
 function OrderCard({ order, movilsCache, onToggle, isOpen }) {
+  const handleInvoice = () => {
+    const items = (order.items || []).map(item => {
+      const movil = movilsCache[item.movil_id] || {};
+      const precio = item.precio ?? item.precio_unitario ?? movil.precio ?? 0;
+      return { ...movil, cantidad: item.cantidad, precio, subtotal: precio * item.cantidad };
+    });
+    const html = generateInvoiceHTML(order.id, items, order.precio_total);
+    const win = window.open("", "_blank");
+    if (!win) return;
+    win.document.write(html);
+    win.document.close();
+    win.focus();
+    win.print();
+  };
   const totalProductos = order.items?.reduce((acc, i) => acc + (Number(i.cantidad) || 0), 0) || 0;
   const estadoConfig = {
     pagado:    { bg: "#d1fae5", text: "#065f46",  label: "PAGAT" },
@@ -182,21 +268,19 @@ function OrderCard({ order, movilsCache, onToggle, isOpen }) {
 
           {/* Totals */}
           <div style={{ marginTop: 16, padding: "16px", background: "#f8fafc", borderRadius: 12, border: "1px solid #e2e8f0" }}>
-            {(() => {
-              const subtotal = order.precio_total / 1.21;
-              const iva = order.precio_total - subtotal;
-              return (
-                <>
-                  <div style={{ display: "flex", justifyContent: "space-between", fontSize: 13, color: "#475569", marginBottom: 6 }}>
-                    <span>Subtotal</span><span>{fmt(subtotal)}</span>
-                  </div>
-                  <div style={{ borderTop: "1px dashed #e2e8f0", paddingTop: 10, display: "flex", justifyContent: "space-between" }}>
-                    <span style={{ fontWeight: 800, fontSize: 15, color: "#0f172a", fontFamily: "'Sora', sans-serif" }}>Total</span>
-                    <span style={{ fontWeight: 800, fontSize: 17, color: "#4f46e5", fontFamily: "'Sora', sans-serif" }}>{fmt(order.precio_total)}</span>
-                  </div>
-                </>
-              );
-            })()}
+            <div style={{ display: "flex", justifyContent: "space-between" }}>
+              <span style={{ fontWeight: 800, fontSize: 15, color: "#0f172a", fontFamily: "'Sora', sans-serif" }}>Total</span>
+              <span style={{ fontWeight: 800, fontSize: 17, color: "#4f46e5", fontFamily: "'Sora', sans-serif" }}>{fmt(order.precio_total)}</span>
+            </div>
+          </div>
+
+          <div style={{ marginTop: 14, display: "flex", justifyContent: "flex-end" }}>
+            <button
+              onClick={handleInvoice}
+              style={{ padding: "9px 18px", background: "#f8fafc", border: "1px solid #e2e8f0", borderRadius: 10, fontSize: 13, fontWeight: 700, cursor: "pointer", color: "#0f172a", fontFamily: "'Sora', sans-serif" }}
+            >
+              Descargar factura
+            </button>
           </div>
 
           {order.stripe_intent && (
