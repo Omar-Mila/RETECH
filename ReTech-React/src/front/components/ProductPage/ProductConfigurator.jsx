@@ -329,7 +329,7 @@ export default function ProductConfigurator({
           <svg className="w-4 h-4 text-gray-600 flex-shrink-0" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75L11.25 15 15 9.75m-3-7.036A11.959 11.959 0 013.598 6 11.955 11.955 0 003 12c0 6.627 5.373 12 12 12s12-5.373 12-12c0-2.03-.506-3.944-1.397-5.617" />
           </svg>
-          <span className="font-medium text-gray-800">Garantia de 30 dies</span>
+          <span className="font-medium text-gray-800">Garantia de 30 díes</span>
         </div>
 
         {/* Mètodes de pagament */}
