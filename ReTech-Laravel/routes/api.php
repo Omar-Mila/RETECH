@@ -46,7 +46,7 @@ Route::middleware(['web'])->group(function () {
 
         if (Auth::attempt($credentials)) {
             $request->session()->regenerate();
-            return response()->json(Auth::user());
+            return response()->json(Auth::user()->load('cliente'));
         }
 
         return response()->json(['message' => 'Credencials incorrectes'], 401);
@@ -88,6 +88,7 @@ Route::get('/products/search', [ProductosController::class, 'search']);
 Route::get('/marcas', [MarcaApiController::class, 'index']);
 Route::get('/moviles', [MovilApiController::class, 'index']);
 
+Route::get('/moviles/best-sellers', [MovilApiController::class, 'bestSellers']);
 Route::get('/products/{id}', [MovilApiController::class, 'show']);
 
 //cerca de models
@@ -114,4 +115,5 @@ Route::prefix('checkout')->middleware(['web', 'auth:sanctum'])->group(function (
 
 Route::middleware('auth:sanctum')->group(function () {
     Route::get('/compras', [CompraController::class, 'index']);
+    Route::get('/compras/{id}', [CompraController::class, 'show']);
 });

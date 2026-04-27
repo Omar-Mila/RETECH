@@ -72,7 +72,7 @@ function CartDropdown({ onClose }) {
                 <img src={item.imagen_url || `https://via.placeholder.com/48?text=Phone`} style={{ width: '80%', height: '80%', objectFit: 'contain' }} alt="movil" />
               </div>
               <div style={{ flex: 1, minWidth: 0 }}>
-                <p style={{ margin: 0, fontSize: 13, fontWeight: 700, color: "#0f172a", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{item.marca} {item.modelo}</p>
+                <p style={{ margin: 0, fontSize: 13, fontWeight: 700, color: "#0f172a", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{item.modelo}</p>
                 <p style={{ margin: 0, fontSize: 12, color: "#4f46e5", fontWeight: 600 }}>{fmt(item.precio)} <span style={{ color: "#94a3b8", fontWeight: 400 }}>x{item.cantidad}</span></p>
               </div>
               <button onClick={() => handleRemove(item.movil_id)} style={{ background: "#fee2e2", border: "none", cursor: "pointer", color: "#ef4444", width: 24, height: 24, borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 14 }}>×</button>

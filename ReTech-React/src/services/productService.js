@@ -9,6 +9,13 @@ export async function getProducts() {
   return data
 }
 
+export async function getBestSellers() {
+  const response = await fetch("http://localhost:8000/api/moviles/best-sellers", {
+    credentials: "include",
+  });
+  return response.json();
+}
+
 export async function getProduct(id) {
     const res = await fetch(`http://localhost:8000/api/models/${id}`, {
         credentials: "include"
