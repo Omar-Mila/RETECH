@@ -1,27 +1,48 @@
 import { useEffect, useMemo, useState } from "react"
 import { useParams } from "react-router-dom"
-import { getModelPrice } from "../../../services/productService"
+import { getModelPrice, getFilteredOptions } from "../../../services/productService"
+
+const STATE_INFO = {
+  "Como nuevo": {
+    img: "/A.png",
+    badge: "Estado A",
+    desc: "Sense raspadures visibles. Com si acabés de sortir de la caixa."
+  },
+  "Buen estado": {
+    img: "/B.png",
+    badge: "Estado B",
+    desc: "Petites marques d'ús gairebé imperceptibles. Funciona perfectament."
+  },
+  "Funcional": {
+    img: "/C.png",
+    badge: "Estado C",
+    desc: "Marques d'ús visibles. En perfecte funcionament."
+  }
+}
 
 export default function ProductConfigurator({
   options,
   selectedColor,
   setSelectedColor,
+  selectedState,
+  setSelectedState,
+  productName,
 }) {
   const { id } = useParams()
 
-  const [openAdvanced, setOpenAdvanced] = useState(false)
   const [loadingPrice, setLoadingPrice] = useState(false)
+  const [loadingOptions, setLoadingOptions] = useState(false)
   const [adding, setAdding] = useState(false)
+  const [priceData, setPriceData] = useState(null)
 
-  const [priceData, setPriceData] = useState(null) // {precio, stock, movil_id, ...}
-
-  // filtros (solo se usan cuando "Personalitzar" está abierto y el user toca algo)
   const [estado, setEstado] = useState("")
   const [almacenamiento, setAlmacenamiento] = useState("")
-  const [color, setColor] = useState("")
   const [bateria, setBateria] = useState("")
 
-  // helper: construir params solo con los que tengan valor
+  const [availAlmacenamientos, setAvailAlmacenamientos] = useState(options?.almacenamientos ?? [])
+  const [availColores, setAvailColores] = useState(options?.colores ?? [])
+  const [availBaterias, setAvailBaterias] = useState(options?.baterias ?? [])
+
   const params = useMemo(() => {
     const p = {}
     if (estado) p.estado = estado
@@ -29,45 +50,35 @@ export default function ProductConfigurator({
     if (selectedColor) p.color = selectedColor
     if (bateria) p.bateria_min = bateria
     return p
-  }, [estado, almacenamiento, color, bateria])
+  }, [estado, almacenamiento, selectedColor, bateria])
 
-  // 1) Al cargar: precio recomendado (sin filtros)
+  // Preu recomanat inicial (sense filtres)
   useEffect(() => {
     let mounted = true
-
-    async function loadRecommended() {
+    async function load() {
       setLoadingPrice(true)
       try {
-        const data = await getModelPrice(id, {}) // sin filtros
-        if (!mounted) return
-        setPriceData(data)
+        const data = await getModelPrice(id, {})
+        if (mounted) setPriceData(data)
       } catch (e) {
         console.error(e)
-        if (mounted) setPriceData(null)
       } finally {
         if (mounted) setLoadingPrice(false)
       }
     }
-
-    loadRecommended()
-
-    return () => {
-      mounted = false
-    }
+    load()
+    return () => { mounted = false }
   }, [id])
 
-  // 2) Si el usuario está personalizando: recalcular precio al cambiar filtros
+  // Recalcular preu quan canvien els filtres
   useEffect(() => {
-    if (!openAdvanced) return
-
+    if (Object.keys(params).length === 0) return
     let mounted = true
-
-    async function loadCustomPrice() {
+    async function load() {
       setLoadingPrice(true)
       try {
         const data = await getModelPrice(id, params)
-        if (!mounted) return
-        setPriceData(data)
+        if (mounted) setPriceData(data)
       } catch (e) {
         console.error(e)
         if (mounted) setPriceData(null)
@@ -75,32 +86,83 @@ export default function ProductConfigurator({
         if (mounted) setLoadingPrice(false)
       }
     }
+    load()
+    return () => { mounted = false }
+  }, [params, id])
 
-    loadCustomPrice()
-
-    return () => {
-      mounted = false
+  async function fetchFiltered(filterParams) {
+    setLoadingOptions(true)
+    try {
+      return await getFilteredOptions(id, filterParams)
+    } catch (e) {
+      console.error(e)
+      return null
+    } finally {
+      setLoadingOptions(false)
     }
-  }, [openAdvanced, params, id])
+  }
+
+  const handleEstadoChange = async (value) => {
+    setEstado(value)
+    setSelectedState(value)
+    setAlmacenamiento("")
+    setSelectedColor("")
+    setBateria("")
+
+    if (!value) {
+      setAvailAlmacenamientos(options?.almacenamientos ?? [])
+      setAvailColores(options?.colores ?? [])
+      setAvailBaterias(options?.baterias ?? [])
+      return
+    }
+
+    const filtered = await fetchFiltered({ estado: value })
+    if (filtered) {
+      setAvailAlmacenamientos(filtered.almacenamientos ?? [])
+      setAvailColores(filtered.colores ?? [])
+      setAvailBaterias(filtered.baterias ?? [])
+    }
+  }
+
+  const handleAlmacenamientoChange = async (value) => {
+    setAlmacenamiento(value)
+    setSelectedColor("")
+    setBateria("")
+
+    const filterParams = value ? { estado, almacenamiento: value } : { estado }
+    const filtered = await fetchFiltered(filterParams)
+    if (filtered) {
+      setAvailColores(filtered.colores ?? [])
+      setAvailBaterias(filtered.baterias ?? [])
+    }
+  }
+
+  const handleColorChange = async (value) => {
+    setSelectedColor(value)
+    setBateria("")
+
+    const filterParams = value
+      ? { estado, almacenamiento, color: value }
+      : { estado, almacenamiento }
+    const filtered = await fetchFiltered(filterParams)
+    if (filtered) {
+      setAvailBaterias(filtered.baterias ?? [])
+    }
+  }
 
   const handleAddToCart = async () => {
     if (!priceData?.movil_id) {
-      alert("Selecciona una combinació válida");
-      return;
+      alert("Selecciona una combinació vàlida")
+      return
     }
 
-    setAdding(true);
+    setAdding(true)
     try {
-      // 1. Obtener la cookie de protección
-      await fetch("http://localhost:8000/sanctum/csrf-cookie", { 
-        credentials: "include" 
-      });
-
-      // 2. Extraer el token de las cookies del navegador (necesario para POST)
+      await fetch("http://localhost:8000/sanctum/csrf-cookie", { credentials: "include" })
       const xsrfToken = document.cookie
         .split("; ")
         .find((row) => row.startsWith("XSRF-TOKEN="))
-        ?.split("=")[1];
+        ?.split("=")[1]
 
       const response = await fetch("http://localhost:8000/api/carrito", {
         method: "POST",
@@ -111,144 +173,217 @@ export default function ProductConfigurator({
           "X-XSRF-TOKEN": decodeURIComponent(xsrfToken || ""),
         },
         credentials: "include",
-        body: JSON.stringify({
-          movil_id: priceData.movil_id,
-          cantidad: 1,
-        }),
-      });
+        body: JSON.stringify({ movil_id: priceData.movil_id, cantidad: 1 }),
+      })
 
       if (response.ok) {
-        // Si el Navbar escucha este evento, se actualizará el numerito del carrito
-        window.dispatchEvent(new Event("cart-updated"));
-        window.scrollTo({ top: 0, behavior: "smooth" });
+        window.dispatchEvent(new Event("cart-updated"))
+        window.scrollTo({ top: 0, behavior: "smooth" })
       } else {
-        const error = await response.json();
-        alert(error.message || "Error al afegir");
+        const error = await response.json()
+        alert(error.message || "Error al afegir")
       }
     } catch (err) {
-      console.error("Error de conexió:", err);
-      alert("No se ha pogut connectar amb el servidor");
+      console.error("Error de connexió:", err)
+      alert("No s'ha pogut connectar amb el servidor")
     } finally {
-      setAdding(false);
+      setAdding(false)
     }
-  };
+  }
 
   const hasResult = priceData && priceData.precio != null && priceData.stock > 0
-
   return (
-    <div className="space-y-4 border-t pt-6">
-      <h2 className="text-lg font-semibold">Compra</h2>
+    <div className="space-y-6">
 
-      {/* TARJETA RECOMENDADA */}
-      <div className="border rounded-lg p-4 space-y-2">
-        <div className="flex items-start justify-between gap-4">
-          <div>
-            <div className="text-sm text-gray-500">Recomanat</div>
-
-            {/* Resumen (si backend devuelve extras, los puedes enseñar aquí) */}
-            <div className="text-sm">
-              {priceData?.almacenamiento ? `${priceData.almacenamiento} GB · ` : ""}
-              {priceData?.estado ? `${priceData.estado} · ` : ""}
-              {priceData?.salud_bateria ? `Bateria ${priceData.salud_bateria}%` : ""}
-            </div>
-          </div>
-
-          <div className="text-right">
-            <div className="text-2xl font-bold">
-              {loadingPrice ? "…" : hasResult ? `${priceData.precio}€` : "—"}
-            </div>
-            <div className="text-xs text-gray-500">
-              {loadingPrice ? "Calculant..." : hasResult ? `Stock: ${priceData.stock}` : "Sense combinacions"}
-            </div>
-          </div>
-        </div>
-
-        <button
-          type="button"
-          onClick={() => setOpenAdvanced(v => !v)}
-          className="text-sm underline"
-        >
-          {openAdvanced ? "Amagar personalització" : "Personalitzar"}
-        </button>
-      </div>
-
-      {/* CONFIGURADOR AVANZADO (COLAPSABLE) */}
-      {openAdvanced && (
-        <div className="space-y-3 border rounded-lg p-4">
-          <div className="text-sm font-medium">Configuració</div>
-
-          <select
-            value={estado}
-            onChange={(e) => setEstado(e.target.value)}
-            className="w-full border rounded p-2"
-          >
-            <option value="">Estat</option>
-            {options.estados.map(e => <option key={e} value={e}>{e}</option>)}
-          </select>
-
-          <select
-            value={almacenamiento}
-            onChange={(e) => setAlmacenamiento(e.target.value)}
-            className="w-full border rounded p-2"
-          >
-            <option value="">Emmagatzematge</option>
-            {options.almacenamientos.map(a => <option key={a} value={a}>{a} GB</option>)}
-          </select>
-
-          {/* <select
-            value={color}
-            onChange={(e) => setColor(e.target.value)}
-            className="w-full border rounded p-2"
-          >
-            <option value="">Color</option>
-            {options.colores.map((c) => (
-            <option key={c.id} value={c.id}>
-                {c.nombre}
-              </option>
-            ))}
-          </select> */}
-
-          <select
-  value={selectedColor}
-  onChange={(e) => setSelectedColor(e.target.value)}
-  className="w-full border rounded p-2"
->
-  <option value="">Color</option>
-  {options.colores.map((c) => (
-    <option key={c.id} value={c.id}>
-      {c.nombre}
-    </option>
-  ))}
-</select>
-
-          <select
-              value={bateria}
-              onChange={(e) => setBateria(e.target.value)}
-              className="w-full border rounded p-2"
-          >
-            
-              {options.baterias.map(b => (
-                <option key={b.valor} value={b.valor}>
-                  {b.label}
-                </option>
-              ))}
-            </select>
-        </div>
+      {productName && (
+        <h1 className="text-2xl font-bold">{productName}</h1>
       )}
 
-      {/* CTA */}
+      <div className="space-y-4">
+
+        {/* Estat */}
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-1">Estat</label>
+          <select
+            value={estado}
+            onChange={(e) => handleEstadoChange(e.target.value)}
+            className="w-full border rounded-lg p-2.5 bg-white focus:ring-2 focus:ring-black focus:border-black"
+          >
+            <option value="">Selecciona l'estat</option>
+            {options?.estados.map(e => (
+              <option key={e} value={e}>{e}</option>
+            ))}
+          </select>
+        </div>
+
+        {/* Previsualització estat */}
+        {estado && STATE_INFO[estado] && (
+          <div className="rounded-xl border overflow-hidden flex gap-3 bg-gray-50 p-3 items-center">
+            <img
+              src={STATE_INFO[estado].img}
+              alt={STATE_INFO[estado].badge}
+              className="w-20 h-20 object-contain flex-shrink-0"
+            />
+            <div>
+              <span className="inline-block text-xs font-semibold bg-black text-white px-2 py-0.5 rounded-full mb-1">
+                {STATE_INFO[estado].badge}
+              </span>
+              <p className="text-xs text-gray-600 leading-snug">{STATE_INFO[estado].desc}</p>
+            </div>
+          </div>
+        )}
+
+        {/* Emmagatzematge */}
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-1">Emmagatzematge</label>
+          <select
+            value={almacenamiento}
+            onChange={(e) => handleAlmacenamientoChange(e.target.value)}
+            disabled={!estado || loadingOptions}
+            className="w-full border rounded-lg p-2.5 bg-white focus:ring-2 focus:ring-black focus:border-black disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            <option value="">
+              {!estado ? "Primer selecciona l'estat" : "Selecciona l'emmagatzematge"}
+            </option>
+            {availAlmacenamientos.map(a => (
+              <option key={a} value={a}>{a} GB</option>
+            ))}
+          </select>
+        </div>
+
+        {/* Color */}
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-1">Color</label>
+          <select
+            value={selectedColor}
+            onChange={(e) => handleColorChange(e.target.value)}
+            disabled={!almacenamiento || loadingOptions}
+            className="w-full border rounded-lg p-2.5 bg-white focus:ring-2 focus:ring-black focus:border-black disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            <option value="">
+              {!almacenamiento ? "Primer selecciona l'emmagatzematge" : "Selecciona el color"}
+            </option>
+            {availColores.map(c => (
+              <option key={c.id} value={c.id}>{c.nombre}</option>
+            ))}
+          </select>
+        </div>
+
+        {/* Bateria */}
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-1">Salut de la bateria</label>
+          <select
+            value={bateria}
+            onChange={(e) => setBateria(e.target.value)}
+            disabled={!selectedColor || loadingOptions}
+            className="w-full border rounded-lg p-2.5 bg-white focus:ring-2 focus:ring-black focus:border-black disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            <option value="">
+              {!selectedColor ? "Primer selecciona el color" : "Selecciona la bateria"}
+            </option>
+            {availBaterias.map(b => (
+              <option key={b.valor} value={b.valor}>{b.label}</option>
+            ))}
+          </select>
+        </div>
+
+      </div>
+
+      {/* Preu */}
+      <div className="border rounded-lg p-4 bg-gray-50">
+        <div className="flex items-center justify-between">
+          <span className="text-sm text-gray-500">
+            {estado ? "Preu de la configuració" : "Preu recomanat"}
+          </span>
+          <span className="text-2xl font-bold">
+            {loadingPrice ? "…" : hasResult ? `${priceData.precio}€` : "—"}
+          </span>
+        </div>
+        <div className="text-xs text-gray-500 mt-1">
+          {loadingPrice
+            ? "Calculant..."
+            : hasResult
+            ? `${priceData.stock} unitats disponibles`
+            : "Sense combinació disponible"}
+        </div>
+      </div>
+
+      {/* Botó compra */}
       <button
         onClick={handleAddToCart}
-        disabled={!hasResult || loadingPrice || adding} // Deshabilitar si está añadiendo
-        className={`w-full py-3 rounded text-white font-medium transition
-          ${(!hasResult || loadingPrice || adding) ? "bg-gray-400 cursor-not-allowed" : "bg-black hover:bg-gray-800"}
-        `}
+        disabled={!hasResult || loadingPrice || adding}
+        className={`w-full py-3 rounded-lg text-white font-medium transition
+          ${(!hasResult || loadingPrice || adding)
+            ? "bg-gray-400 cursor-not-allowed"
+            : "bg-black hover:bg-gray-800"
+          }`}
       >
-        {adding ? "Afegint..." : "Afegir al carret"} 
+        {adding ? "Afegint..." : "Afegir al carret"}
       </button>
 
-      {/* Debug útil mientras montas */}
-      {/* <pre className="text-xs bg-gray-50 p-2 rounded">{JSON.stringify(priceData, null, 2)}</pre> */}
+      {/* Informació de confiança */}
+      <div className="border rounded-xl p-4 space-y-4 text-sm">
+
+        {/* Garantia */}
+        <div className="flex items-center gap-2">
+          <svg className="w-4 h-4 text-gray-600 flex-shrink-0" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75L11.25 15 15 9.75m-3-7.036A11.959 11.959 0 013.598 6 11.955 11.955 0 003 12c0 6.627 5.373 12 12 12s12-5.373 12-12c0-2.03-.506-3.944-1.397-5.617" />
+          </svg>
+          <span className="font-medium text-gray-800">Garantia de 30 dies</span>
+        </div>
+
+        {/* Mètodes de pagament */}
+        <div>
+          <p className="text-xs text-gray-400 mb-2">Acceptem</p>
+          <div className="flex items-center gap-2 flex-wrap">
+            {/* Visa */}
+            <span className="inline-flex items-center px-2.5 py-1 rounded border border-gray-200 bg-[#1A1F71] text-white text-xs font-bold tracking-widest">
+              VISA
+            </span>
+            {/* Mastercard */}
+            <span className="inline-flex items-center gap-0.5 px-2 py-1 rounded border border-gray-200 bg-white">
+              <span className="w-4 h-4 rounded-full bg-[#EB001B] inline-block"></span>
+              <span className="w-4 h-4 rounded-full bg-[#F79E1B] inline-block -ml-2"></span>
+            </span>
+            {/* PayPal */}
+            <span className="inline-flex items-center px-2.5 py-1 rounded border border-gray-200 bg-white text-xs font-bold">
+              <span className="text-[#003087]">Pay</span><span className="text-[#009cde]">Pal</span>
+            </span>
+            {/* Bizum */}
+            <span className="inline-flex items-center px-2.5 py-1 rounded border border-gray-200 bg-[#00c2a8] text-white text-xs font-bold">
+              bizum
+            </span>
+            {/* Apple Pay */}
+            <span className="inline-flex items-center px-2.5 py-1 rounded border border-gray-200 bg-black text-white text-xs font-semibold tracking-tight">
+               Pay
+            </span>
+          </div>
+        </div>
+
+        {/* Enviament + extras */}
+        <div className="space-y-1.5 text-gray-600 text-xs">
+          <div className="flex items-center gap-2">
+            <svg className="w-3.5 h-3.5 flex-shrink-0" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M8.25 18.75a1.5 1.5 0 01-3 0m3 0a1.5 1.5 0 00-3 0m3 0h6m-9 0H3.375a1.125 1.125 0 01-1.125-1.125V14.25m17.25 4.5a1.5 1.5 0 01-3 0m3 0a1.5 1.5 0 00-3 0m3 0h1.125c.621 0 1.129-.504 1.09-1.124a17.902 17.902 0 00-3.213-9.193 2.056 2.056 0 00-1.58-.86H14.25M16.5 18.75h-2.25m0-11.177v-.958c0-.568-.422-1.048-.987-1.106a48.554 48.554 0 00-10.026 0 1.106 1.106 0 00-.987 1.106v7.635m12-6.677v6.677m0 4.5v-4.5m0 0h-12" />
+            </svg>
+            <span>Enviament gratuït a tota la Península</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <svg className="w-3.5 h-3.5 flex-shrink-0" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+            <span>IVA inclòs en el preu</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <svg className="w-3.5 h-3.5 flex-shrink-0" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 13.5l10.5-11.25L12 10.5h8.25L9.75 21.75 12 13.5H3.75z" />
+            </svg>
+            <span>Inclou carregador original</span>
+          </div>
+        </div>
+
+      </div>
+
     </div>
   )
 }

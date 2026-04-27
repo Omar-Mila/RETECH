@@ -58,39 +58,61 @@ class ModeloApiController extends Controller
 
     
 
-    public function options($modelId)
+    public function options(Request $request, $modelId)
     {
-        $moviles = Movil::where('modelo_id', $modelId);
+        $base = Movil::where('modelo_id', $modelId);
+
+        // Estats: sempre tots, sense filtres (és el primer pas)
+        $estados = (clone $base)
+            ->select('estado')
+            ->distinct()
+            ->pluck('estado');
+
+        // Emmagatzematge: filtrat per estat si s'ha triat
+        $qAlm = (clone $base);
+        if ($request->estado) $qAlm->where('estado', $request->estado);
+        $almacenamientos = $qAlm
+            ->select('almacenamiento')
+            ->distinct()
+            ->orderBy('almacenamiento')
+            ->pluck('almacenamiento');
+
+        // Colors: filtrats per estat + emmagatzematge si s'han triat
+        $qCol = (clone $base);
+        if ($request->estado)        $qCol->where('estado', $request->estado);
+        if ($request->almacenamiento) $qCol->where('almacenamiento', $request->almacenamiento);
+        $colores = $qCol
+            ->with('color:id,nombre')
+            ->get()
+            ->pluck('color')
+            ->unique('id')
+            ->values();
+
+        // Bateries: filtrades per estat + emmagatzematge + color si s'han triat
+        $qBat = (clone $base);
+        if ($request->estado)        $qBat->where('estado', $request->estado);
+        if ($request->almacenamiento) $qBat->where('almacenamiento', $request->almacenamiento);
+        if ($request->color)         $qBat->where('color_id', $request->color);
+        $baterias = $qBat
+            ->select('salud_bateria')
+            ->distinct()
+            ->orderBy('salud_bateria')
+            ->pluck('salud_bateria')
+            ->map(fn($b) => [
+                'valor' => $b,
+                'label' => match((int)$b) {
+                    100 => 'Nueva (100%)',
+                    90  => 'Excelente Estado (90-95%)',
+                    80  => 'Buen Estado (80-90%)',
+                    default => "{$b}%"
+                }
+            ])->values();
 
         return response()->json([
-            'estados' => $moviles->clone()->select('estado')->distinct()->pluck('estado'),
-            
-            'almacenamientos' => $moviles->clone()->select('almacenamiento')->distinct()->pluck('almacenamiento'),
-            
-            'rams' => $moviles->clone()->select('ram')->distinct()->pluck('ram'),
-            
-            'colores' => $moviles->clone()
-                ->with('color:id,nombre')
-                ->get()
-                ->pluck('color')
-                ->unique('id')
-                ->values(),
-            
-            'baterias' => $moviles->clone()
-                ->select('salud_bateria')
-                ->distinct()
-                ->orderBy('salud_bateria')
-                ->pluck('salud_bateria')
-                ->map(fn($b) => [
-                    'valor' => $b,
-                    'label' => match((int)$b) {
-                        100 => 'Nueva (100%)',
-                        90  => 'Excelente Estado (90-95%)',
-                        80  => 'Buen Estado (80-90%)',
-                        default => "{$b}%"
-                    }
-                ])->values(),
-            
+            'estados'         => $estados,
+            'almacenamientos' => $almacenamientos,
+            'colores'         => $colores,
+            'baterias'        => $baterias,
         ]);
     }
 
