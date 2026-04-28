@@ -260,16 +260,21 @@ export default function Navbar() {
       </div>
 
       {/* Botones de marca */}
-      <div className="bg-white border-t border-gray-100 px-6 py-2 flex justify-center gap-2">
-        {["iPhone", "Samsung", "Xiaomi", "Google"].map((brand) => (
-          <button
-            key={brand}
-            onClick={() => navigate(`/search?q=${brand}`)}
-            className="px-5 py-1.5 rounded-full border border-gray-200 text-sm font-medium text-gray-600 hover:bg-gray-100 hover:text-gray-900 transition"
-          >
-            {brand}
-          </button>
-        ))}
+      <div className="bg-white border-t border-gray-100 px-6 py-2 flex items-center gap-2">
+        <Link to="/contact" className="text-sm font-medium text-black underline underline-offset-2 shrink-0 hover:text-black transition mr-2">
+          Contacta'ns
+        </Link>
+        <div className="flex-1 flex justify-center gap-2">
+          {["iPhone", "Samsung", "Xiaomi", "Google"].map((brand) => (
+            <button
+              key={brand}
+              onClick={() => navigate(`/search?q=${brand}`)}
+              className="px-5 py-1.5 rounded-full border border-gray-200 text-sm font-medium text-gray-600 hover:bg-gray-100 hover:text-gray-900 transition"
+            >
+              {brand}
+            </button>
+          ))}
+        </div>
       </div>
 
       {/* Estilos locales para los links del dropdown */}

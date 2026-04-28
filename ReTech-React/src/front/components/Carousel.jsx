@@ -3,7 +3,7 @@ import { useEffect, useState } from "react"
 const slides = [
   {
     title: "Reacondicionats premium",
-    description: "Mòbils com nous, revisats i garantits fins a 30 díes.",
+    description: "Mòbils com nous, revisats i garantits fins a 12 mesos.",
     cta: "Comprar ara",
     image:
       "https://images.unsplash.com/photo-1511707171634-5f897ff02aa9?auto=format&fit=crop&w=1400&h=420&q=80",

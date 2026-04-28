@@ -1,6 +1,11 @@
-export default function PhoneCardS({ name, condition, price, image }) {
+import { Link } from "react-router-dom"
+
+export default function PhoneCardS({ modeloId, name, condition, price, image }) {
   return (
-    <div className="min-w-[200px] bg-white p-4 rounded-lg shadow">
+    <Link
+      to={modeloId ? `/models/${modeloId}` : "#"}
+      className="min-w-[200px] bg-white p-4 rounded-lg shadow block transition-transform duration-200 hover:scale-105 hover:shadow-lg"
+    >
       <div className="h-40 mb-4 rounded overflow-hidden">
         <img
           src={image}
@@ -9,9 +14,9 @@ export default function PhoneCardS({ name, condition, price, image }) {
         />
       </div>
 
-      <h4 className="font-semibold">{name}</h4>
+      <h4 className="font-semibold text-gray-900">{name}</h4>
       <p className="text-gray-500 text-sm">{condition}</p>
-      <p className="font-bold mt-2">{price}€</p>
-    </div>
+      <p className="font-bold mt-2 text-gray-900">{price}€</p>
+    </Link>
   )
 }

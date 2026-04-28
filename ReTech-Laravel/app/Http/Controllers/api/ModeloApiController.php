@@ -53,7 +53,8 @@ class ModeloApiController extends Controller
     public function show($id)
     {
         $modelo = Modelo::findOrFail($id);
-        return response()->json($modelo);
+        $empresa = $modelo->moviles()->with('empresa')->orderBy('precio')->first()?->empresa?->nombre_empresa;
+        return response()->json(array_merge($modelo->toArray(), ['empresa' => $empresa]));
     }
 
     

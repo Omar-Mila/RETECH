@@ -81,6 +81,7 @@ class MovilApiController extends Controller
         return response()->json($moviles->map(function ($movil) {
             return [
                 'id'             => $movil->id,
+                'modelo_id'      => $movil->modelo_id,
                 'modelo'         => $movil->modelo?->nombre,
                 'precio'         => $movil->precio,
                 'estado'         => $movil->estado,
@@ -107,7 +108,8 @@ class MovilApiController extends Controller
             'almacenamiento' => $movil->almacenamiento,
             'ram' => $movil->ram,
             'color' => $movil->color->nombre ?? null,
-            'stock' => $movil->stock
+            'stock' => $movil->stock,
+            'empresa' => $movil->empresa->nombre_empresa ?? null,
         ]);
     }
 }

@@ -42,6 +42,7 @@ export default function PhonesSection() {
                 {phones.slice(0, 4).map(phone => (
                 <PhoneCardS
                     key={phone.id}
+                    modeloId={phone.modelo_id}
                     name={phone.modelo?.nombre ?? phone.modelo}
                     condition={phone.estado}
                     price={phone.precio}

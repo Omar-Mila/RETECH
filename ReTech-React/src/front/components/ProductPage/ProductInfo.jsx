@@ -9,16 +9,12 @@ export default function ProductInfo({ product }) {
     { label: "Conector", value: product.conector },
     { label: "5G", value: product.cinco_g ? "Sí" : "No" },
     { label: "NFC", value: product.nfc ? "Sí" : "No" },
-    { label: "SIM", value: product.tipo_sim }
+    { label: "SIM", value: product.tipo_sim },
+    { label: "Empresa reaccondicionadora", value: product.empresa }
   ]
 
   return (
     <div className="space-y-6">
-
-      {/* Nombre modelo */}
-      <h1 className="text-3xl font-bold">
-        {product.nombre}
-      </h1>
 
       {/* Características */}
       <div>
