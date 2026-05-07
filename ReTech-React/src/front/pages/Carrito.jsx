@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
+import { useNavigate } from "react-router-dom";
 import { loadStripe } from "@stripe/stripe-js";
 import {
   Elements,
@@ -441,6 +442,7 @@ function LockIcon() {
 }
 
 export default function CartCheckoutPage() {
+  const navigate = useNavigate();
   const [items,         setItems]         = useState([]);
   const [fetchLoading,  setFetchLoading]  = useState(true);
   const [intentLoading, setIntentLoading] = useState(false);
@@ -448,18 +450,27 @@ export default function CartCheckoutPage() {
   const [intentTotal,   setIntentTotal]   = useState(0);
   const [successId,     setSuccessId]     = useState(null);
   const [apiError,      setApiError]      = useState(null);
+  const [authToast,     setAuthToast]     = useState(false);
 
   const loadCart = useCallback(async () => {
     setFetchLoading(true);
     try {
       const data = await apiFetch("/carrito");
       setItems(data.items ?? []);
-    } catch {
-      setApiError("No se pudo cargar el carrito.");
+    } catch (err) {
+      if (err.message === "Unauthenticated.") {
+        setAuthToast(true);
+        setTimeout(() => {
+          setAuthToast(false);
+          navigate("/login");
+        }, 2500);
+      } else {
+        setApiError("No se pudo cargar el carrito.");
+      }
     } finally {
       setFetchLoading(false);
     }
-  }, []);
+  }, [navigate]);
 
 // const loadCart = useCallback(async () => {
 //   setFetchLoading(true);
@@ -557,8 +568,15 @@ export default function CartCheckoutPage() {
         setApiError(data.message ?? "No se pudo iniciar el pago. ¿Has iniciado sesión?");
       }
     } catch (err) {
-      console.error("Error en checkout:", err);
-      setApiError(err.message || "Error desconocido: " + err);
+      if (err.message === "Unauthenticated.") {
+        setAuthToast(true);
+        setTimeout(() => {
+          setAuthToast(false);
+          navigate("/login");
+        }, 2500);
+      } else {
+        setApiError(err.message || "Error desconocido: " + err);
+      }
     } finally {
       setIntentLoading(false);
     }
@@ -568,6 +586,20 @@ export default function CartCheckoutPage() {
 
   return (
     <>
+      {authToast && (
+        <div style={{
+          position: "fixed", top: 24, left: "50%", transform: "translateX(-50%)",
+          zIndex: 9999, background: "#1e293b", color: "#fff",
+          padding: "14px 24px", borderRadius: 12, fontSize: 14, fontWeight: 600,
+          boxShadow: "0 8px 30px rgba(0,0,0,.25)", display: "flex", alignItems: "center", gap: 10,
+          animation: "fadeIn .25s ease"
+        }}>
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#f87171" strokeWidth="2.2">
+            <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
+          </svg>
+          Debes iniciar sesión para comprar. Redirigiendo…
+        </div>
+      )}
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=Sora:wght@400;600;700;800&family=Inter:wght@400;500;600&display=swap');
         * { box-sizing: border-box; }

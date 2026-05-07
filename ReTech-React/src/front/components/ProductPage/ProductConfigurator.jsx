@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react"
-import { useParams } from "react-router-dom"
+import { useParams, useNavigate } from "react-router-dom"
 import { getModelPrice, getFilteredOptions } from "../../../services/productService"
 
 const STATE_INFO = {
@@ -29,11 +29,13 @@ export default function ProductConfigurator({
   productName,
 }) {
   const { id } = useParams()
+  const navigate = useNavigate()
 
   const [loadingPrice, setLoadingPrice] = useState(false)
   const [loadingOptions, setLoadingOptions] = useState(false)
   const [adding, setAdding] = useState(false)
   const [priceData, setPriceData] = useState(null)
+  const [authToast, setAuthToast] = useState(false)
 
   const [estado, setEstado] = useState("")
   const [almacenamiento, setAlmacenamiento] = useState("")
@@ -181,7 +183,15 @@ export default function ProductConfigurator({
         window.scrollTo({ top: 0, behavior: "smooth" })
       } else {
         const error = await response.json()
-        alert(error.message || "Error al afegir")
+        if (response.status === 401 || error.message === "Unauthenticated.") {
+          setAuthToast(true)
+          setTimeout(() => {
+            setAuthToast(false)
+            navigate("/login")
+          }, 2500)
+        } else {
+          alert(error.message || "Error al afegir")
+        }
       }
     } catch (err) {
       console.error("Error de connexió:", err)
@@ -193,6 +203,22 @@ export default function ProductConfigurator({
 
   const hasResult = priceData && priceData.precio != null && priceData.stock > 0
   return (
+    <>
+    {authToast && (
+      <div style={{
+        position: "fixed", top: 24, left: "50%", transform: "translateX(-50%)",
+        zIndex: 9999, background: "#1e293b", color: "#fff",
+        padding: "14px 24px", borderRadius: 12, fontSize: 14, fontWeight: 600,
+        boxShadow: "0 8px 30px rgba(0,0,0,.25)", display: "flex", alignItems: "center", gap: 10,
+        animation: "fadeInToast .25s ease", whiteSpace: "nowrap"
+      }}>
+        <style>{`@keyframes fadeInToast { from { opacity:0; transform:translateX(-50%) translateY(8px); } to { opacity:1; transform:translateX(-50%) translateY(0); } }`}</style>
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#f87171" strokeWidth="2.2">
+          <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
+        </svg>
+        Necessites iniciar sessió per afegir al carret. Redirigint…
+      </div>
+    )}
     <div className="space-y-6">
 
       {productName && (
@@ -385,5 +411,6 @@ export default function ProductConfigurator({
       </div>
 
     </div>
+    </>
   )
 }
