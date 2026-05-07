@@ -7,19 +7,20 @@ function getCookie(name) {
     ?.split("=")[1];
 }
 
-export async function loginRequest(email, password) {
-  await fetch(`${API_URL}/sanctum/csrf-cookie`, {
-    credentials: "include",
-  })
+async function getCSRF() {
+  await fetch(`${API_URL}/sanctum/csrf-cookie`, { credentials: "include" });
+  return decodeURIComponent(getCookie("XSRF-TOKEN") || "");
+}
 
-  const csrfToken = getCookie("XSRF-TOKEN");
+export async function loginRequest(email, password) {
+  const csrfToken = await getCSRF();
 
   const response = await fetch(`${API_URL}/api/login`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
       "Accept": "application/json",
-      "X-XSRF-TOKEN": decodeURIComponent(csrfToken || ""),
+      "X-XSRF-TOKEN": csrfToken,
     },
     credentials: "include",
     body: JSON.stringify({ email, password }),
@@ -31,13 +32,33 @@ export async function loginRequest(email, password) {
   return data.user ?? data
 }
 
+export async function googleLoginRequest(credential) {
+  const csrfToken = await getCSRF();
+
+  const response = await fetch(`${API_URL}/api/auth/google`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "Accept": "application/json",
+      "X-XSRF-TOKEN": csrfToken,
+    },
+    credentials: "include",
+    body: JSON.stringify({ credential }),
+  });
+
+  if (!response.ok) throw new Error("Error al iniciar sessió amb Google");
+
+  const data = await response.json();
+  return data.user ?? data;
+}
+
 export async function logoutRequest() {
   const csrfToken = getCookie("XSRF-TOKEN");
 
   return await fetch(`${API_URL}/api/logout`, {
     method: "POST",
     credentials: "include",
-    headers: { 
+    headers: {
       "Accept": "application/json",
       "X-XSRF-TOKEN": decodeURIComponent(csrfToken || ""),
     },
@@ -49,7 +70,7 @@ export const getCurrentUser = async () => {
     const res = await fetch(`${API_URL}/api/user`, {
       method: "GET",
       credentials: "include",
-      headers: { 
+      headers: {
         "Accept": "application/json",
         "Content-Type": "application/json"
       },

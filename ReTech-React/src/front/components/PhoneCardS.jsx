@@ -4,7 +4,7 @@ export default function PhoneCardS({ modeloId, name, condition, price, image }) 
   return (
     <Link
       to={modeloId ? `/models/${modeloId}` : "#"}
-      className="min-w-[200px] bg-white p-4 rounded-lg shadow block transition-transform duration-200 hover:scale-105 hover:shadow-lg"
+      className="min-w-[200px] bg-white p-4 rounded-lg shadow block transition hover:shadow-lg"
     >
       <div className="h-40 mb-4 rounded overflow-hidden">
         <img

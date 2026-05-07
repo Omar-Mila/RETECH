@@ -1,10 +1,10 @@
 import { useState } from "react";
 import { useAuth } from "./AuthContext";
 import { useNavigate } from "react-router-dom";
-import Footer from "../front/components/Footer";
+import { GoogleLogin } from "@react-oauth/google";
 
 export default function Login() {
-  const { login } = useAuth();
+  const { login, loginWithGoogle } = useAuth();
   const navigate = useNavigate();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -15,11 +15,8 @@ export default function Login() {
     e.preventDefault();
     setError("");
     setLoading(true);
-
     try {
       await login(email, password);
-      // Si el login es exitoso, el AuthContext suele redireccionar, 
-      // si no, puedes añadir: navigate("/perfil");
     } catch (err) {
       setError("Credencials incorrectes. Torna-ho a intentar.");
     } finally {
@@ -27,9 +24,20 @@ export default function Login() {
     }
   };
 
+  const handleGoogleSuccess = async (credentialResponse) => {
+    setError("");
+    setLoading(true);
+    try {
+      await loginWithGoogle(credentialResponse.credential);
+    } catch (err) {
+      setError("Error al iniciar sessió amb Google. Torna-ho a intentar.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
     <div className="min-h-screen flex flex-col bg-gray-100">
-      {/* Contenedor del Formulario con padding vertical para separar del footer */}
       <div className="flex-grow flex items-center justify-center py-20">
         <div className="w-full max-w-md bg-white p-8 rounded-xl shadow-lg">
           <h1 className="text-2xl font-bold mb-6 text-center text-gray-800">
@@ -59,8 +67,6 @@ export default function Login() {
                 }`}
                 required
               />
-              
-              {/* MENSAJE DE ERROR: Justo debajo del input de password */}
               {error && (
                 <p className="text-red-600 text-xs mt-1.5 ml-1 font-medium">
                   {error}
@@ -68,7 +74,7 @@ export default function Login() {
               )}
             </div>
 
-            <button 
+            <button
               disabled={loading}
               className="w-full bg-black text-white py-3 rounded-lg font-semibold hover:bg-gray-800 transition-colors disabled:opacity-50"
             >
@@ -76,10 +82,27 @@ export default function Login() {
             </button>
           </form>
 
+          <div className="my-5 flex items-center gap-3">
+            <div className="flex-grow border-t border-gray-200" />
+            <span className="text-xs text-gray-400">o continua amb</span>
+            <div className="flex-grow border-t border-gray-200" />
+          </div>
+
+          <div className="flex justify-center">
+            <GoogleLogin
+              onSuccess={handleGoogleSuccess}
+              onError={() => setError("Error al iniciar sessió amb Google.")}
+              width="368"
+              text="signin_with"
+              shape="rectangular"
+              locale="ca"
+            />
+          </div>
+
           <p className="text-sm text-center mt-6 text-gray-600">
             No tens compte?{" "}
-            <button 
-              onClick={() => navigate("/register")} 
+            <button
+              onClick={() => navigate("/register")}
               className="underline font-bold text-black hover:text-gray-700"
             >
               Registra't
