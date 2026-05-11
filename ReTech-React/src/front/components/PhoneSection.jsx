@@ -45,8 +45,8 @@ export default function PhonesSection() {
                     name={phone.modelo?.nombre ?? phone.modelo}
                     condition={phone.estado}
                     price={phone.precio}
-                    image="https://via.placeholder.com/300"
-                />
+                    image={phone.image_url ?? "https://via.placeholder.com/300"}
+                    />
                 ))}
             </div>
             </div>
