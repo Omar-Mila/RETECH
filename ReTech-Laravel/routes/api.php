@@ -13,6 +13,7 @@ use App\Http\Controllers\Api\CheckoutApiController;
 use App\Http\Controllers\ClienteController;
 use App\Http\Controllers\Auth\RegisterController;
 use App\Http\Controllers\Auth\LoginController;
+use App\Http\Controllers\Auth\GoogleAuthController;
 
 use App\Models\Marca;
 use App\Models\Modelo;
@@ -83,6 +84,7 @@ Route::middleware('auth:sanctum')->put('/user/cliente', function (Request $reque
 });
 
 Route::post('/register', [RegisterController::class, 'store']);
+Route::middleware(['web'])->post('/auth/google', [GoogleAuthController::class, 'handleGoogle']);
 
 Route::get('/products/search', [ProductosController::class, 'search']);
 Route::get('/marcas', [MarcaApiController::class, 'index']);

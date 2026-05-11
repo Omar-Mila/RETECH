@@ -51,3 +51,10 @@ export async function getModelImages(id) {
   const res = await fetch(`http://localhost:8000/api/models/${id}/images`);
   return res.json();
 }
+
+export async function getFilteredOptions(id, params) {
+  const query = new URLSearchParams(params).toString()
+  const res = await fetch(`http://localhost:8000/api/models/${id}/options?${query}`)
+  if (!res.ok) throw new Error("Options error")
+  return res.json()
+}

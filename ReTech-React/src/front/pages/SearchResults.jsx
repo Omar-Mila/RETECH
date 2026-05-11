@@ -67,9 +67,9 @@ function FilterPanel({ products, filters, onChange, collapsed, onToggleCollapse 
             borderRadius: 12,
             alignSelf: "flex-start",
             position: "sticky",
-            top: 16,
+            top: 88,
             overflow: "hidden",
-            maxHeight: "calc(100vh - 96px)",
+            maxHeight: "calc(100vh - 104px)",
             display: "flex",
             flexDirection: "column",
             boxShadow: "0 1px 4px rgba(0,0,0,0.04)"

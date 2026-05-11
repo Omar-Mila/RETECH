@@ -1,6 +1,6 @@
 import { createContext, useContext, useState, useEffect } from "react"
 import { useNavigate } from "react-router-dom"
-import { loginRequest, logoutRequest, getCurrentUser } from "./authService"
+import { loginRequest, logoutRequest, getCurrentUser, googleLoginRequest } from "./authService"
 
 let AuthContext = createContext()
 
@@ -14,9 +14,6 @@ export function AuthProvider({ children }) {
     let loadUser = async () => {
       try {
         let userData = await getCurrentUser()
-        console.log("Respuesta de getCurrentUser:", userData)
-        
-        // Ajustamos la validación: si userData tiene id o name, es que está logueado
         if (userData && (userData.id || userData.name)) {
           setUser(userData)
         } else {
@@ -26,62 +23,71 @@ export function AuthProvider({ children }) {
         console.error("Error cargando usuario:", error)
         setUser(null)
       } finally {
-        setLoading(false) // Esto SIEMPRE se ejecuta ahora
+        setLoading(false)
       }
     }
 
     loadUser()
   }, [])
 
+  const redirectByRole = (userData) => {
+    if (userData.role === 'admin') {
+      navigate("/admin");
+    } else {
+      navigate("/");
+    }
+  };
+
   let login = async (email, password) => {
     try {
       const userData = await loginRequest(email, password);
-      
       if (userData) {
-        setUser(userData); 
-        
-        console.log("Login con éxito, usuario:", userData);
-
-        if (userData.role === 'admin') {
-          navigate("/admin");
-        } else {
-          navigate("/");
-        }
+        setUser(userData);
+        redirectByRole(userData);
       }
     } catch (error) {
-      console.log("Error de login: " + error.message);
+      throw error;
+    }
+  };
+
+  let loginWithGoogle = async (credential) => {
+    try {
+      const userData = await googleLoginRequest(credential);
+      if (userData) {
+        setUser(userData);
+        redirectByRole(userData);
+      }
+    } catch (error) {
       throw error;
     }
   };
 
   let logout = async () => {
     try {
-      await logoutRequest(); 
+      await logoutRequest();
     } catch (error) {
       console.error("Error en servidor", error);
     } finally {
       setUser(null);
-      
+
       const cookies = document.cookie.split(";");
       for (let i = 0; i < cookies.length; i++) {
-          const cookie = cookies[i];
-          const eqPos = cookie.indexOf("=");
-          const name = eqPos > -1 ? cookie.substr(0, eqPos) : cookie;
-          document.cookie = name + "=;expires=Thu, 01 Jan 1970 00:00:00 GMT;path=/";
+        const cookie = cookies[i];
+        const eqPos = cookie.indexOf("=");
+        const name = eqPos > -1 ? cookie.substr(0, eqPos) : cookie;
+        document.cookie = name + "=;expires=Thu, 01 Jan 1970 00:00:00 GMT;path=/";
       }
 
-      window.location.replace("/"); 
+      window.location.replace("/");
     }
   }
 
-  // IMPORTANTE: El "return" de carga va justo antes del Provider, 
-  // permitiendo que los hooks de arriba se ejecuten.
   if (loading) {
-      return (
-          <div style={{ display: 'flex', justifyContent: 'center', marginTop: '50px' }}>
-              <p>Verificando sesión...</p>
-          </div>
-      );
+    return (
+      <div style={{ display: 'flex', justifyContent: 'center', marginTop: '50px' }}>
+        <p>Verificando sesión...</p>
+      </div>
+    );
   }
 
   return (
@@ -92,6 +98,7 @@ export function AuthProvider({ children }) {
         loading,
         isAuthenticated: !!user,
         login,
+        loginWithGoogle,
         logout,
       }}
     >

@@ -111,7 +111,7 @@ class CheckoutApiController extends Controller
         $request->session()->forget('stripe_intent_id');
 
         return response()->json([
-            'message'   => '¡Pago completado!',
+            'message'   => '¡Pagament completado!',
             'compra_id' => $compra->id,
             'estado'    => $estado,
         ], 201);

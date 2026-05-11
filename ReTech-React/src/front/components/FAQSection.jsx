@@ -14,7 +14,7 @@ export default function FAQSection() {
     },
     {
       question: "Puc retornar el producte?",
-      answer: "Sí, tens 14 dies per retornar el dispositiu sense problemes."
+      answer: "Sí, tens 30 dies per retornar el dispositiu sense problemes."
     },
     {
       question: "Com es comprova la salut de la bateria?",

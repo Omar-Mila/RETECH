@@ -3,24 +3,24 @@ import { useEffect, useState } from "react"
 const slides = [
   {
     title: "Reacondicionats premium",
-    description: "Mòbils com nous, revisats i garantits fins a 24 mesos.",
+    description: "Mòbils com nous, revisats i garantits fins a 12 mesos.",
     cta: "Comprar ara",
     image:
-      "https://images.unsplash.com/photo-1511707171634-5f897ff02aa9",
+      "https://images.unsplash.com/photo-1511707171634-5f897ff02aa9?auto=format&fit=crop&w=1400&h=420&q=80",
   },
   {
     title: "Tecnologia sostenible",
     description: "Millor per a tu. Millor per al planeta.",
     cta: "Descobreix més",
     image:
-      "https://images.unsplash.com/photo-1580910051074-7b6c4f1f44b1",
+      "https://images.pexels.com/photos/19037726/pexels-photo-19037726.jpeg",
   },
   {
     title: "Qualitat garantida",
     description: "Cada dispositiu passa controls estrictes de qualitat.",
     cta: "Com funciona",
     image:
-      "https://images.unsplash.com/photo-1517336714731-489689fd1ca8",
+      "https://images.unsplash.com/photo-1517336714731-489689fd1ca8?auto=format&fit=crop&w=1400&h=420&q=80",
   },
 ]
 

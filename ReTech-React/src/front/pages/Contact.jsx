@@ -2,6 +2,18 @@ import React from "react";
 import Navbar from "../components/Navbar";
 import Footer from "../components/Footer";
 import { useEffect } from "react";
+import { MapContainer, TileLayer, Marker, Popup } from "react-leaflet";
+import L from "leaflet";
+import "leaflet/dist/leaflet.css";
+
+delete L.Icon.Default.prototype._getIconUrl;
+L.Icon.Default.mergeOptions({
+  iconRetinaUrl: new URL("leaflet/dist/images/marker-icon-2x.png", import.meta.url).href,
+  iconUrl: new URL("leaflet/dist/images/marker-icon.png", import.meta.url).href,
+  shadowUrl: new URL("leaflet/dist/images/marker-shadow.png", import.meta.url).href,
+});
+
+const OFFICE_COORDS = [41.5836374, 1.6018583];
 
 // Reutilizamos el formateador que ya tienes para mantener coherencia
 const fmt = (n) =>
@@ -58,10 +70,14 @@ export default function AboutPage() {
         .review-text { font-size: 14px; color: var(--color-text-secondary); line-height: 1.6; margin-bottom: 1rem; font-style: italic; }
         .review-avatar { width: 32px; height: 32px; border-radius: 50%; background: #f1f5f9; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 12px; }
 
+        .map-section { padding: 0 2rem 3rem; max-width: 1000px; margin: 0 auto; }
+        .map-wrapper { border-radius: var(--border-radius-lg); overflow: hidden; border: 0.5px solid var(--color-border-tertiary); height: 380px; }
+
         @media (max-width: 768px) {
           .about-grid, .photos-grid, .reviews-grid { grid-template-columns: 1fr; }
           .hero h1 { font-size: 32px; }
           .award-section { margin: 0 1rem; }
+          .map-wrapper { height: 260px; }
         }
       `}</style>
      
@@ -129,6 +145,29 @@ export default function AboutPage() {
               <p style={{ fontSize: '12px', fontWeight: 700, marginTop: '12px', color: '#0f172a' }}>LABORATORIO</p>
               <p style={{ fontSize: '14px', color: '#64748b' }}>Equipamiento de precisión para garantizar el estado óptimo de cada batería y pantalla.</p>
             </div>
+          </div>
+        </div>
+
+        {/* MAPA */}
+        <div className="map-section">
+          <p className="section-label">Dónde estamos</p>
+          <h2 style={{ fontSize: '26px', fontWeight: 800, fontFamily: 'Sora, sans-serif', marginBottom: '1.25rem' }}>
+            Milà i Fontanals, Igualada
+          </h2>
+          <div className="map-wrapper">
+            <MapContainer center={OFFICE_COORDS} zoom={16} style={{ height: '100%', width: '100%' }} scrollWheelZoom={false}>
+              <TileLayer
+                attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+                url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+              />
+              <Marker position={OFFICE_COORDS}>
+                <Popup>
+                  <strong>ReTech</strong><br />
+                  Institut Milà i Fontanals<br />
+                  Igualada, Barcelona
+                </Popup>
+              </Marker>
+            </MapContainer>
           </div>
         </div>
 

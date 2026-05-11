@@ -1,6 +1,19 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import Footer from "../front/components/Footer"; // Importamos el Footer
+
+const STRENGTH_LABELS = ["", "Feble", "Regular", "Bona", "Forta"];
+const STRENGTH_BAR_COLORS = ["", "bg-red-500", "bg-orange-400", "bg-yellow-400", "bg-green-500"];
+const STRENGTH_TEXT_COLORS = ["", "text-red-500", "text-orange-500", "text-yellow-600", "text-green-600"];
+
+function getPasswordStrength(pwd) {
+  if (!pwd) return 0;
+  let score = 0;
+  if (pwd.length >= 8) score++;
+  if (/[A-Z]/.test(pwd)) score++;
+  if (/[0-9]/.test(pwd)) score++;
+  if (/[^A-Za-z0-9]/.test(pwd)) score++;
+  return score;
+}
 
 export default function Register() {
   const navigate = useNavigate();
@@ -10,7 +23,9 @@ export default function Register() {
   const [password, setPassword] = useState("");
   const [passwordConfirm, setPasswordConfirm] = useState("");
   const [error, setError] = useState("");
-  const [loading, setLoading] = useState(false); // Estado para el botón
+  const [loading, setLoading] = useState(false);
+
+  const strength = getPasswordStrength(password);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -39,13 +54,11 @@ export default function Register() {
       }
 
       navigate("/login");
-      
     } catch (err) {
-      // Si el error es "Unexpected token <", es que Laravel envió HTML
       if (err.message.includes("Unexpected token")) {
         setError("Error crític: El servidor ha enviat HTML. Revisa la pestanya Network.");
       } else {
-        setError(err.message); // Aquí saldrá el error de SQL si lo capturamos bien
+        setError(err.message);
       }
     } finally {
       setLoading(false);
@@ -54,7 +67,6 @@ export default function Register() {
 
   return (
     <div className="min-h-screen flex flex-col bg-gray-100">
-      {/* Contenido principal centrado */}
       <div className="flex-grow flex items-center justify-center py-10">
         <div className="w-full max-w-md bg-white p-8 rounded-xl shadow-lg">
           <h1 className="text-2xl font-bold mb-6 text-center text-gray-800">
@@ -80,14 +92,42 @@ export default function Register() {
               required
             />
 
-            <input
-              type="password"
-              placeholder="Contrasenya"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              className="w-full rounded-lg border-gray-300 border p-3 focus:ring-2 focus:ring-black outline-none"
-              required
-            />
+            <div>
+              <input
+                type="password"
+                placeholder="Contrasenya"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                className="w-full rounded-lg border-gray-300 border p-3 focus:ring-2 focus:ring-black outline-none"
+                required
+              />
+
+              {password && (
+                <div className="mt-2 px-1">
+                  <div className="flex gap-1">
+                    {[1, 2, 3, 4].map((i) => (
+                      <div
+                        key={i}
+                        className={`h-1.5 flex-1 rounded-full transition-all duration-300 ${
+                          i <= strength ? STRENGTH_BAR_COLORS[strength] : "bg-gray-200"
+                        }`}
+                      />
+                    ))}
+                  </div>
+                  <p className={`text-xs mt-1 font-medium ${STRENGTH_TEXT_COLORS[strength]}`}>
+                    {STRENGTH_LABELS[strength]}
+                    {strength < 4 && (
+                      <span className="text-gray-400 font-normal ml-1">
+                        {strength === 0 && "· Afegeix més caràcters"}
+                        {strength === 1 && "· Afegeix majúscules, números o símbols"}
+                        {strength === 2 && "· Afegeix números o símbols"}
+                        {strength === 3 && "· Afegeix un símbol (!@#$...)"}
+                      </span>
+                    )}
+                  </p>
+                </div>
+              )}
+            </div>
 
             <div className="flex flex-col">
               <input
@@ -96,14 +136,13 @@ export default function Register() {
                 value={passwordConfirm}
                 onChange={(e) => setPasswordConfirm(e.target.value)}
                 className={`w-full rounded-lg border p-3 focus:ring-2 outline-none ${
-                  error ? "border-red-500" : "border-gray-300"
+                  error ? "border-red-500 focus:ring-red-300" : "border-gray-300 focus:ring-black"
                 }`}
                 required
               />
-              {/* Mensaje de error integrado debajo del campo */}
               {error && (
                 <p className="text-red-600 text-sm mt-2 ml-1 font-medium">
-                    {error}
+                  {error}
                 </p>
               )}
             </div>
@@ -128,7 +167,6 @@ export default function Register() {
           </p>
         </div>
       </div>
-
     </div>
   );
 }
