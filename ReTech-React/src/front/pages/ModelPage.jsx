@@ -7,8 +7,10 @@ import Footer from "../components/Footer"
 import ProductGallery from "../components/ProductPage/ProductGallery"
 import ProductInfo from "../components/ProductPage/ProductInfo"
 import ProductConfigurator from "../components/ProductPage/ProductConfigurator"
+import { useLanguage } from "../context/LanguageContext"
 
 export default function ModelPage() {
+  const { t } = useLanguage()
 
   const { id } = useParams()
 
@@ -50,10 +52,10 @@ export default function ModelPage() {
 
       <main className="flex-1">
 
-        {loading && <div className="p-10">Carregant model...</div>}
+        {loading && <div className="p-10">{t('product.loading')}</div>}
 
         {!loading && !model && (
-          <div className="p-10">Model no trobat</div>
+          <div className="p-10">{t('product.notFound')}</div>
         )}
 
         {!loading && model && (

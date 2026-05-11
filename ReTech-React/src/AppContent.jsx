@@ -1,6 +1,7 @@
 
 import { Routes, Route } from "react-router-dom";
-import { useAuth } from "./auth/AuthContext"; 
+import { useAuth } from "./auth/AuthContext";
+import { useLanguage } from "./front/context/LanguageContext";
 
 import Home from "./front/pages/Home";
 import Login from "./auth/Login";
@@ -16,12 +17,12 @@ import Contact from "./front/pages/Contact";
 
 export default function AppContent() {
   const { loading, user } = useAuth();
+  const { t } = useLanguage();
 
-  // Mientras verifica si hay sesión, mostramos un cargando limpio
   if (loading) {
     return (
       <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh', fontFamily: 'sans-serif' }}>
-        <p>Verificant sessió...</p>
+        <p>{t('appLoading')}</p>
       </div>
     );
   }

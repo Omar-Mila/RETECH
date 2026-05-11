@@ -1,67 +1,50 @@
-import { useEffect, useState, Fragment } from "react"
+import { useEffect, useState, Fragment } from "react";
 import {
   InboxArrowDownIcon,
   MagnifyingGlassIcon,
   WrenchScrewdriverIcon,
   ShieldCheckIcon,
   TruckIcon,
-} from "@heroicons/react/24/outline"
+} from "@heroicons/react/24/outline";
+import { useLanguage } from "../context/LanguageContext";
 
-const steps = [
-  {
-    icon: InboxArrowDownIcon,
-    title: "Recepció",
-    desc: "Rebem i registrem el dispositiu al sistema.",
-  },
-  {
-    icon: MagnifyingGlassIcon,
-    title: "Diagnòstic",
-    desc: "Anàlisi exhaustiva de cada component.",
-  },
-  {
-    icon: WrenchScrewdriverIcon,
-    title: "Reparació",
-    desc: "Substitució de peces per components originals.",
-  },
-  {
-    icon: ShieldCheckIcon,
-    title: "Test de qualitat",
-    desc: "Superem 30 punts de control certificats.",
-  },
-  {
-    icon: TruckIcon,
-    title: "A les teves mans",
-    desc: "Enviat en 24h amb garantia inclosa.",
-  },
-]
+const stepIcons = [
+  InboxArrowDownIcon,
+  MagnifyingGlassIcon,
+  WrenchScrewdriverIcon,
+  ShieldCheckIcon,
+  TruckIcon,
+];
 
 export default function PhoneJourney() {
-  const [active, setActive] = useState(0)
+  const { t } = useLanguage();
+  const steps = t('journey.steps');
+  const [active, setActive] = useState(0);
 
   useEffect(() => {
-    const t = setInterval(() => {
-      setActive(prev => (prev + 1) % steps.length)
-    }, 2000)
-    return () => clearInterval(t)
-  }, [])
+    const interval = setInterval(() => {
+      setActive(prev => (prev + 1) % steps.length);
+    }, 2000);
+    return () => clearInterval(interval);
+  }, [steps.length]);
 
   return (
     <section className="w-full bg-gray-50 py-20 border-t border-gray-100">
       <div className="max-w-5xl mx-auto px-6">
 
         <h2 className="text-3xl md:text-4xl font-bold text-center mb-3">
-          El camí del teu mòbil
+          {t('journey.title')}
         </h2>
         <p className="text-center text-gray-500 text-sm mb-16">
-          Cada dispositiu passa per un procés rigorós abans d'arribar a les teves mans.
+          {t('journey.subtitle')}
         </p>
 
         {/* Desktop */}
         <div className="hidden md:flex items-start">
           {steps.map((step, i) => {
-            const Icon = step.icon
-            const isActive = i === active
-            const isDone = i < active
+            const Icon = stepIcons[i];
+            const isActive = i === active;
+            const isDone = i < active;
 
             return (
               <Fragment key={i}>
@@ -99,16 +82,16 @@ export default function PhoneJourney() {
                   </div>
                 )}
               </Fragment>
-            )
+            );
           })}
         </div>
 
         {/* Mobile */}
         <div className="md:hidden flex flex-col">
           {steps.map((step, i) => {
-            const Icon = step.icon
-            const isActive = i === active
-            const isDone = i < active
+            const Icon = stepIcons[i];
+            const isActive = i === active;
+            const isDone = i < active;
 
             return (
               <div key={i} className="flex gap-5">
@@ -147,11 +130,11 @@ export default function PhoneJourney() {
                   </p>
                 </div>
               </div>
-            )
+            );
           })}
         </div>
 
       </div>
     </section>
-  )
+  );
 }

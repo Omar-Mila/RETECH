@@ -87,17 +87,18 @@ export default function AboutPage() {
         {/* HERO */}
         <div className="hero">
           <p className="hero-tag">Sobre ReTech</p>
-          <h1>Tecnología de calidad.<br/>Precio honesto.</h1>
-          <p>Damos una segunda vida a los mejores dispositivos del mercado con revisión técnica certificada y compromiso real con el planeta.</p>
+          <h1>Tecnologia de qualitat.<br/>Preu honest.</h1>
+          <p>Donem una segona vida als millors dispositius del mercat amb revisió tècnica certificada i compromís real amb el planeta.</p>
         </div>
 
-        {/* HISTORIA Y STATS */}
+        {/* HISTÒRIA I ESTADÍSTIQUES */}
         <div className="section">
           <div className="about-grid">
             <div className="about-text">
-              <p className="section-label">Nuestra historia</p>
+              <p className="section-label">La nostra història</p>
               <h2 style={{ fontSize: '26px', fontWeight: 800, fontFamily: 'Sora, sans-serif', marginBottom: '1rem' }}>
-                Nacidos para cambiar la forma de comprar móviles
+                Nascuts per canviar la forma de comprar mòbils
+                
               </h2>
               <p>ReTech va néixer el 2019 amb una idea simple: per què llençar un dispositiu perfectament funcional quan es pot restaurar i donar-li una nova vida? Des d'aleshores hem processat més de 12.000 dispositius des del nostre taller a Barcelona.</p>
             <p>Cada mòbil passa per un procés de revisió de 42 punts: pantalla, bateria, càmera, connectors, software. Si no supera els nostres estàndards, no surt a la venda. Així de senzill.</p>

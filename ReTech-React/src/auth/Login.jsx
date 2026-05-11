@@ -2,9 +2,11 @@ import { useState } from "react";
 import { useAuth } from "./AuthContext";
 import { useNavigate } from "react-router-dom";
 import { GoogleLogin } from "@react-oauth/google";
+import { useLanguage } from "../front/context/LanguageContext";
 
 export default function Login() {
   const { login, loginWithGoogle } = useAuth();
+  const { t, lang } = useLanguage();
   const navigate = useNavigate();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -18,7 +20,7 @@ export default function Login() {
     try {
       await login(email, password);
     } catch (err) {
-      setError("Credencials incorrectes. Torna-ho a intentar.");
+      setError(t('login.error'));
     } finally {
       setLoading(false);
     }
@@ -30,7 +32,7 @@ export default function Login() {
     try {
       await loginWithGoogle(credentialResponse.credential);
     } catch (err) {
-      setError("Error al iniciar sessió amb Google. Torna-ho a intentar.");
+      setError(t('login.googleError'));
     } finally {
       setLoading(false);
     }
@@ -41,7 +43,7 @@ export default function Login() {
       <div className="flex-grow flex items-center justify-center py-20">
         <div className="w-full max-w-md bg-white p-8 rounded-xl shadow-lg">
           <h1 className="text-2xl font-bold mb-6 text-center text-gray-800">
-            Iniciar sessió
+            {t('login.title')}
           </h1>
 
           <form onSubmit={handleSubmit} className="space-y-4">
@@ -59,7 +61,7 @@ export default function Login() {
             <div className="relative">
               <input
                 type="password"
-                placeholder="Contrasenya"
+                placeholder={t('login.password')}
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 className={`w-full border rounded-lg p-3 focus:ring-2 focus:ring-black outline-none transition-all ${
@@ -78,34 +80,34 @@ export default function Login() {
               disabled={loading}
               className="w-full bg-black text-white py-3 rounded-lg font-semibold hover:bg-gray-800 transition-colors disabled:opacity-50"
             >
-              {loading ? "Entrant..." : "Entrar"}
+              {loading ? t('login.entering') : t('login.enter')}
             </button>
           </form>
 
           <div className="my-5 flex items-center gap-3">
             <div className="flex-grow border-t border-gray-200" />
-            <span className="text-xs text-gray-400">o continua amb</span>
+            <span className="text-xs text-gray-400">{t('login.orWith')}</span>
             <div className="flex-grow border-t border-gray-200" />
           </div>
 
           <div className="flex justify-center">
             <GoogleLogin
               onSuccess={handleGoogleSuccess}
-              onError={() => setError("Error al iniciar sessió amb Google.")}
+              onError={() => setError(t('login.googleError'))}
               width="368"
               text="signin_with"
               shape="rectangular"
-              locale="ca"
+              locale={t('login.locale')}
             />
           </div>
 
           <p className="text-sm text-center mt-6 text-gray-600">
-            No tens compte?{" "}
+            {t('login.noAccount')}{" "}
             <button
               onClick={() => navigate("/register")}
               className="underline font-bold text-black hover:text-gray-700"
             >
-              Registra't
+              {t('login.register')}
             </button>
           </p>
         </div>

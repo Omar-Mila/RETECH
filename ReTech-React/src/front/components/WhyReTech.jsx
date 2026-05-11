@@ -3,42 +3,25 @@ import {
   CurrencyEuroIcon,
   WrenchScrewdriverIcon,
   GlobeAltIcon,
-} from "@heroicons/react/24/outline"
+} from "@heroicons/react/24/outline";
+import { useLanguage } from "../context/LanguageContext";
+
+const icons = [CurrencyEuroIcon, ShieldCheckIcon, WrenchScrewdriverIcon, GlobeAltIcon];
 
 export default function WhyReTech() {
-  const features = [
-    {
-      title: "Fins a un 70% més barat",
-      description: "Estalvia diners sense renunciar a qualitat premium.",
-      icon: CurrencyEuroIcon,
-    },
-    {
-      title: "Garantia inclosa",
-      description: "Tots els dispositius inclouen garantia oficial.",
-      icon: ShieldCheckIcon,
-    },
-    {
-      title: "Revisió professional",
-      description: "Testats per tècnics certificats amb control exhaustiu.",
-      icon: WrenchScrewdriverIcon,
-    },
-    {
-      title: "Compra sostenible",
-      description: "Redueix residus electrònics i ajuda al planeta.",
-      icon: GlobeAltIcon,
-    },
-  ]
+  const { t } = useLanguage();
+  const features = t('why.features');
 
   return (
     <section className="w-full bg-white py-20">
       <div className="max-w-7xl mx-auto px-6">
         <h2 className="text-4xl font-bold text-center mb-16">
-          Per què comprar reacondicionat?
+          {t('why.title')}
         </h2>
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-10">
           {features.map((item, index) => {
-            const Icon = item.icon
+            const Icon = icons[index];
 
             return (
               <div
@@ -55,10 +38,10 @@ export default function WhyReTech() {
                   {item.description}
                 </p>
               </div>
-            )
+            );
           })}
         </div>
       </div>
     </section>
-  )
+  );
 }

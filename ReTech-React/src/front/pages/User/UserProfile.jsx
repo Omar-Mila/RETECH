@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { useAuth } from "../../../auth/AuthContext";
 import Navbar from "../../components/Navbar";
 import Footer from "../../components/Footer";
+import { useLanguage } from "../../context/LanguageContext";
 
 // Fuera del componente para evitar re-renders que quitan el focus
 const ReadField = ({ label, value }) => (
@@ -50,6 +51,7 @@ const SectionTitle = ({ color = "#6366f1", children }) => (
 
 export default function UserProfile() {
   const { user, setUser } = useAuth();
+  const { t } = useLanguage();
   const cliente = user?.cliente;
 
   const [editing, setEditing] = useState(false);
@@ -109,7 +111,7 @@ export default function UserProfile() {
       setUser(updatedUser);
       setEditing(false);
     } catch {
-      setError("Error en desar els canvis. Torna-ho a intentar.");
+      setError(t('profile.saveError'));
     } finally {
       setSaving(false);
     }
@@ -140,7 +142,7 @@ export default function UserProfile() {
           }}>
             <span style={{ fontSize: 32 }}>👤</span>
           </div>
-          <h1 style={{ margin: 0, fontSize: 24, fontWeight: 800, color: "#0f172a" }}>Tu Perfil</h1>
+          <h1 style={{ margin: 0, fontSize: 24, fontWeight: 800, color: "#0f172a" }}>{t('profile.title')}</h1>
         </div>
 
         {/* Dos columnas */}
@@ -151,10 +153,10 @@ export default function UserProfile() {
             background: "#fff", padding: 32, borderRadius: 24,
             border: "1px solid #e2e8f0", boxShadow: "0 4px 20px rgba(0,0,0,0.03)"
           }}>
-            <SectionTitle>Compte</SectionTitle>
+            <SectionTitle>{t('profile.account')}</SectionTitle>
             <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
-              <ReadField label="Nom d'usuari" value={user?.name} />
-              <ReadField label="Correu Electrònic" value={user?.email} />
+              <ReadField label={t('profile.username')} value={user?.name} />
+              <ReadField label={t('profile.email')} value={user?.email} />
             </div>
           </div>
 
@@ -165,7 +167,7 @@ export default function UserProfile() {
           }}>
             {/* Título + botón editar */}
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
-              <SectionTitle color="#10b981">Dades Personals</SectionTitle>
+              <SectionTitle color="#10b981">{t('profile.personalData')}</SectionTitle>
               {!editing && (
                 <button
                   onClick={() => setEditing(true)}
@@ -175,7 +177,7 @@ export default function UserProfile() {
                     padding: "6px 14px", cursor: "pointer", marginBottom: 16
                   }}
                 >
-                  ✏️ Editar
+                  {t('profile.edit')}
                 </button>
               )}
             </div>
@@ -185,11 +187,11 @@ export default function UserProfile() {
             <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
               {editing ? (
                 <>
-                  <EditField label="Nom"     name="nombre"    value={form.nombre}    onChange={handleChange} />
-                  <EditField label="Cognoms" name="apellidos" value={form.apellidos} onChange={handleChange} />
-                  <EditField label="NIF"     name="nif"       value={form.nif}       onChange={handleChange} />
-                  <EditField label="Adreça"  name="direccion" value={form.direccion} onChange={handleChange} />
-                  <EditField label="Telèfon" name="telefono"  value={form.telefono}  onChange={handleChange} />
+                  <EditField label={t('profile.name')}     name="nombre"    value={form.nombre}    onChange={handleChange} />
+                  <EditField label={t('profile.surnames')} name="apellidos" value={form.apellidos} onChange={handleChange} />
+                  <EditField label={t('profile.nif')}      name="nif"       value={form.nif}       onChange={handleChange} />
+                  <EditField label={t('profile.address')}  name="direccion" value={form.direccion} onChange={handleChange} />
+                  <EditField label={t('profile.phone')}    name="telefono"  value={form.telefono}  onChange={handleChange} />
 
                   <div style={{ display: "flex", gap: 10, marginTop: 4 }}>
                     <button
@@ -202,7 +204,7 @@ export default function UserProfile() {
                         opacity: saving ? 0.7 : 1
                       }}
                     >
-                      {saving ? "Desant..." : "Desar canvis"}
+                      {saving ? t('profile.saving') : t('profile.save')}
                     </button>
                     <button
                       onClick={handleCancel}
@@ -213,17 +215,17 @@ export default function UserProfile() {
                         fontSize: 14, cursor: "pointer"
                       }}
                     >
-                      Cancel·lar
+                      {t('profile.cancel')}
                     </button>
                   </div>
                 </>
               ) : (
                 <>
-                  <ReadField label="Nom"     value={cliente?.nombre} />
-                  <ReadField label="Cognoms" value={cliente?.apellidos} />
-                  <ReadField label="NIF"     value={cliente?.nif} />
-                  <ReadField label="Adreça"  value={cliente?.direccion} />
-                  <ReadField label="Telèfon" value={cliente?.telefono} />
+                  <ReadField label={t('profile.name')}     value={cliente?.nombre} />
+                  <ReadField label={t('profile.surnames')} value={cliente?.apellidos} />
+                  <ReadField label={t('profile.nif')}      value={cliente?.nif} />
+                  <ReadField label={t('profile.address')}  value={cliente?.direccion} />
+                  <ReadField label={t('profile.phone')}    value={cliente?.telefono} />
                 </>
               )}
             </div>

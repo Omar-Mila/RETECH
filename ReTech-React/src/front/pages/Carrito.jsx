@@ -9,6 +9,7 @@ import {
 } from "@stripe/react-stripe-js";
 import Navbar from "../components/Navbar";
 import Footer from "../components/Footer";
+import { useLanguage } from "../context/LanguageContext";
 
 const stripePromise = loadStripe("pk_test_51SehVv68Ge0SylH5spiVqLpHaRCt8s3RsIiwyPi2VINaXKBYxbhDyzF6YThlNyVb0WHAp16SnJ5plSMoMxswIy8S00lVuCfPjV");
 const API = "http://localhost:8000";
@@ -130,7 +131,7 @@ function CartItem({ item, onRemove, onQty, disabled }) {
   );
 }
 
-function PaymentForm({ total, onSuccess, onCancel }) {
+function PaymentForm({ total, onSuccess, onCancel, t }) {
   const stripe   = useStripe();
   const elements = useElements();
   const [error,   setError]   = useState(null);
@@ -190,11 +191,11 @@ function PaymentForm({ total, onSuccess, onCancel }) {
       <div style={{ display:"flex",gap:10,marginTop:20 }}>
         <button onClick={onCancel} disabled={loading}
           style={{ flex:1,padding:"13px",background:"#f8fafc",border:"1px solid #e2e8f0",borderRadius:10,fontSize:13.5,fontWeight:600,cursor:"pointer",color:"#475569" }}>
-          ← Volver
+          {t('cart.back')}
         </button>
         <button onClick={handlePay} disabled={!stripe || loading}
           style={{ flex:2,padding:"13px",background:loading||!stripe?"#94a3b8":"linear-gradient(135deg,#6366f1,#4f46e5)",color:"#fff",border:"none",borderRadius:10,fontSize:14,fontWeight:700,cursor:loading||!stripe?"not-allowed":"pointer",fontFamily:"'Sora',sans-serif",boxShadow:loading?"none":"0 4px 14px rgba(99,102,241,.4)",display:"flex",alignItems:"center",justifyContent:"center",gap:8 }}>
-          {loading ? <><Spinner/> Procesando…</> : <><LockIcon/> Pagar {fmt(total)}</>}
+          {loading ? <><Spinner/> {t('cart.processing')}</> : <><LockIcon/> {t('cart.pay')(fmt(total))}</>}
         </button>
       </div>
     </div>
@@ -214,55 +215,55 @@ function Row({ label, value, muted, bold, large }) {
   );
 }
 
-function OrderSummary({ items, onCheckout, loadingIntent }) {
+function OrderSummary({ items, onCheckout, loadingIntent, t }) {
   const total = items.reduce((s, i) => s + i.subtotal, 0);
   const totalItems = items.reduce((s, i) => s + i.cantidad, 0);
 
   return (
     <div style={{ position: "sticky", top: 24, background: "#fff", border: "1px solid #e2e8f0", borderRadius: 20, padding: 26, boxShadow: "0 4px 24px rgba(15,23,42,.07)" }}>
       <h2 style={{ margin: "0 0 22px", fontSize: 17, fontWeight: 800, color: "#0f172a", fontFamily: "'Sora',sans-serif", letterSpacing: "-.3px" }}>
-        Resumen del pedido
+        {t('cart.summaryTitle')}
       </h2>
-      
+
       <div style={{ display: "flex", flexDirection: "column", gap: 11 }}>
-        <Row label={`Subtotal (${totalItems} art.)`} value={fmt(total)} />
-        <Row label="Total" value={fmt(total)} bold large />
+        <Row label={t('cart.subtotal')(totalItems)} value={fmt(total)} />
+        <Row label={t('cart.total')} value={fmt(total)} bold large />
       </div>
 
       <div style={{ margin: "18px 0", background: "#f0fdf4", border: "1px solid #bbf7d0", borderRadius: 10, padding: "9px 13px", display: "flex", alignItems: "center", gap: 7 }}>
         <span>🚚</span>
-        <span style={{ fontSize: 12, color: "#15803d", fontWeight: 600 }}>¡Envío gratuito incluido!</span>
+        <span style={{ fontSize: 12, color: "#15803d", fontWeight: 600 }}>{t('cart.freeShipping')}</span>
       </div>
 
-      <button 
-        onClick={onCheckout} 
+      <button
+        onClick={onCheckout}
         disabled={loadingIntent || items.length === 0}
-        style={{ 
-          width: "100%", padding: "15px", 
-          background: loadingIntent || items.length === 0 ? "#94a3b8" : "linear-gradient(135deg,#6366f1,#4f46e5)", 
-          color: "#fff", border: "none", borderRadius: 12, fontSize: 14.5, fontWeight: 700, 
-          cursor: loadingIntent ? "not-allowed" : "pointer", fontFamily: "'Sora',sans-serif", 
-          boxShadow: loadingIntent ? "none" : "0 4px 14px rgba(99,102,241,.4)", 
-          display: "flex", alignItems: "center", justifyContent: "center", gap: 9, transition: "transform .15s" 
+        style={{
+          width: "100%", padding: "15px",
+          background: loadingIntent || items.length === 0 ? "#94a3b8" : "linear-gradient(135deg,#6366f1,#4f46e5)",
+          color: "#fff", border: "none", borderRadius: 12, fontSize: 14.5, fontWeight: 700,
+          cursor: loadingIntent ? "not-allowed" : "pointer", fontFamily: "'Sora',sans-serif",
+          boxShadow: loadingIntent ? "none" : "0 4px 14px rgba(99,102,241,.4)",
+          display: "flex", alignItems: "center", justifyContent: "center", gap: 9, transition: "transform .15s"
         }}
         onMouseEnter={(e) => { if (!loadingIntent) e.currentTarget.style.transform = "translateY(-1px)"; }}
         onMouseLeave={(e) => { e.currentTarget.style.transform = "translateY(0)"; }}
       >
-        {loadingIntent ? <><Spinner /> Preparando pago…</> : <><LockIcon /> Proceder al pago</>}
+        {loadingIntent ? <><Spinner /> {t('cart.preparingPay')}</> : <><LockIcon /> {t('cart.checkout')}</>}
       </button>
 
       <div style={{ marginTop: 12, display: "flex", alignItems: "center", justifyContent: "center", gap: 5 }}>
         <svg width="34" height="14" viewBox="0 0 60 25">
           <text x="0" y="18" fontFamily="Arial" fontSize="18" fontWeight="bold" fill="#635bff">stripe</text>
         </svg>
-        <span style={{ fontSize: 10.5, color: "#94a3b8" }}>Pago 100% seguro con Stripe</span>
+        <span style={{ fontSize: 10.5, color: "#94a3b8" }}>{t('cart.stripeSecure')}</span>
       </div>
     </div>
   );
 }
 
-function generateInvoiceHTML(compraId, items, total) {
-  const date = new Date().toLocaleDateString("es-ES", { day: "numeric", month: "long", year: "numeric" });
+function generateInvoiceHTML(compraId, items, total, labels, dateLocale) {
+  const date = new Date().toLocaleDateString(dateLocale, { day: "numeric", month: "long", year: "numeric" });
   const invoiceNum = `FAC-${String(compraId).padStart(5, "0")}`;
   const rows = items.map(item => `
     <tr>
@@ -274,7 +275,7 @@ function generateInvoiceHTML(compraId, items, total) {
   `).join("");
 
   return `<!DOCTYPE html>
-<html lang="es">
+<html lang="${dateLocale.split('-')[0]}">
 <head>
   <meta charset="UTF-8">
   <title>Factura ${invoiceNum}</title>
@@ -305,40 +306,41 @@ function generateInvoiceHTML(compraId, items, total) {
   <div class="header">
     <div>
       <div class="brand">Re<span>Tech</span></div>
-      <p style="color:#64748b;font-size:12px;margin-top:6px;">Tecnologia reacondicionada de confiança</p>
+      <p style="color:#64748b;font-size:12px;margin-top:6px;">${labels.tagline}</p>
     </div>
     <div class="meta">
       <h2>${invoiceNum}</h2>
-      <p>Data: ${date}</p>
-      <p>Comanda #${compraId}</p>
+      <p>${labels.issueDate} ${date}</p>
+      <p>${labels.orderNum} #${compraId}</p>
     </div>
   </div>
   <hr>
   <table>
     <thead>
       <tr>
-        <th>Producte</th>
-        <th>Quantitat</th>
-        <th>Preu unit.</th>
-        <th>Total</th>
+        <th>${labels.product}</th>
+        <th>${labels.quantity}</th>
+        <th>${labels.unitPrice}</th>
+        <th>${labels.total}</th>
       </tr>
     </thead>
     <tbody>${rows}</tbody>
   </table>
   <div class="totals">
     <div class="totals-inner">
-      <div class="total-final"><span>Total</span><span>${fmt(total)}</span></div>
+      <div class="total-final"><span>${labels.total}</span><span>${fmt(total)}</span></div>
     </div>
   </div>
   <div class="footer">
-    <p>Gràcies per la teva compra a ReTech</p>
-    <p>Aquest document és la teva factura simplificada</p>
+    <p>${labels.thanks}</p>
+    <p>${labels.simplifiedInvoice}</p>
   </div>
 </body>
 </html>`;
 }
 
 function SuccessScreen({ compraId }) {
+  const { t } = useLanguage();
   const [items, setItems] = useState([]);
   const [total, setTotal] = useState(0);
   const [loadingOrder, setLoadingOrder] = useState(true);
@@ -381,7 +383,7 @@ function SuccessScreen({ compraId }) {
   }, [compraId]);
 
   const handleInvoice = () => {
-    const html = generateInvoiceHTML(compraId, items, total);
+    const html = generateInvoiceHTML(compraId, items, total, t('invoice'), t('orders.dateLocale'));
     const win = window.open("", "_blank");
     if (!win) return;
     win.document.write(html);
@@ -398,9 +400,9 @@ function SuccessScreen({ compraId }) {
             <polyline points="20 6 9 17 4 12"/>
           </svg>
         </div>
-        <h1 style={{ margin:"0 0 8px",fontSize:24,fontWeight:800,color:"#0f172a",fontFamily:"'Sora',sans-serif" }}>¡Pedido confirmado!</h1>
-        <p style={{ margin:"0 0 4px",color:"#64748b",fontSize:14 }}>Tu pago se ha procesado correctamente.</p>
-        <p style={{ margin:"0 0 24px",color:"#94a3b8",fontSize:12.5 }}>Pedido #{compraId}</p>
+        <h1 style={{ margin:"0 0 8px",fontSize:24,fontWeight:800,color:"#0f172a",fontFamily:"'Sora',sans-serif" }}>{t('cart.orderConfirmed')}</h1>
+        <p style={{ margin:"0 0 4px",color:"#64748b",fontSize:14 }}>{t('cart.orderProcessed')}</p>
+        <p style={{ margin:"0 0 24px",color:"#94a3b8",fontSize:12.5 }}>{t('cart.orderNumber')} #{compraId}</p>
 
         {loadingOrder && (
           <div style={{ marginBottom:24 }}><Spinner size={22} color="#6366f1"/></div>
@@ -412,10 +414,10 @@ function SuccessScreen({ compraId }) {
             disabled={loadingOrder || items.length === 0}
             style={{ padding:"12px 22px",background:"#f8fafc",border:"1px solid #e2e8f0",borderRadius:10,fontSize:13.5,fontWeight:700,cursor:loadingOrder||items.length===0?"not-allowed":"pointer",color:"#0f172a",fontFamily:"'Sora',sans-serif",opacity:loadingOrder||items.length===0?0.5:1 }}
           >
-              Descargar factura
+            {t('cart.downloadInvoice')}
           </button>
           <a href="/" style={{ padding:"12px 22px",background:"linear-gradient(135deg,#6366f1,#4f46e5)",color:"#fff",borderRadius:10,textDecoration:"none",fontSize:13.5,fontWeight:700,fontFamily:"'Sora',sans-serif",boxShadow:"0 4px 12px rgba(99,102,241,.35)" }}>
-            Seguir comprando →
+            {t('cart.keepShopping')}
           </a>
         </div>
       </div>
@@ -443,6 +445,7 @@ function LockIcon() {
 
 export default function CartCheckoutPage() {
   const navigate = useNavigate();
+  const { t } = useLanguage();
   const [items,         setItems]         = useState([]);
   const [fetchLoading,  setFetchLoading]  = useState(true);
   const [intentLoading, setIntentLoading] = useState(false);
@@ -465,7 +468,7 @@ export default function CartCheckoutPage() {
           navigate("/login");
         }, 2500);
       } else {
-        setApiError("No se pudo cargar el carrito.");
+        setApiError(t('cart.loadError'));
       }
     } finally {
       setFetchLoading(false);
@@ -597,7 +600,7 @@ export default function CartCheckoutPage() {
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#f87171" strokeWidth="2.2">
             <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
           </svg>
-          Debes iniciar sesión para comprar. Redirigiendo…
+          {t('cart.authRequired')}
         </div>
       )}
       <style>{`
@@ -622,11 +625,11 @@ export default function CartCheckoutPage() {
             </div>
             <div>
               <h1 style={{ margin:0,fontSize:24,fontWeight:800,color:"#0f172a",fontFamily:"'Sora',sans-serif",letterSpacing:"-.5px" }}>
-                {clientSecret ? "Pago seguro" : "Tu carrito"}
+                {clientSecret ? t('cart.payTitle') : t('cart.title')}
               </h1>
               {!clientSecret && (
                 <p style={{ margin:0,fontSize:12.5,color:"#64748b" }}>
-                  {fetchLoading ? "Cargando…" : items.length === 0 ? "Vacío" : `${items.reduce((s,i) => s+i.cantidad, 0)} artículos`}
+                  {fetchLoading ? t('cart.loading') : items.length === 0 ? t('cart.emptyStatus') : t('cart.itemsCount')(items.reduce((s,i) => s+i.cantidad, 0))}
                 </p>
               )}
             </div>
@@ -645,8 +648,8 @@ export default function CartCheckoutPage() {
           ) : items.length === 0 && !clientSecret ? (
             <div style={{ textAlign:"center",padding:"72px 20px",background:"#fff",borderRadius:20,border:"1px solid #e2e8f0" }}>
               <div style={{ fontSize:56,marginBottom:14 }}>🛒</div>
-              <h2 style={{ margin:"0 0 6px",fontSize:19,fontWeight:700,color:"#0f172a",fontFamily:"'Sora',sans-serif" }}>Tu carrito está vacío</h2>
-              <p style={{ margin:0,color:"#64748b",fontSize:13.5 }}>Explora el catálogo y encuentra tu próximo móvil.</p>
+              <h2 style={{ margin:"0 0 6px",fontSize:19,fontWeight:700,color:"#0f172a",fontFamily:"'Sora',sans-serif" }}>{t('cart.emptyTitle')}</h2>
+              <p style={{ margin:0,color:"#64748b",fontSize:13.5 }}>{t('cart.emptyDesc')}</p>
             </div>
           ) : (
             <div style={{ display:"grid",gridTemplateColumns:"1fr 340px",gap:24,alignItems:"flex-start" }}>
@@ -654,16 +657,16 @@ export default function CartCheckoutPage() {
                 {clientSecret ? (
                   <div style={{ padding:"20px 0" }}>
                     <h3 style={{ margin:"0 0 18px",fontSize:14,fontWeight:700,color:"#94a3b8",textTransform:"uppercase",letterSpacing:".7px" }}>
-                      Datos de pago
+                      {t('cart.paymentData')}
                     </h3>
                     <Elements stripe={stripePromise} options={{ clientSecret, appearance:{ theme:"stripe", variables:{ colorPrimary:"#6366f1", borderRadius:"10px", fontFamily:"Inter, sans-serif" } } }}>
-                      <PaymentForm total={intentTotal} onSuccess={(id) => setSuccessId(id)} onCancel={() => setClientSecret(null)}/>
+                      <PaymentForm total={intentTotal} onSuccess={(id) => setSuccessId(id)} onCancel={() => setClientSecret(null)} t={t}/>
                     </Elements>
                   </div>
                 ) : (
                   <>
                     <div style={{ padding:"14px 0 4px",borderBottom:"2px solid #f1f5f9" }}>
-                      <span style={{ fontSize:11.5,fontWeight:700,color:"#94a3b8",textTransform:"uppercase",letterSpacing:".7px" }}>Productos</span>
+                      <span style={{ fontSize:11.5,fontWeight:700,color:"#94a3b8",textTransform:"uppercase",letterSpacing:".7px" }}>{t('cart.products')}</span>
                     </div>
                     {items.map((item) => (
                       <CartItem key={item.movil_id} item={item} onRemove={handleRemove} onQty={handleQty} disabled={intentLoading}/>
@@ -675,13 +678,13 @@ export default function CartCheckoutPage() {
                           <polyline points="3 6 5 6 21 6"/>
                           <path d="M19 6l-1 14H6L5 6M10 11v6M14 11v6M9 6V4h6v2"/>
                         </svg>
-                        Vaciar carrito
+                        {t('cart.clearCart')}
                       </button>
                     </div>
                   </>
                 )}
               </div>
-              <OrderSummary items={items} onCheckout={handleCheckout} loadingIntent={intentLoading}/>
+              <OrderSummary items={items} onCheckout={handleCheckout} loadingIntent={intentLoading} t={t}/>
             </div>
           )}
         </div>

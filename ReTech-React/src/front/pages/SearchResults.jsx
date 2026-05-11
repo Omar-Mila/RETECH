@@ -2,6 +2,7 @@ import { useEffect, useState, useMemo, useRef } from "react"
 import { useSearchParams, Link } from "react-router-dom"
 import Navbar from "../components/Navbar"
 import Footer from "../components/Footer"
+import { useLanguage } from "../context/LanguageContext"
 
 const ESTADO_LABELS = {
     "nuevo":        { label: "Nou",         color: "bg-green-100 text-green-700" },
@@ -42,7 +43,7 @@ function SortButton({ label, sort, onClick }) {
     )
 }
 
-function FilterPanel({ products, filters, onChange, collapsed, onToggleCollapse }) {
+function FilterPanel({ products, filters, onChange, collapsed, onToggleCollapse, t }) {
     const modelos         = useMemo(() => [...new Set(products.map(p => p.modelo))].sort(), [products])
     const colores         = useMemo(() => [...new Set(products.map(p => p.color))].sort(), [products])
     const almacenamientos = useMemo(() => [...new Set(products.map(p => p.almacenamiento))].sort((a, b) => a - b), [products])
@@ -121,7 +122,7 @@ function FilterPanel({ products, filters, onChange, collapsed, onToggleCollapse 
                         onClick={() => onChange({ modelos: [], colores: [], almacenamientos: [], precioMax: maxPrice })}
                         style={{ fontSize: 11, color: "#64748b", background: "none", border: "none", cursor: "pointer", textDecoration: "underline" }}
                     >
-                        Netejar
+                        {t('search.clear')}
                     </button>
                 )}
             </div>
@@ -129,22 +130,22 @@ function FilterPanel({ products, filters, onChange, collapsed, onToggleCollapse 
             {/* Content */}
             {!collapsed && (
                 <div style={{ flex: 1, overflowY: "auto" }}>
-                    <Section title="Model">
+                    <Section title={t('search.filterModel')}>
                         {modelos.map(m => (
                             <CheckRow key={m} label={m} checked={filters.modelos.includes(m)} onChange={() => toggle("modelos", m)} />
                         ))}
                     </Section>
-                    <Section title="Color">
+                    <Section title={t('search.filterColor')}>
                         {colores.map(c => (
                             <CheckRow key={c} label={c} checked={filters.colores.includes(c)} onChange={() => toggle("colores", c)} />
                         ))}
                     </Section>
-                    <Section title="Emmagatzematge">
+                    <Section title={t('search.filterStorage')}>
                         {almacenamientos.map(a => (
                             <CheckRow key={a} label={`${a} GB`} checked={filters.almacenamientos.includes(a)} onChange={() => toggle("almacenamientos", a)} />
                         ))}
                     </Section>
-                    <Section title="Preu màxim">
+                    <Section title={t('search.filterMaxPrice')}>
                         <div style={{ padding: "4px 14px 14px" }}>
                             <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 8 }}>
                                 <span style={{ fontSize: 11, color: "#64748b" }}>0 €</span>
@@ -184,6 +185,7 @@ function CheckRow({ label, checked, onChange }) {
 const LIMITE = 8
 
 export default function SearchResults() {
+    const { t } = useLanguage()
     const [searchParams]   = useSearchParams()
     const query             = searchParams.get("q")
     const [productos, setProductos]             = useState([])
@@ -289,7 +291,7 @@ export default function SearchResults() {
 
                 {cargando && (
                     <div className="flex justify-center py-16 w-full">
-                        <p className="text-gray-400 animate-pulse">Cercant "{query}"...</p>
+                        <p className="text-gray-400 animate-pulse">{t('search.searching')(query)}</p>
                     </div>
                 )}
 
@@ -305,18 +307,19 @@ export default function SearchResults() {
                             onChange={setFiltros}
                             collapsed={filtroColapsado}
                             onToggleCollapse={() => setFiltroColapsado(c => !c)}
+                            t={t}
                         />
 
                         <div style={{ flex: 1, minWidth: 0 }}>
                             {/* Cabecera */}
                             <div style={{ display: "flex", flexWrap: "wrap", alignItems: "center", gap: 8, marginBottom: 4 }}>
                                 <h1 style={{ fontSize: 17, fontWeight: 700, margin: 0, whiteSpace: "nowrap" }}>
-                                    Resultats per: <span style={{ color: "#94a3b8" }}>"{query}"</span>
+                                    {t('search.results')(query)}
                                 </h1>
 
                                 <div style={{ display: "flex", gap: 6, alignItems: "center" }}>
-                                    <SortButton label="Preu" sort={ordenPrecio} onClick={alternarOrdenPrecio} />
-                                    <SortButton label="Nom" sort={ordenNombre} onClick={alternarOrdenNombre} />
+                                    <SortButton label={t('search.price')} sort={ordenPrecio} onClick={alternarOrdenPrecio} />
+                                    <SortButton label={t('search.name')} sort={ordenNombre} onClick={alternarOrdenNombre} />
                                 </div>
 
                                 {/* Burbujas de filtros activos */}
@@ -343,12 +346,12 @@ export default function SearchResults() {
                                 )}
                             </div>
 
-                            <p style={{ fontSize: 12, color: "#94a3b8", marginBottom: 20, marginTop: 2 }}>{filtrados.length} productes trobats</p>
+                            <p style={{ fontSize: 12, color: "#94a3b8", marginBottom: 20, marginTop: 2 }}>{t('search.found')(filtrados.length)}</p>
 
                             {filtrados.length === 0 ? (
                                 <div className="text-center py-16 text-gray-400">
                                     <p className="text-4xl mb-3">🔍</p>
-                                    <p className="text-lg">No s'han trobat mòbils per "{query}"</p>
+                                    <p className="text-lg">{t('search.noResults')(query)}</p>
                                 </div>
                             ) : (
                                 <>
@@ -378,7 +381,7 @@ export default function SearchResults() {
                                                     <span className={`mt-2 text-xs px-2 py-0.5 rounded-full w-fit ${estat.color}`}>
                                                         {estat.label}
                                                     </span>
-                                                    <p className="text-xs text-gray-400 mt-1">🔋 {producto.salud_bateria}% bateria</p>
+                                                    <p className="text-xs text-gray-400 mt-1">{t('search.battery')(producto.salud_bateria)}</p>
                                                     <p className="text-lg font-bold mt-auto pt-2">{producto.precio} €</p>
                                                 </Link>
                                             )
@@ -390,13 +393,13 @@ export default function SearchResults() {
 
                                     {hayMas && (
                                         <div style={{ textAlign: "center", padding: "24px 0 8px", color: "#94a3b8", fontSize: 13 }}>
-                                            Carregant més productes...
+                                            {t('search.loadingMore')}
                                         </div>
                                     )}
 
                                     {!hayMas && filtrados.length > LIMITE && (
                                         <div style={{ textAlign: "center", padding: "24px 0 8px", color: "#cbd5e1", fontSize: 12 }}>
-                                            Tots els productes carregats · {filtrados.length} en total
+                                            {t('search.allLoaded')(filtrados.length)}
                                         </div>
                                     )}
                                 </>
