@@ -20,7 +20,6 @@ return new class extends Migration
             $table->integer('cantidad')->default(1);
             $table->timestamps();
             $table->unique(['user_id', 'movil_id']);
-
             $table->foreign('user_id')->references('id')->on('users')->onDelete('cascade');
             $table->foreign('movil_id')->references('id')->on('moviles')->onDelete('cascade'); // ← moviles
         });

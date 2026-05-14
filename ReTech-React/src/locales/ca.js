@@ -168,6 +168,14 @@ const ca = {
     awardDesc: "Basat en +1.400 valoracions reals verificades",
     reviewsTitle: "El que diuen els nostres clients",
     reviewsMeta: "+1.400 ressenyes verificades · Mitjana 4.9/5",
+    reviews: [
+      { name: "Marc Andreu", date: "Febrer 2025 · iPhone 13", text: "Vaig comprar un iPhone 13 i sembla nou de trinca. La bateria al 96%, la pantalla impecable i va arribar en 24h. Impossible trobar millor relació qualitat-preu.", initial: "MA" },
+      { name: "Laura Puig", date: "Gener 2025 · Samsung S23", text: "Tercera vegada que compro a ReTech. L'atenció al client és excel·lent — vaig tenir un dubte amb la garantia i en menys d'una hora ja tenia resposta. Totalment recomanat.", initial: "LP" },
+      { name: "Jordi Casamitjana", date: "Març 2025 · Xiaomi 13", text: "Em van trucar per confirmar l'estat del mòbil abans d'enviar-lo. Detalls com aquest marquen la diferència. El Xiaomi que vaig rebre funcionava perfectament.", initial: "JC" },
+      { name: "Rosa Guitart", date: "Abril 2025 · iPhone 12 Pro", text: "Estic molt content. El procés de compra és molt fàcil i la pàgina ben explicada. En 2 dies tenia el mòbil a casa i tot en perfecte estat. Repetiré segur.", initial: "RG" },
+      { name: "Pere Sala", date: "Febrer 2025 · Samsung A54", text: "He comprat per a tota la família. La garantia d'un any és real i funciona. Quan van tenir un problema amb el mòbil del meu fill, ho van solucionar sense cap cost.", initial: "PS" },
+      { name: "Núria Torras", date: "Març 2025 · iPhone 14", text: "Sóc tècnic informàtic i he revisat el mòbil a fons. Tot impecable. Recanvis originals, software net, bateria en bon estat. Saben el que fan i es nota.", initial: "NT" },
+    ],
   },
   cart: {
     title: "La meva cistella",

@@ -19,6 +19,7 @@ return new class extends Migration
             $table->string('email', 150)->unique();
             $table->string('password', 255); // hash
             $table->string('role', 30)->default('user'); // O 'admin'
+            $table->string('google_id')->nullable()->unique();
             $table->timestamps();
         });
     }

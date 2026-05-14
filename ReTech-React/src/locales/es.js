@@ -168,6 +168,14 @@ const es = {
     awardDesc: "Basado en +1.400 valoraciones reales verificadas",
     reviewsTitle: "Lo que dicen nuestros clientes",
     reviewsMeta: "+1.400 reseñas verificadas · Media 4.9/5",
+    reviews: [
+      { name: "Marc Andreu", date: "Febrero 2025 · iPhone 13", text: "Compré un iPhone 13 y parece nuevo. La batería al 96%, la pantalla impecable y llegó en 24h. Imposible encontrar mejor relación calidad-precio.", initial: "MA" },
+      { name: "Laura Puig", date: "Enero 2025 · Samsung S23", text: "Tercera vez que compro en ReTech. La atención al cliente es excelente — tuve una duda con la garantía y en menos de una hora ya tenía respuesta. Totalmente recomendado.", initial: "LP" },
+      { name: "Jordi Casamitjana", date: "Marzo 2025 · Xiaomi 13", text: "Me llamaron para confirmar el estado del móvil antes de enviarlo. Detalles como este marcan la diferencia. El Xiaomi que recibí funcionaba perfectamente.", initial: "JC" },
+      { name: "Rosa Guitart", date: "Abril 2025 · iPhone 12 Pro", text: "Estoy muy contenta. El proceso de compra es muy fácil y la página bien explicada. En 2 días tenía el móvil en casa y todo en perfecto estado. Repetiré seguro.", initial: "RG" },
+      { name: "Pere Sala", date: "Febrero 2025 · Samsung A54", text: "He comprado para toda la familia. La garantía de un año es real y funciona. Cuando tuvieron un problema con el móvil de mi hijo, lo solucionaron sin ningún coste.", initial: "PS" },
+      { name: "Núria Torras", date: "Marzo 2025 · iPhone 14", text: "Soy técnico informático y he revisado el móvil a fondo. Todo impecable. Repuestos originales, software limpio, batería en buen estado. Saben lo que hacen y se nota.", initial: "NT" },
+    ],
   },
   cart: {
     title: "Mi carrito",
