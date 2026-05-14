@@ -1,5 +1,7 @@
 import { useState, useEffect, useCallback } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
+import { useAuth } from "../../auth/AuthContext";
+import { getGuestCart, setGuestCart, clearGuestCart } from "../../services/guestCart";
 import { loadStripe } from "@stripe/stripe-js";
 import {
   Elements,
@@ -18,11 +20,17 @@ const apiFetch = async (path, opts = {}) => {
     if (opts.method && opts.method !== 'GET') {
         await fetch(`${API}/sanctum/csrf-cookie`, { credentials: "include" });
     }
+    const xsrfToken = document.cookie
+      .split("; ")
+      .find(r => r.startsWith("XSRF-TOKEN="))
+      ?.split("=")[1];
     const response = await fetch(`${API}/api${path}`, {
       credentials: "include",
-      headers: { 
-        "Content-Type": "application/json", 
-        "Accept": "application/json" 
+      headers: {
+        "Content-Type": "application/json",
+        "Accept": "application/json",
+        "X-Requested-With": "XMLHttpRequest",
+        ...(xsrfToken ? { "X-XSRF-TOKEN": decodeURIComponent(xsrfToken) } : {}),
       },
       ...opts,
     });
@@ -131,41 +139,40 @@ function CartItem({ item, onRemove, onQty, disabled }) {
   );
 }
 
-function PaymentForm({ total, onSuccess, onCancel, t }) {
+function PaymentForm({ total, onSuccess, onCancel, t, profileFormData }) {
   const stripe   = useStripe();
   const elements = useElements();
   const [error,   setError]   = useState(null);
   const [loading, setLoading] = useState(false);
 
   const handlePay = async () => {
-    if (!stripe || !elements) {
-      console.log("Stripe no listo:", { stripe, elements });
-      return;
-    }
+    if (!stripe || !elements) return;
     setLoading(true);
     setError(null);
     const { error: stripeError, paymentIntent } = await stripe.confirmPayment({
       elements,
       redirect: "if_required",
-        confirmParams: {
-          return_url: window.location.href,
-          payment_method_data: {
-            billing_details: {
-              address: {
-                country: "ES",
-              },
-            },
-          },
-        },
+      confirmParams: {
+        return_url: window.location.href,
+        payment_method_data: { billing_details: { address: { country: "ES" } } },
+      },
     });
-    console.log("Confirmando pago...", stripeError, paymentIntent);
     if (stripeError) {
       setError(stripeError.message);
       setLoading(false);
       return;
     }
-    console.log("Pago confirmado:", paymentIntent);
     if (paymentIntent?.status === "succeeded") {
+      if (profileFormData && Object.values(profileFormData).some(v => v !== "")) {
+        try {
+          await apiFetch("/user/cliente", {
+            method: "PUT",
+            body: JSON.stringify(profileFormData),
+          });
+        } catch {
+          // No bloqueamos la compra si falla guardar el perfil
+        }
+      }
       const res = await apiFetch("/checkout/confirm", {
         method: "POST",
         body: JSON.stringify({ payment_intent_id: paymentIntent.id }),
@@ -176,7 +183,6 @@ function PaymentForm({ total, onSuccess, onCancel, t }) {
         setError(res.message ?? "Error al registrar la compra.");
       }
     }
-
     setLoading(false);
   };
 
@@ -215,7 +221,7 @@ function Row({ label, value, muted, bold, large }) {
   );
 }
 
-function OrderSummary({ items, onCheckout, loadingIntent, t }) {
+function OrderSummary({ items, onCheckout, loadingIntent, t, isGuest }) {
   const total = items.reduce((s, i) => s + i.subtotal, 0);
   const totalItems = items.reduce((s, i) => s + i.cantidad, 0);
 
@@ -235,39 +241,62 @@ function OrderSummary({ items, onCheckout, loadingIntent, t }) {
         <span style={{ fontSize: 12, color: "#15803d", fontWeight: 600 }}>{t('cart.freeShipping')}</span>
       </div>
 
-      <button
-        onClick={onCheckout}
-        disabled={loadingIntent || items.length === 0}
-        style={{
-          width: "100%", padding: "15px",
-          background: loadingIntent || items.length === 0 ? "#94a3b8" : "linear-gradient(135deg,#6366f1,#4f46e5)",
-          color: "#fff", border: "none", borderRadius: 12, fontSize: 14.5, fontWeight: 700,
-          cursor: loadingIntent ? "not-allowed" : "pointer", fontFamily: "'Sora',sans-serif",
-          boxShadow: loadingIntent ? "none" : "0 4px 14px rgba(99,102,241,.4)",
-          display: "flex", alignItems: "center", justifyContent: "center", gap: 9, transition: "transform .15s"
-        }}
-        onMouseEnter={(e) => { if (!loadingIntent) e.currentTarget.style.transform = "translateY(-1px)"; }}
-        onMouseLeave={(e) => { e.currentTarget.style.transform = "translateY(0)"; }}
-      >
-        {loadingIntent ? <><Spinner /> {t('cart.preparingPay')}</> : <><LockIcon /> {t('cart.checkout')}</>}
-      </button>
-
-      <div style={{ marginTop: 12, display: "flex", alignItems: "center", justifyContent: "center", gap: 5 }}>
-        <svg width="34" height="14" viewBox="0 0 60 25">
-          <text x="0" y="18" fontFamily="Arial" fontSize="18" fontWeight="bold" fill="#635bff">stripe</text>
-        </svg>
-        <span style={{ fontSize: 10.5, color: "#94a3b8" }}>{t('cart.stripeSecure')}</span>
-      </div>
+      {isGuest ? (
+        <div style={{ marginTop: 4 }}>
+          <div style={{ padding: "12px 14px", background: "#fefce8", border: "1px solid #fde68a", borderRadius: 10, marginBottom: 12, fontSize: 12.5, color: "#92400e", lineHeight: 1.5 }}>
+            {t('cart.guestCheckout')}
+          </div>
+          <button
+            onClick={onCheckout}
+            style={{ width: "100%", padding: "15px", background: "linear-gradient(135deg,#6366f1,#4f46e5)", color: "#fff", border: "none", borderRadius: 12, fontSize: 14.5, fontWeight: 700, cursor: "pointer", fontFamily: "'Sora',sans-serif", boxShadow: "0 4px 14px rgba(99,102,241,.4)", display: "flex", alignItems: "center", justifyContent: "center", gap: 9 }}
+          >
+            <LockIcon /> {t('cart.loginToBuy')}
+          </button>
+        </div>
+      ) : (
+        <>
+          <button
+            onClick={onCheckout}
+            disabled={loadingIntent || items.length === 0}
+            style={{
+              width: "100%", padding: "15px",
+              background: loadingIntent || items.length === 0 ? "#94a3b8" : "linear-gradient(135deg,#6366f1,#4f46e5)",
+              color: "#fff", border: "none", borderRadius: 12, fontSize: 14.5, fontWeight: 700,
+              cursor: loadingIntent ? "not-allowed" : "pointer", fontFamily: "'Sora',sans-serif",
+              boxShadow: loadingIntent ? "none" : "0 4px 14px rgba(99,102,241,.4)",
+              display: "flex", alignItems: "center", justifyContent: "center", gap: 9, transition: "transform .15s"
+            }}
+            onMouseEnter={(e) => { if (!loadingIntent) e.currentTarget.style.transform = "translateY(-1px)"; }}
+            onMouseLeave={(e) => { e.currentTarget.style.transform = "translateY(0)"; }}
+          >
+            {loadingIntent ? <><Spinner /> {t('cart.preparingPay')}</> : <><LockIcon /> {t('cart.checkout')}</>}
+          </button>
+          <div style={{ marginTop: 12, display: "flex", alignItems: "center", justifyContent: "center", gap: 5 }}>
+            <svg width="34" height="14" viewBox="0 0 60 25">
+              <text x="0" y="18" fontFamily="Arial" fontSize="18" fontWeight="bold" fill="#635bff">stripe</text>
+            </svg>
+            <span style={{ fontSize: 10.5, color: "#94a3b8" }}>{t('cart.stripeSecure')}</span>
+          </div>
+        </>
+      )}
     </div>
   );
 }
 
-function generateInvoiceHTML(compraId, items, total, labels, dateLocale) {
+function generateInvoiceHTML(compraId, items, total, user, labels, dateLocale) {
   const date = new Date().toLocaleDateString(dateLocale, { day: "numeric", month: "long", year: "numeric" });
   const invoiceNum = `FAC-${String(compraId).padStart(5, "0")}`;
+
+  const c = user?.cliente ?? {};
+  const clienteName     = c.nombre && c.apellidos ? `${c.nombre} ${c.apellidos}` : user?.name ?? "—";
+  const clienteEmail    = user?.email    ?? "—";
+  const clienteNif      = c.nif          ?? null;
+  const clienteTel      = c.telefono     ?? null;
+  const clienteDireccion = c.direccion   ?? null;
+
   const rows = items.map(item => `
     <tr>
-      <td><strong>${item.modelo}</strong><br><small>${item.almacenamiento} GB · ${item.ram} GB RAM · ${item.color} · ${item.estado}</small></td>
+      <td><strong>${item.modelo ?? ""}</strong><br><small>${item.almacenamiento ?? ""} GB · ${item.ram ?? ""} GB RAM · ${item.color ?? ""} · ${item.estado ?? ""}</small></td>
       <td>${item.cantidad}</td>
       <td>${fmt(item.precio)}</td>
       <td>${fmt(item.subtotal)}</td>
@@ -281,48 +310,80 @@ function generateInvoiceHTML(compraId, items, total, labels, dateLocale) {
   <title>Factura ${invoiceNum}</title>
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
-    body { font-family: Arial, Helvetica, sans-serif; color: #1e293b; padding: 48px; font-size: 13px; }
-    .header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 40px; }
-    .brand { font-size: 26px; font-weight: 900; letter-spacing: -1px; color: #0f172a; }
+    body { font-family: Arial, Helvetica, sans-serif; color: #1e293b; padding: 52px; font-size: 13px; background: #fff; }
+    .top-bar { background: #0f172a; height: 5px; border-radius: 3px; margin-bottom: 40px; }
+    .header-row { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 36px; }
+    .brand { font-size: 30px; font-weight: 900; letter-spacing: -1.5px; color: #0f172a; }
     .brand span { color: #6366f1; }
-    .meta { text-align: right; }
-    .meta h2 { font-size: 22px; font-weight: 800; color: #0f172a; margin-bottom: 4px; }
-    .meta p { color: #64748b; font-size: 12px; line-height: 1.7; }
-    hr { border: none; border-top: 2px solid #e2e8f0; margin: 28px 0; }
+    .tagline { color: #64748b; font-size: 11.5px; margin-top: 4px; }
+    .invoice-meta { text-align: right; }
+    .invoice-num { font-size: 24px; font-weight: 800; color: #0f172a; letter-spacing: -1px; }
+    .invoice-meta p { color: #64748b; font-size: 12px; margin-top: 4px; line-height: 1.6; }
+    .info-row { display: grid; grid-template-columns: 1fr 1fr; gap: 32px; margin-bottom: 36px; }
+    .info-block { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px; padding: 18px 20px; }
+    .info-block h3 { font-size: 9px; font-weight: 800; letter-spacing: 1.5px; text-transform: uppercase; color: #94a3b8; margin-bottom: 12px; }
+    .info-block p { font-size: 12.5px; color: #1e293b; line-height: 1.75; }
+    .info-block p strong { color: #0f172a; font-weight: 700; }
+    hr { border: none; border-top: 2px solid #e2e8f0; margin: 0 0 24px; }
     table { width: 100%; border-collapse: collapse; }
-    thead th { background: #0f172a; color: #fff; padding: 10px 14px; font-size: 11px; text-transform: uppercase; letter-spacing: .5px; text-align: left; }
+    thead th { background: #0f172a; color: #fff; padding: 11px 14px; font-size: 10px; text-transform: uppercase; letter-spacing: .8px; text-align: left; }
+    thead th:first-child { border-radius: 6px 0 0 6px; }
+    thead th:last-child  { border-radius: 0 6px 6px 0; }
     th:nth-child(2), th:nth-child(3), th:nth-child(4) { text-align: right; }
-    tbody td { padding: 12px 14px; border-bottom: 1px solid #f1f5f9; vertical-align: top; }
+    tbody td { padding: 13px 14px; border-bottom: 1px solid #f1f5f9; vertical-align: top; font-size: 12.5px; }
     tbody td:nth-child(2), tbody td:nth-child(3), tbody td:nth-child(4) { text-align: right; white-space: nowrap; }
     small { color: #64748b; font-size: 11px; }
     .totals { margin-top: 24px; display: flex; justify-content: flex-end; }
-    .totals-inner { width: 260px; }
-    .total-final { display: flex; justify-content: space-between; padding: 12px 0; font-size: 17px; font-weight: 800; color: #0f172a; border-top: 2px solid #0f172a; margin-top: 8px; }
-    .footer { margin-top: 52px; padding-top: 20px; border-top: 1px solid #e2e8f0; text-align: center; color: #94a3b8; font-size: 11px; line-height: 1.8; }
-    @media print { body { padding: 20px; } }
+    .totals-inner { width: 280px; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px; padding: 16px 20px; }
+    .total-final { display: flex; justify-content: space-between; padding: 12px 0 0; margin-top: 10px; border-top: 2px solid #0f172a; font-size: 17px; font-weight: 800; color: #0f172a; }
+    .footer { margin-top: 48px; padding-top: 20px; border-top: 1px solid #e2e8f0; display: flex; justify-content: space-between; align-items: center; }
+    .footer-left { color: #94a3b8; font-size: 11px; line-height: 1.8; }
+    .footer-badge { background: #6366f1; color: #fff; font-size: 10px; font-weight: 800; padding: 5px 12px; border-radius: 20px; letter-spacing: .5px; }
+    @media print { body { padding: 28px; } .top-bar { display: none; } }
   </style>
 </head>
 <body>
-  <div class="header">
+  <div class="top-bar"></div>
+  <div class="header-row">
     <div>
       <div class="brand">Re<span>Tech</span></div>
-      <p style="color:#64748b;font-size:12px;margin-top:6px;">${labels.tagline}</p>
+      <p class="tagline">${labels.tagline}</p>
     </div>
-    <div class="meta">
-      <h2>${invoiceNum}</h2>
-      <p>${labels.issueDate} ${date}</p>
+    <div class="invoice-meta">
+      <div class="invoice-num">${invoiceNum}</div>
+      <p>${labels.issueDate} <strong style="color:#0f172a">${date}</strong></p>
       <p>${labels.orderNum} #${compraId}</p>
     </div>
   </div>
+
+  <div class="info-row">
+    <div class="info-block">
+      <h3>${labels.seller}</h3>
+      <p>
+        <strong>ReTech SL</strong><br>
+        CIF: B-08700123<br>
+        Carrer de la Tecnologia, 12<br>
+        08700 Igualada, Barcelona<br>
+        Tel: +34 938 00 12 34<br>
+        info@retech.cat
+      </p>
+    </div>
+    <div class="info-block">
+      <h3>${labels.client}</h3>
+      <p>
+        <strong>${clienteName}</strong><br>
+        ${clienteNif        ? `NIF: ${clienteNif}<br>`  : ""}
+        ${clienteDireccion  ? `${clienteDireccion}<br>` : ""}
+        ${clienteTel        ? `Tel: ${clienteTel}<br>`  : ""}
+        ${clienteEmail}
+      </p>
+    </div>
+  </div>
+
   <hr>
   <table>
     <thead>
-      <tr>
-        <th>${labels.product}</th>
-        <th>${labels.quantity}</th>
-        <th>${labels.unitPrice}</th>
-        <th>${labels.total}</th>
-      </tr>
+      <tr><th>${labels.product}</th><th>${labels.quantity}</th><th>${labels.unitPrice}</th><th>${labels.total}</th></tr>
     </thead>
     <tbody>${rows}</tbody>
   </table>
@@ -332,8 +393,11 @@ function generateInvoiceHTML(compraId, items, total, labels, dateLocale) {
     </div>
   </div>
   <div class="footer">
-    <p>${labels.thanks}</p>
-    <p>${labels.simplifiedInvoice}</p>
+    <div class="footer-left">
+      <p>${labels.thanks}</p>
+      <p>${labels.simplifiedInvoice}</p>
+    </div>
+    <div class="footer-badge">RETECH CERT</div>
   </div>
 </body>
 </html>`;
@@ -341,6 +405,7 @@ function generateInvoiceHTML(compraId, items, total, labels, dateLocale) {
 
 function SuccessScreen({ compraId }) {
   const { t } = useLanguage();
+  const { user } = useAuth();
   const [items, setItems] = useState([]);
   const [total, setTotal] = useState(0);
   const [loadingOrder, setLoadingOrder] = useState(true);
@@ -383,7 +448,7 @@ function SuccessScreen({ compraId }) {
   }, [compraId]);
 
   const handleInvoice = () => {
-    const html = generateInvoiceHTML(compraId, items, total, t('invoice'), t('orders.dateLocale'));
+    const html = generateInvoiceHTML(compraId, items, total, user, t('invoice'), t('orders.dateLocale'));
     const win = window.open("", "_blank");
     if (!win) return;
     win.document.write(html);
@@ -443,9 +508,113 @@ function LockIcon() {
   );
 }
 
+const VALIDATE = {
+  nombre:    v => v.trim() !== "",
+  apellidos: v => v.trim() !== "",
+  nif:       v => v === "" || /^\d{8}[A-Za-z]$/.test(v),
+  direccion: v => v.trim() !== "",
+  telefono:  v => v === "" || /^\d{9}$/.test(v),
+};
+
+function ProfileForm({ user, onDataChange, t }) {
+  const c = user?.cliente ?? {};
+  const initial = {
+    nombre:    c.nombre    ?? "",
+    apellidos: c.apellidos ?? "",
+    nif:       c.nif       ?? "",
+    direccion: c.direccion ?? "",
+    telefono:  c.telefono  ?? "",
+  };
+  const [form,    setForm]    = useState(initial);
+  const [touched, setTouched] = useState(() =>
+    Object.fromEntries(Object.entries(initial).filter(([,v]) => v !== "").map(([k]) => [k, true]))
+  );
+
+  const validity = Object.fromEntries(Object.keys(form).map(k => [k, VALIDATE[k](form[k])]));
+
+  useEffect(() => {
+    const allValid = Object.values(validity).every(Boolean) &&
+      form.nombre.trim() && form.apellidos.trim() && form.direccion.trim();
+    onDataChange?.(form, !!allValid);
+  }, []);
+
+  const handleChange = (key, value) => {
+    const newForm = { ...form, [key]: value };
+    setForm(newForm);
+    setTouched(p => ({ ...p, [key]: true }));
+    const newValidity = Object.fromEntries(Object.keys(newForm).map(k => [k, VALIDATE[k](newForm[k])]));
+    const allValid = Object.values(newValidity).every(Boolean) &&
+      newForm.nombre.trim() && newForm.apellidos.trim() && newForm.direccion.trim();
+    onDataChange?.(newForm, !!allValid);
+  };
+
+  const ERRORS = {
+    nombre:    t('cart.profileFieldRequired'),
+    apellidos: t('cart.profileFieldRequired'),
+    nif:       t('cart.profileNifError'),
+    direccion: t('cart.profileFieldRequired'),
+    telefono:  t('cart.profilePhoneError'),
+  };
+
+  const field = (label, key) => {
+    const isValid   = validity[key];
+    const hasValue  = form[key] !== "";
+    const isTouched = touched[key];
+    const showTick  = hasValue && isValid;
+    const showError = isTouched && !isValid;
+    const border    = showError ? "#fca5a5" : showTick ? "#86efac" : "#e2e8f0";
+    const bg        = showError ? "#fef2f2" : showTick ? "#f0fdf4" : "#fff";
+
+    return (
+      <div>
+        <label style={{ display:"block", fontSize:11, fontWeight:700, color:"#94a3b8", textTransform:"uppercase", letterSpacing:".05em", marginBottom:4 }}>
+          {label}
+        </label>
+        <div style={{ position:"relative" }}>
+          <input
+            type="text"
+            value={form[key]}
+            onChange={e => handleChange(key, e.target.value)}
+            onBlur={() => setTouched(p => ({ ...p, [key]: true }))}
+            style={{ width:"100%", boxSizing:"border-box", padding:"10px 36px 10px 13px", border:`1px solid ${border}`, borderRadius:10, fontSize:13.5, outline:"none", fontFamily:"inherit", color:"#0f172a", background:bg, transition:"border-color .15s, background .15s" }}
+          />
+          {showTick && (
+            <svg style={{ position:"absolute", right:11, top:"50%", transform:"translateY(-50%)", color:"#22c55e", flexShrink:0 }} width="15" height="15" viewBox="0 0 20 20" fill="currentColor">
+              <path fillRule="evenodd" d="M16.704 4.153a.75.75 0 01.143 1.052l-8 10.5a.75.75 0 01-1.127.075l-4.5-4.5a.75.75 0 011.06-1.06l3.894 3.893 7.48-9.817a.75.75 0 011.05-.143z" clipRule="evenodd"/>
+            </svg>
+          )}
+        </div>
+        {showError && (
+          <p style={{ margin:"3px 0 0 2px", fontSize:11, color:"#ef4444" }}>{ERRORS[key]}</p>
+        )}
+      </div>
+    );
+  };
+
+  return (
+    <div style={{ background:"#fff", border:"1px solid #e2e8f0", borderRadius:20, padding:22, boxShadow:"0 4px 24px rgba(15,23,42,.07)" }}>
+      <h3 style={{ margin:"0 0 4px", fontSize:14, fontWeight:800, color:"#0f172a", fontFamily:"'Sora',sans-serif" }}>
+        {t('cart.profileModalTitle')}
+      </h3>
+      <p style={{ margin:"0 0 16px", fontSize:12, color:"#64748b" }}>
+        {t('cart.profileModalDesc')}
+      </p>
+      <div style={{ display:"flex", flexDirection:"column", gap:11 }}>
+        {field(t('profile.name'),     "nombre")}
+        {field(t('profile.surnames'), "apellidos")}
+        {field(t('profile.nif'),      "nif")}
+        {field(t('profile.address'),  "direccion")}
+        {field(t('profile.phone'),    "telefono")}
+      </div>
+    </div>
+  );
+}
+
 export default function CartCheckoutPage() {
   const navigate = useNavigate();
+  const location = useLocation();
   const { t } = useLanguage();
+  const { isAuthenticated, user, setUser } = useAuth();
   const [items,         setItems]         = useState([]);
   const [fetchLoading,  setFetchLoading]  = useState(true);
   const [intentLoading, setIntentLoading] = useState(false);
@@ -453,27 +622,28 @@ export default function CartCheckoutPage() {
   const [intentTotal,   setIntentTotal]   = useState(0);
   const [successId,     setSuccessId]     = useState(null);
   const [apiError,      setApiError]      = useState(null);
-  const [authToast,     setAuthToast]     = useState(false);
+  const [isGuest,       setIsGuest]       = useState(!isAuthenticated);
+  const [profileFormData, setProfileFormData] = useState(null);
 
   const loadCart = useCallback(async () => {
     setFetchLoading(true);
+    if (!isAuthenticated) {
+      setIsGuest(true);
+      const stored = getGuestCart();
+      setItems(stored.map(item => ({ ...item, subtotal: item.precio * item.cantidad })));
+      setFetchLoading(false);
+      return;
+    }
     try {
       const data = await apiFetch("/carrito");
       setItems(data.items ?? []);
+      setIsGuest(false);
     } catch (err) {
-      if (err.message === "Unauthenticated.") {
-        setAuthToast(true);
-        setTimeout(() => {
-          setAuthToast(false);
-          navigate("/login");
-        }, 2500);
-      } else {
-        setApiError(t('cart.loadError'));
-      }
+      setApiError(t('cart.loadError'));
     } finally {
       setFetchLoading(false);
     }
-  }, [navigate]);
+  }, [isAuthenticated]);
 
 // const loadCart = useCallback(async () => {
 //   setFetchLoading(true);
@@ -531,11 +701,31 @@ export default function CartCheckoutPage() {
   useEffect(() => { loadCart(); }, [loadCart]);
 
   const handleRemove = async (movilId) => {
+    if (!isAuthenticated) {
+      const updated = getGuestCart().filter(i => i.movil_id !== movilId);
+      setGuestCart(updated);
+      setItems(prev => prev.filter(i => i.movil_id !== movilId));
+      window.dispatchEvent(new Event("cart-updated"));
+      return;
+    }
     await apiFetch(`/carrito/${movilId}`, { method: "DELETE" });
     await loadCart();
   };
 
   const handleQty = async (movilId, nuevaCantidad) => {
+    if (!isAuthenticated) {
+      const updated = getGuestCart().map(i =>
+        i.movil_id === movilId ? { ...i, cantidad: nuevaCantidad } : i
+      );
+      setGuestCart(updated);
+      setItems(prev => prev.map(i =>
+        i.movil_id === movilId
+          ? { ...i, cantidad: nuevaCantidad, subtotal: i.precio * nuevaCantidad }
+          : i
+      ));
+      window.dispatchEvent(new Event("cart-updated"));
+      return;
+    }
     await apiFetch(`/carrito/${movilId}`, {
       method: "PATCH",
       body: JSON.stringify({ cantidad: nuevaCantidad }),
@@ -544,11 +734,22 @@ export default function CartCheckoutPage() {
   };
 
   const handleClear = async () => {
+    if (!isAuthenticated) {
+      clearGuestCart();
+      setItems([]);
+      window.dispatchEvent(new Event("cart-updated"));
+      return;
+    }
     await apiFetch("/carrito/vaciar", { method: "DELETE" });
     setItems([]);
   };
 
   const handleCheckout = async () => {
+    if (!isAuthenticated) {
+      navigate("/login", { state: { from: location.pathname } });
+      return;
+    }
+
     setIntentLoading(true);
     setApiError(null);
     
@@ -589,20 +790,6 @@ export default function CartCheckoutPage() {
 
   return (
     <>
-      {authToast && (
-        <div style={{
-          position: "fixed", top: 24, left: "50%", transform: "translateX(-50%)",
-          zIndex: 9999, background: "#1e293b", color: "#fff",
-          padding: "14px 24px", borderRadius: 12, fontSize: 14, fontWeight: 600,
-          boxShadow: "0 8px 30px rgba(0,0,0,.25)", display: "flex", alignItems: "center", gap: 10,
-          animation: "fadeIn .25s ease"
-        }}>
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#f87171" strokeWidth="2.2">
-            <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
-          </svg>
-          {t('cart.authRequired')}
-        </div>
-      )}
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=Sora:wght@400;600;700;800&family=Inter:wght@400;500;600&display=swap');
         * { box-sizing: border-box; }
@@ -656,11 +843,19 @@ export default function CartCheckoutPage() {
               <div style={{ background:"#fff",borderRadius:20,border:"1px solid #e2e8f0",padding:"6px 24px 4px",boxShadow:"0 2px 10px rgba(15,23,42,.04)" }}>
                 {clientSecret ? (
                   <div style={{ padding:"20px 0" }}>
+                    <div style={{ marginBottom:24 }}>
+                      <ProfileForm
+                        user={user}
+                        onDataChange={(data) => setProfileFormData(data)}
+                        t={t}
+                      />
+                      <div style={{ margin:"24px 0", borderTop:"2px solid #f1f5f9" }}/>
+                    </div>
                     <h3 style={{ margin:"0 0 18px",fontSize:14,fontWeight:700,color:"#94a3b8",textTransform:"uppercase",letterSpacing:".7px" }}>
                       {t('cart.paymentData')}
                     </h3>
                     <Elements stripe={stripePromise} options={{ clientSecret, appearance:{ theme:"stripe", variables:{ colorPrimary:"#6366f1", borderRadius:"10px", fontFamily:"Inter, sans-serif" } } }}>
-                      <PaymentForm total={intentTotal} onSuccess={(id) => setSuccessId(id)} onCancel={() => setClientSecret(null)} t={t}/>
+                      <PaymentForm total={intentTotal} onSuccess={(id) => setSuccessId(id)} onCancel={() => setClientSecret(null)} t={t} profileFormData={profileFormData}/>
                     </Elements>
                   </div>
                 ) : (
@@ -681,10 +876,11 @@ export default function CartCheckoutPage() {
                         {t('cart.clearCart')}
                       </button>
                     </div>
+
                   </>
                 )}
               </div>
-              <OrderSummary items={items} onCheckout={handleCheckout} loadingIntent={intentLoading} t={t}/>
+              <OrderSummary items={items} onCheckout={handleCheckout} loadingIntent={intentLoading} t={t} isGuest={!isAuthenticated}/>
             </div>
           )}
         </div>

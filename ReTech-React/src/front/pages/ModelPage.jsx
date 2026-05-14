@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react"
 import { useParams } from "react-router-dom"
-import { getProduct, getModelOptions, getModelImages } from "../../services/productService"
+import { getProduct, getModelImages, getModelUnits } from "../../services/productService"
 
 import Navbar from "../components/Navbar"
 import Footer from "../components/Footer"
@@ -11,13 +11,12 @@ import { useLanguage } from "../context/LanguageContext"
 
 export default function ModelPage() {
   const { t } = useLanguage()
-
   const { id } = useParams()
 
-  const [model, setModel]     = useState(null)
-  const [options, setOptions] = useState(null)
+  const [model, setModel]   = useState(null)
+  const [units, setUnits]   = useState([])
   const [loading, setLoading] = useState(true)
-  const [images, setImages]   = useState([])
+  const [images, setImages] = useState([])
   const [selectedColor, setSelectedColor] = useState("")
   const [selectedState, setSelectedState] = useState("")
 
@@ -25,15 +24,15 @@ export default function ModelPage() {
     let mounted = true
     async function loadData() {
       try {
-        const [modelData, optionsData, imagesData] = await Promise.all([
+        const [modelData, imagesData, unitsData] = await Promise.all([
           getProduct(id),
-          getModelOptions(id),
           getModelImages(id),
+          getModelUnits(id),
         ])
         if (!mounted) return
         setModel(modelData)
-        setOptions(optionsData)
         setImages(imagesData)
+        setUnits(unitsData)
       } catch (e) {
         console.error(e)
         if (mounted) setModel(null)
@@ -52,27 +51,26 @@ export default function ModelPage() {
 
       <main className="flex-1">
 
-        {loading && <div className="p-10">{t('product.loading')}</div>}
+        {loading && <div className="p-10">{t("product.loading")}</div>}
 
         {!loading && !model && (
-          <div className="p-10">{t('product.notFound')}</div>
+          <div className="p-10">{t("product.notFound")}</div>
         )}
 
         {!loading && model && (
           <div className="max-w-6xl mx-auto px-6 py-10 flex flex-col lg:flex-row gap-12">
 
-            {/* IZQUIERDA: scroll normal */}
+            {/* IZQUIERDA */}
             <div className="flex-1 min-w-0 space-y-8">
               <ProductGallery images={images} selectedColor={selectedColor} />
               <ProductInfo product={model} />
             </div>
 
-            {/* DERECHA: wrapper que s'estira fins al final del contingut esquerre */}
+            {/* DERECHA */}
             <div className="lg:w-[440px] flex-shrink-0">
-              {/* El sticky s'ancora aquí dins i té tot el recorregut de la pàgina */}
               <div className="sticky top-24">
                 <ProductConfigurator
-                  options={options}
+                  units={units}
                   selectedColor={selectedColor}
                   setSelectedColor={setSelectedColor}
                   selectedState={selectedState}

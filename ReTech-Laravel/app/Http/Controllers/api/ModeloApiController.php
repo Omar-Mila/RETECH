@@ -172,6 +172,27 @@ class ModeloApiController extends Controller
         ]);
     }
 
+    public function units($modelId)
+    {
+        $moviles = Movil::where('modelo_id', $modelId)
+            ->where('stock', '>', 0)
+            ->with('color:id,nombre')
+            ->orderBy('precio')
+            ->get(['id', 'estado', 'almacenamiento', 'color_id', 'salud_bateria', 'precio', 'stock', 'ram']);
+
+        return response()->json($moviles->map(fn($m) => [
+            'id'             => $m->id,
+            'estado'         => $m->estado,
+            'almacenamiento' => $m->almacenamiento,
+            'color_id'       => $m->color_id,
+            'color'          => $m->color?->nombre,
+            'salud_bateria'  => $m->salud_bateria,
+            'precio'         => $m->precio,
+            'stock'          => $m->stock,
+            'ram'            => $m->ram,
+        ]));
+    }
+
     public function uploadImage(Request $request)
     {
         $request->validate([

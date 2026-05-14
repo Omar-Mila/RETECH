@@ -28,9 +28,6 @@ function generateInvoiceHTML(compraId, items, total, user, labels, dateLocale) {
     </tr>
   `).join("");
 
-  const baseIVA = (total / 1.21).toFixed(2);
-  const ivaAmount = (total - baseIVA).toFixed(2);
-
   return `<!DOCTYPE html>
 <html lang="${dateLocale.split('-')[0]}">
 <head>
@@ -105,7 +102,7 @@ function generateInvoiceHTML(compraId, items, total, user, labels, dateLocale) {
       <h3>${labels.seller}</h3>
       <p>
         <strong>ReTech SL</strong><br>
-        NIF: B-08700123<br>
+        CIF: B-08700123<br>
         Carrer de la Tecnologia, 12<br>
         08700 Igualada, Barcelona<br>
         Tel: +34 938 00 12 34<br>
@@ -134,8 +131,6 @@ function generateInvoiceHTML(compraId, items, total, user, labels, dateLocale) {
 
   <div class="totals">
     <div class="totals-inner">
-      <div class="total-row"><span>${labels.taxBase}</span><span>${fmt(parseFloat(baseIVA))}</span></div>
-      <div class="total-row"><span>${labels.vat}</span><span>${fmt(parseFloat(ivaAmount))}</span></div>
       <div class="total-final"><span>${labels.total}</span><span>${fmt(total)}</span></div>
     </div>
   </div>

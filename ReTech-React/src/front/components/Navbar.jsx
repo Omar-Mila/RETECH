@@ -1,8 +1,9 @@
 import { useState, useEffect, useRef } from "react"
 import { useAuth } from "../../auth/AuthContext"
-import { useNavigate, Link } from "react-router-dom"
+import { useNavigate, useLocation, Link } from "react-router-dom"
 import { searchProducts } from "../../services/searchService"
 import { useLanguage } from "../context/LanguageContext"
+import { getGuestCart, setGuestCart } from "../../services/guestCart"
 
 const API = "http://localhost:8000"
 
@@ -68,12 +69,24 @@ function CartDropdown({ onClose, t }) {
   const [loading, setLoading] = useState(true)
   const navigate = useNavigate()
 
-  const loadCartData = () => {
+  const { isAuthenticated } = useAuth()
+
+  const loadCartData = async () => {
     setLoading(true)
-    apiFetch("/carrito")
-      .then((data) => { setItems(data.items ?? []) })
-      .catch(() => setItems([]))
-      .finally(() => setLoading(false))
+    if (!isAuthenticated) {
+      const stored = getGuestCart()
+      setItems(stored.map(item => ({ ...item, subtotal: item.precio * item.cantidad })))
+      setLoading(false)
+      return
+    }
+    try {
+      const data = await apiFetch("/carrito")
+      setItems(data.items ?? [])
+    } catch {
+      setItems([])
+    } finally {
+      setLoading(false)
+    }
   }
 
   useEffect(() => {
@@ -83,7 +96,12 @@ function CartDropdown({ onClose, t }) {
   }, [])
 
   const handleRemove = async (movilId) => {
-    await apiFetch(`/carrito/${movilId}`, { method: "DELETE" })
+    if (!isAuthenticated) {
+      const updated = getGuestCart().filter(i => i.movil_id !== movilId)
+      setGuestCart(updated)
+    } else {
+      await apiFetch(`/carrito/${movilId}`, { method: "DELETE" })
+    }
     window.dispatchEvent(new Event("cart-updated"))
     loadCartData()
   }
@@ -171,6 +189,7 @@ export default function Navbar() {
   const { user, isAuthenticated, logout, loading } = useAuth()
   const { lang, setLang, t } = useLanguage()
   const navigate = useNavigate()
+  const location = useLocation()
 
   const [query, setQuery] = useState("")
   const [results, setResults] = useState([])
@@ -201,12 +220,19 @@ export default function Navbar() {
 
   useEffect(() => {
     const fetchCount = () => {
-      apiFetch("/carrito").then((data) => setCartCount(data.total_items ?? 0)).catch(() => setCartCount(0))
+      if (!isAuthenticated) {
+        const items = getGuestCart()
+        setCartCount(items.reduce((s, i) => s + i.cantidad, 0))
+        return
+      }
+      apiFetch("/carrito")
+        .then((data) => setCartCount(data.total_items ?? 0))
+        .catch(() => setCartCount(0))
     }
     window.addEventListener("cart-updated", fetchCount)
     fetchCount()
     return () => window.removeEventListener("cart-updated", fetchCount)
-  }, [])
+  }, [isAuthenticated])
 
   useEffect(() => {
     const handler = (e) => {
@@ -320,7 +346,7 @@ export default function Navbar() {
             {/* LOGIN / USER */}
             {!isAuthenticated ? (
               <div className="flex gap-3">
-                <button onClick={() => navigate("/login")} className="text-sm font-medium hover:underline">{t('nav.login')}</button>
+                <button onClick={() => navigate("/login", { state: { from: location.pathname } })} className="text-sm font-medium hover:underline">{t('nav.login')}</button>
                 <button onClick={() => navigate("/register")} className="bg-black text-white px-4 py-2 rounded text-sm">{t('nav.register')}</button>
               </div>
             ) : (

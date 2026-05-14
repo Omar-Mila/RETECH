@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useAuth } from "./AuthContext";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import { GoogleLogin } from "@react-oauth/google";
 import { useLanguage } from "../front/context/LanguageContext";
 
@@ -8,6 +8,8 @@ export default function Login() {
   const { login, loginWithGoogle } = useAuth();
   const { t, lang } = useLanguage();
   const navigate = useNavigate();
+  const location = useLocation();
+  const from = location.state?.from || null;
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
@@ -18,7 +20,7 @@ export default function Login() {
     setError("");
     setLoading(true);
     try {
-      await login(email, password);
+      await login(email, password, from);
     } catch (err) {
       setError(t('login.error'));
     } finally {
@@ -30,7 +32,7 @@ export default function Login() {
     setError("");
     setLoading(true);
     try {
-      await loginWithGoogle(credentialResponse.credential);
+      await loginWithGoogle(credentialResponse.credential, from);
     } catch (err) {
       setError(t('login.googleError'));
     } finally {

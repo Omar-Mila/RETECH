@@ -1,6 +1,7 @@
 import { createContext, useContext, useState, useEffect } from "react"
 import { useNavigate } from "react-router-dom"
 import { loginRequest, logoutRequest, getCurrentUser, googleLoginRequest } from "./authService"
+import { syncGuestCartToServer } from "../services/guestCart"
 
 let AuthContext = createContext()
 
@@ -30,32 +31,34 @@ export function AuthProvider({ children }) {
     loadUser()
   }, [])
 
-  const redirectByRole = (userData) => {
+  const redirectByRole = (userData, from) => {
     if (userData.role === 'admin') {
       navigate("/admin");
     } else {
-      navigate("/");
+      navigate(from || "/");
     }
   };
 
-  let login = async (email, password) => {
+  let login = async (email, password, from) => {
     try {
       const userData = await loginRequest(email, password);
       if (userData) {
         setUser(userData);
-        redirectByRole(userData);
+        await syncGuestCartToServer();
+        redirectByRole(userData, from);
       }
     } catch (error) {
       throw error;
     }
   };
 
-  let loginWithGoogle = async (credential) => {
+  let loginWithGoogle = async (credential, from) => {
     try {
       const userData = await googleLoginRequest(credential);
       if (userData) {
         setUser(userData);
-        redirectByRole(userData);
+        await syncGuestCartToServer();
+        redirectByRole(userData, from);
       }
     } catch (error) {
       throw error;
