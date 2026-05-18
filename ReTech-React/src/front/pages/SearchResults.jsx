@@ -361,7 +361,7 @@ export default function SearchResults() {
 
                                             return (
                                                 <Link
-                                                    to={`/models/${producto.modelo_id}`}
+                                                    to={`/models/${producto.modelo_id}?movil=${producto.id}`}
                                                     key={producto.id}
                                                     className="border rounded-xl p-3 hover:shadow-lg transition flex flex-col"
                                                 >

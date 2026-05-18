@@ -2,8 +2,8 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useLanguage } from "../front/context/LanguageContext";
 
-const STRENGTH_BAR_COLORS = ["", "bg-red-500", "bg-orange-400", "bg-yellow-400", "bg-green-500"];
-const STRENGTH_TEXT_COLORS = ["", "text-red-500", "text-orange-500", "text-yellow-600", "text-green-600"];
+const STRENGTH_BAR_COLORS = ["bg-red-500", "bg-red-500", "bg-orange-400", "bg-yellow-400", "bg-green-500"];
+const STRENGTH_TEXT_COLORS = ["text-red-500", "text-red-500", "text-orange-500", "text-yellow-600", "text-green-600"];
 
 function getPasswordStrength(pwd) {
   if (!pwd) return 0;
@@ -13,6 +13,15 @@ function getPasswordStrength(pwd) {
   if (/[0-9]/.test(pwd)) score++;
   if (/[^A-Za-z0-9]/.test(pwd)) score++;
   return score;
+}
+
+function getRequirements(pwd, t) {
+  return [
+    { label: t('register.reqLength'),   met: pwd.length >= 8 },
+    { label: t('register.reqUppercase'), met: /[A-Z]/.test(pwd) },
+    { label: t('register.reqNumber'),   met: /[0-9]/.test(pwd) },
+    { label: t('register.reqSymbol'),   met: /[^A-Za-z0-9]/.test(pwd) },
+  ];
 }
 
 export default function Register() {
@@ -30,6 +39,10 @@ export default function Register() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    if (strength < 4) {
+      setError(t('register.weakPassword'));
+      return;
+    }
     if (password !== passwordConfirm) {
       setError(t('register.passwordMismatch'));
       return;
@@ -45,7 +58,7 @@ export default function Register() {
           "Content-Type": "application/json",
           "Accept": "application/json",
         },
-        body: JSON.stringify({ name, email, password }),
+        body: JSON.stringify({ name, email, password, lang: localStorage.getItem("retech-lang") || "es" }),
       });
 
       const data = await response.json();
@@ -67,7 +80,6 @@ export default function Register() {
   };
 
   const strengthLabels = t('register.strength');
-  const strengthHints = t('register.hints');
 
   return (
     <div className="min-h-screen flex flex-col bg-gray-100">
@@ -120,12 +132,20 @@ export default function Register() {
                   </div>
                   <p className={`text-xs mt-1 font-medium ${STRENGTH_TEXT_COLORS[strength]}`}>
                     {strengthLabels[strength]}
-                    {strength < 4 && (
-                      <span className="text-gray-400 font-normal ml-1">
-                        {strengthHints[strength]}
-                      </span>
-                    )}
                   </p>
+                  <ul className="mt-1.5 space-y-0.5">
+                    {getRequirements(password, t).map(({ label, met }) => (
+                      <li
+                        key={label}
+                        className={`flex items-center gap-1.5 text-xs transition-colors duration-200 ${
+                          met ? "text-green-600" : "text-gray-400"
+                        }`}
+                      >
+                        <span className="font-bold">{met ? "✓" : "·"}</span>
+                        <span>{label}</span>
+                      </li>
+                    ))}
+                  </ul>
                 </div>
               )}
             </div>

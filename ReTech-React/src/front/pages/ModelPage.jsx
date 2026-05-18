@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react"
-import { useParams } from "react-router-dom"
+import { useParams, useSearchParams } from "react-router-dom"
 import { getProduct, getModelImages, getModelUnits } from "../../services/productService"
 
 import Navbar from "../components/Navbar"
@@ -12,6 +12,8 @@ import { useLanguage } from "../context/LanguageContext"
 export default function ModelPage() {
   const { t } = useLanguage()
   const { id } = useParams()
+  const [searchParams] = useSearchParams()
+  const initialMovilId = searchParams.get("movil")
 
   const [model, setModel]   = useState(null)
   const [units, setUnits]   = useState([])
@@ -71,6 +73,7 @@ export default function ModelPage() {
               <div className="sticky top-24">
                 <ProductConfigurator
                   units={units}
+                  initialMovilId={initialMovilId}
                   selectedColor={selectedColor}
                   setSelectedColor={setSelectedColor}
                   selectedState={selectedState}

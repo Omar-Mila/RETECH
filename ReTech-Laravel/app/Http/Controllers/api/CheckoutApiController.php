@@ -162,7 +162,8 @@ class CheckoutApiController extends Controller
                 'cliente_telefono'   => $cliente?->telefono,
             ];
 
-            Mail::to($user->email)->send(new OrderConfirmed($orderData));
+            $lang = in_array($request->lang, ['ca', 'es', 'en']) ? $request->lang : 'es';
+            Mail::to($user->email)->send(new OrderConfirmed($orderData, $lang));
         } catch (\Exception $e) {
             // El email falla silenciosamente — la compra ya está registrada
             \Log::warning('Email de confirmación fallido: ' . $e->getMessage());

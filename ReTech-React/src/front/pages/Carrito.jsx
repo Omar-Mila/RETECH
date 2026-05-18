@@ -175,7 +175,7 @@ function PaymentForm({ total, onSuccess, onCancel, t, profileFormData }) {
       }
       const res = await apiFetch("/checkout/confirm", {
         method: "POST",
-        body: JSON.stringify({ payment_intent_id: paymentIntent.id }),
+        body: JSON.stringify({ payment_intent_id: paymentIntent.id, lang: localStorage.getItem("retech-lang") || "es" }),
       });
       if (res.compra_id) {
         onSuccess(res.compra_id);

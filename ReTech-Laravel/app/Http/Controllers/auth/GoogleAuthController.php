@@ -32,15 +32,26 @@ class GoogleAuthController extends Controller
         $user = User::firstOrCreate(
             ['email' => $googleUser['email']],
             [
-                'name'      => $googleUser['name'] ?? $googleUser['email'],
-                'google_id' => $googleUser['sub'],
-                'password'  => bcrypt(Str::random(32)),
-                'role'      => 'cliente',
+                'name'               => $googleUser['name'] ?? $googleUser['email'],
+                'google_id'          => $googleUser['sub'],
+                'password'           => bcrypt(Str::random(32)),
+                'role'               => 'cliente',
+                'email_verified_at'  => now(),
+                'verification_token' => null,
             ]
         );
 
+        $updates = [];
         if (!$user->google_id) {
-            $user->update(['google_id' => $googleUser['sub']]);
+            $updates['google_id'] = $googleUser['sub'];
+        }
+        // Google confirms email ownership, so verify immediately
+        if (!$user->email_verified_at) {
+            $updates['email_verified_at']  = now();
+            $updates['verification_token'] = null;
+        }
+        if (!empty($updates)) {
+            $user->update($updates);
         }
 
         Auth::login($user);

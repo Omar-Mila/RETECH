@@ -65,6 +65,29 @@ Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
     return $request->user()->load('cliente');
 });
 
+Route::middleware(['web', 'auth:sanctum'])->post('/resend-verification', function (Request $request) {
+    $user = $request->user();
+
+    if ($user->email_verified_at) {
+        return response()->json(['message' => 'already_verified'], 200);
+    }
+
+    $token = \Illuminate\Support\Str::random(64);
+    $user->update(['verification_token' => $token]);
+
+    $verificationUrl = config('app.url') . '/api/verify-email/' . $token;
+    $lang = in_array($request->lang, ['ca', 'es', 'en']) ? $request->lang : 'es';
+
+    try {
+        \Illuminate\Support\Facades\Mail::to($user->email)
+            ->send(new \App\Mail\AccountVerification($user->name, $verificationUrl, $lang));
+        return response()->json(['message' => 'sent'], 200);
+    } catch (\Exception $e) {
+        \Log::warning('Resend verification failed: ' . $e->getMessage());
+        return response()->json(['message' => 'error'], 500);
+    }
+});
+
 Route::middleware('auth:sanctum')->put('/user/cliente', function (Request $request) {
     $user = $request->user();
     $data = $request->validate([
@@ -85,6 +108,26 @@ Route::middleware('auth:sanctum')->put('/user/cliente', function (Request $reque
 
 Route::post('/register', [RegisterController::class, 'store']);
 Route::middleware(['web'])->post('/auth/google', [GoogleAuthController::class, 'handleGoogle']);
+
+Route::middleware(['web'])->get('/verify-email/{token}', function (string $token, Request $request) {
+    $user = \App\Models\User::where('verification_token', $token)->first();
+
+    $frontendUrl = config('app.frontend_url', 'http://localhost:5173');
+
+    if (!$user) {
+        return redirect($frontendUrl . '/perfil?verified=invalid');
+    }
+
+    $user->update([
+        'email_verified_at'  => now(),
+        'verification_token' => null,
+    ]);
+
+    Auth::login($user);
+    $request->session()->regenerate();
+
+    return redirect($frontendUrl . '/perfil?verified=1');
+});
 
 Route::get('/products/search', [ProductosController::class, 'search']);
 Route::get('/marcas', [MarcaApiController::class, 'index']);

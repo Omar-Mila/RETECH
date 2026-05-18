@@ -34,6 +34,7 @@ function CheckIcon() {
 
 export default function ProductConfigurator({
   units = [],
+  initialMovilId = null,
   selectedColor,
   setSelectedColor,
   selectedState,
@@ -114,9 +115,13 @@ export default function ProductConfigurator({
     .sort((a, b) => a.precio - b.precio)[0] ?? null
   , [units, estado, almacenamiento, selectedColor, bateria])
 
-  // Al cargar las unidades, pre-seleccionar la más barata
+  // Al cargar las unidades, pre-seleccionar la unidad indicada o la primera disponible
   useEffect(() => {
-    if (units.length > 0) selectUnit(units[0])
+    if (units.length === 0) return
+    const target = initialMovilId
+      ? units.find(u => String(u.id) === String(initialMovilId))
+      : null
+    selectUnit(target ?? units[0])
   }, [units])
 
   function selectUnit(unit) {
