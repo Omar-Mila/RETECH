@@ -5,6 +5,7 @@ import { useEffect } from "react";
 import { MapContainer, TileLayer, Marker, Popup } from "react-leaflet";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
+import { useLanguage } from "../context/LanguageContext";
 
 delete L.Icon.Default.prototype._getIconUrl;
 L.Icon.Default.mergeOptions({
@@ -15,20 +16,19 @@ L.Icon.Default.mergeOptions({
 
 const OFFICE_COORDS = [41.5836374, 1.6018583];
 
-// Reutilizamos el formateador que ya tienes para mantener coherencia
-const fmt = (n) =>
-  new Intl.NumberFormat("es-ES", { style: "currency", currency: "EUR" }).format(n);
-
 export default function AboutPage() {
-    
-    useEffect(() => {
-        window.scrollTo(0, 0);
-    }, []);
-    return (
+  const { t } = useLanguage();
+  const c = t("contact");
+
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, []);
+
+  return (
     <>
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=Sora:wght@400;600;700;800&family=Inter:wght@400;500;600&display=swap');
-        
+
         :root {
           --color-text-primary: #0f172a;
           --color-text-secondary: #64748b;
@@ -40,7 +40,7 @@ export default function AboutPage() {
         }
 
         .about-container { font-family: 'Inter', sans-serif; background: #f8fafc; color: var(--color-text-primary); }
-        
+
         .hero { padding: 5rem 2rem 4rem; max-width: 760px; margin: 0 auto; text-align: center; border-bottom: 0.5px solid var(--color-border-tertiary); }
         .hero-tag { font-size: 11px; letter-spacing: 2px; text-transform: uppercase; color: #0f172a; margin-bottom: 1.5rem; font-weight: 700; }
         .hero h1 { font-size: 42px; font-weight: 800; line-height: 1.15; margin-bottom: 1.25rem; letter-spacing: -1px; fontFamily: 'Sora', sans-serif; }
@@ -48,7 +48,7 @@ export default function AboutPage() {
 
         .section { padding: 3rem 2rem; max-width: 1000px; margin: 0 auto; }
         .section-label { font-size: 11px; letter-spacing: 2px; text-transform: uppercase; color: var(--color-text-secondary); margin-bottom: 1rem; font-weight: 600; }
-        
+
         .about-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 2.5rem; align-items: start; }
         .about-text p { font-size: 15px; color: var(--color-text-secondary); line-height: 1.8; margin-bottom: 1.25rem; }
 
@@ -80,47 +80,47 @@ export default function AboutPage() {
           .map-wrapper { height: 260px; }
         }
       `}</style>
-     
+
       <Navbar />
 
       <main className="about-container">
         {/* HERO */}
         <div className="hero">
-          <p className="hero-tag">Sobre ReTech</p>
-          <h1>Tecnología de calidad.<br/>Precio honesto.</h1>
-          <p>Damos una segunda vida a los mejores dispositivos del mercado con revisión técnica certificada y compromiso real con el planeta.</p>
+          <p className="hero-tag">{c.heroTag}</p>
+          <h1>{c.heroTitle1}<br/>{c.heroTitle2}</h1>
+          <p>{c.heroParagraph}</p>
         </div>
 
-        {/* HISTORIA Y STATS */}
+        {/* HISTÒRIA I ESTADÍSTIQUES */}
         <div className="section">
           <div className="about-grid">
             <div className="about-text">
-              <p className="section-label">Nuestra historia</p>
+              <p className="section-label">{c.historyLabel}</p>
               <h2 style={{ fontSize: '26px', fontWeight: 800, fontFamily: 'Sora, sans-serif', marginBottom: '1rem' }}>
-                Nacidos para cambiar la forma de comprar móviles
+                {c.historyTitle}
               </h2>
-              <p>ReTech va néixer el 2019 amb una idea simple: per què llençar un dispositiu perfectament funcional quan es pot restaurar i donar-li una nova vida? Des d'aleshores hem processat més de 12.000 dispositius des del nostre taller a Barcelona.</p>
-            <p>Cada mòbil passa per un procés de revisió de 42 punts: pantalla, bateria, càmera, connectors, software. Si no supera els nostres estàndards, no surt a la venda. Així de senzill.</p>
-            <p>Treballem amb els principals fabricants — Apple, Samsung, Xiaomi — per garantir que els recanvis siguin originals i que la teva experiència sigui idèntica a la d'un dispositiu nou.</p>
+              <p>{c.historyP1}</p>
+              <p>{c.historyP2}</p>
+              <p>{c.historyP3}</p>
             </div>
             <div>
               <div className="stats-row">
                 <div className="stat-cell">
                   <div className="stat-num">12k+</div>
-                  <div className="stat-lbl">Vendidos</div>
+                  <div className="stat-lbl">{c.statSold}</div>
                 </div>
                 <div className="stat-cell">
                   <div className="stat-num">42</div>
-                  <div className="stat-lbl">Puntos Control</div>
+                  <div className="stat-lbl">{c.statControl}</div>
                 </div>
                 <div className="stat-cell">
                   <div className="stat-num">98%</div>
-                  <div className="stat-lbl">Satisfechos</div>
+                  <div className="stat-lbl">{c.statSatisfied}</div>
                 </div>
               </div>
               <div style={{ marginTop: '1.5rem', padding: '1.5rem', background: 'white', border: '1px solid #e2e8f0', borderRadius: '20px' }}>
-                <p style={{ fontSize: '13px', color: '#0f172a', fontWeight: 700, marginBottom: '5px' }}>CERTIFICACIÓN RE-TECH</p>
-                <p style={{ fontSize: '14px', fontWeight: 600, color: '#0f172a' }}>Todos los dispositivos incluyen 12 meses de garantía y 30 días de devolución.</p>
+                <p style={{ fontSize: '13px', color: '#0f172a', fontWeight: 700, marginBottom: '5px' }}>{c.certTitle}</p>
+                <p style={{ fontSize: '14px', fontWeight: 600, color: '#0f172a' }}>{c.certDesc}</p>
               </div>
             </div>
           </div>
@@ -128,29 +128,29 @@ export default function AboutPage() {
 
         {/* INSTALACIONES */}
         <div className="section">
-          <p className="section-label">Instalaciones</p>
-          <h2 style={{ fontSize: '26px', fontWeight: 800, fontFamily: 'Sora, sans-serif', marginBottom: '2rem' }}>Donde ocurre la magia</h2>
+          <p className="section-label">{c.facilitiesLabel}</p>
+          <h2 style={{ fontSize: '26px', fontWeight: 800, fontFamily: 'Sora, sans-serif', marginBottom: '2rem' }}>{c.facilitiesTitle}</h2>
           <div className="photos-grid">
             <div className="photo-card">
               <div className="photo-frame">
                 <img src="/img/retechfuera.png" alt="Exterior" />
               </div>
-              <p style={{ fontSize: '12px', fontWeight: 700, marginTop: '12px', color: '#0f172a' }}>TALLER CENTRAL</p>
-              <p style={{ fontSize: '14px', color: '#64748b' }}>Nuestro centro de revisión técnica en el distrito tecnológico de Barcelona.</p>
+              <p style={{ fontSize: '12px', fontWeight: 700, marginTop: '12px', color: '#0f172a' }}>{c.workshopLabel}</p>
+              <p style={{ fontSize: '14px', color: '#64748b' }}>{c.workshopDesc}</p>
             </div>
             <div className="photo-card">
               <div className="photo-frame">
                 <img src="/img/retechdentro.png" alt="Interior" />
               </div>
-              <p style={{ fontSize: '12px', fontWeight: 700, marginTop: '12px', color: '#0f172a' }}>LABORATORIO</p>
-              <p style={{ fontSize: '14px', color: '#64748b' }}>Equipamiento de precisión para garantizar el estado óptimo de cada batería y pantalla.</p>
+              <p style={{ fontSize: '12px', fontWeight: 700, marginTop: '12px', color: '#0f172a' }}>{c.labLabel}</p>
+              <p style={{ fontSize: '14px', color: '#64748b' }}>{c.labDesc}</p>
             </div>
           </div>
         </div>
 
         {/* MAPA */}
         <div className="map-section">
-          <p className="section-label">Dónde estamos</p>
+          <p className="section-label">{c.mapLabel}</p>
           <h2 style={{ fontSize: '26px', fontWeight: 800, fontFamily: 'Sora, sans-serif', marginBottom: '1.25rem' }}>
             Milà i Fontanals, Igualada
           </h2>
@@ -178,79 +178,41 @@ export default function AboutPage() {
               <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
             </svg>
           </div>
-          <h2 className="award-title">Mejor tienda reacondicionada 2024</h2>
-          <p style={{ opacity: 0.8, fontSize: '15px' }}>Basado en +1.400 valoraciones reales verificadas</p>
+          <h2 className="award-title">{c.awardTitle}</h2>
+          <p style={{ opacity: 0.8, fontSize: '15px' }}>{c.awardDesc}</p>
         </div>
 
         {/* REVIEWS */}
-        {/* SECCIÓ DE RESSENYES */}
-            <div className="section">
-            <div className="reviews-header">
-                <h2 style={{ fontSize: '28px', fontWeight: 500, letterSpacing: '-0.5px' }}>El que diuen els nostres clients</h2>
-                <span className="reviews-meta">+1.400 ressenyes verificades · Mitjana 4.9/5</span>
-            </div>
+        <div className="section">
+          <div className="reviews-header">
+            <h2 style={{ fontSize: '28px', fontWeight: 500, letterSpacing: '-0.5px' }}>{c.reviewsTitle}</h2>
+            <span className="reviews-meta">{c.reviewsMeta}</span>
+          </div>
 
-            <div className="reviews-grid">
-                {[
-                {
-                    name: "Marc Andreu",
-                    date: "Febrer 2025 · iPhone 13",
-                    text: "Vaig comprar un iPhone 13 i sembla nou de trinca. La bateria al 96%, la pantalla impecable i va arribar en 24h. Impossible trobar millor relació qualitat-preu.",
-                    initial: "MA"
-                },
-                {
-                    name: "Laura Puig",
-                    date: "Gener 2025 · Samsung S23",
-                    text: "Tercera vegada que compro a ReTech. L'atenció al client és excel·lent — vaig tenir un dubte amb la garantia i en menys d'una hora ja tenia resposta. Totalment recomanat.",
-                    initial: "LP"
-                },
-                {
-                    name: "Jordi Casamitjana",
-                    date: "Març 2025 · Xiaomi 13",
-                    text: "Em van trucar per confirmar l'estat del mòbil abans d'enviar-lo. Detalls com aquest marquen la diferència. El Xiaomi que vaig rebre funcionava perfectament.",
-                    initial: "JC"
-                },
-                {
-                    name: "Rosa Guitart",
-                    date: "Abril 2025 · iPhone 12 Pro",
-                    text: "Estic molt content. El procés de compra és molt fàcil i la pàgina ben explicada. En 2 dies tenia el mòbil a casa i tot en perfecte estat. Repetiré segur.",
-                    initial: "RG"
-                },
-                {
-                    name: "Pere Sala",
-                    date: "Febrer 2025 · Samsung A54",
-                    text: "He comprat per a tota la família. La garantia d'un any és real i funciona. Quan van tenir un problema amb el mòbil del meu fill, ho van solucionar sense cap cost.",
-                    initial: "PS"
-                },
-                {
-                    name: "Núria Torras",
-                    date: "Març 2025 · iPhone 14",
-                    text: "Sóc tècnic informàtic i he revisat el mòbil a fons. Tot impecable. Recanvis originals, software net, bateria en bon estat. Saben el que fan i es nota.",
-                    initial: "NT"
-                }
-                ].map((rev, i) => (
-                <div key={i} className="review-card">
-                    <div className="review-stars" style={{ display: 'flex', gap: '3px', marginBottom: '0.75rem' }}>
-                    {[...Array(5)].map((_, starIdx) => (
-                        <svg key={starIdx} width="13" height="13" viewBox="0 0 24 24" fill="var(--color-text-primary)">
-                        <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
-                        </svg>
-                    ))}
-                    </div>
-                    <p className="review-text" style={{ fontSize: '14px', color: 'var(--color-text-secondary)', lineHeight: '1.7', marginBottom: '1rem' }}>
-                    "{rev.text}"
-                    </p>
-                    <div className="review-author" style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                    <div className="review-avatar">{rev.initial}</div>
-                    <div>
-                        <p className="review-name" style={{ fontSize: '13px', fontWeight: 500, margin: 0 }}>{rev.name}</p>
-                        <p className="review-date" style={{ fontSize: '11px', color: 'var(--color-text-secondary)', margin: 0 }}>{rev.date}</p>
-                    </div>
-                    </div>
+          <div className="reviews-grid">
+            {c.reviews.map((rev, i) => (
+              <div key={i} className="review-card">
+                <div className="review-stars" style={{ display: 'flex', gap: '3px', marginBottom: '0.75rem' }}>
+                  {[...Array(5)].map((_, starIdx) => (
+                    <svg key={starIdx} width="13" height="13" viewBox="0 0 24 24" fill="var(--color-text-primary)">
+                      <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
+                    </svg>
+                  ))}
                 </div>
-                ))}
-            </div>
-            </div>
+                <p className="review-text" style={{ fontSize: '14px', color: 'var(--color-text-secondary)', lineHeight: '1.7', marginBottom: '1rem' }}>
+                  "{rev.text}"
+                </p>
+                <div className="review-author" style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                  <div className="review-avatar">{rev.initial}</div>
+                  <div>
+                    <p className="review-name" style={{ fontSize: '13px', fontWeight: 500, margin: 0 }}>{rev.name}</p>
+                    <p className="review-date" style={{ fontSize: '11px', color: 'var(--color-text-secondary)', margin: 0 }}>{rev.date}</p>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
       </main>
 
       <Footer />

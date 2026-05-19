@@ -1,13 +1,24 @@
 import { useState, useEffect } from "react";
 import Navbar from "../../components/Navbar";
 import Footer from "../../components/Footer";
+import { useLanguage } from "../../context/LanguageContext";
 
 const fmt = (n) =>
   new Intl.NumberFormat("es-ES", { style: "currency", currency: "EUR" }).format(n);
 
-function generateInvoiceHTML(compraId, items, total) {
-  const date = new Date().toLocaleDateString("es-ES", { day: "numeric", month: "long", year: "numeric" });
+function generateInvoiceHTML(compraId, items, total, user, labels, dateLocale) {
+  const date = new Date().toLocaleDateString(dateLocale, { day: "numeric", month: "long", year: "numeric" });
   const invoiceNum = `FAC-${String(compraId).padStart(5, "0")}`;
+
+  const c = user?.cliente ?? {};
+  const clienteName = c.nombre && c.apellidos
+    ? `${c.nombre} ${c.apellidos}`
+    : user?.name ?? "—";
+  const clienteEmail   = user?.email    ?? "—";
+  const clienteNif     = c.nif          ?? null;
+  const clienteTel     = c.telefono     ?? null;
+  const clienteDireccion = c.direccion  ?? null;
+
   const rows = items.map(item => `
     <tr>
       <td><strong>${item.modelo ?? ""}</strong><br><small>${item.almacenamiento ?? ""} GB · ${item.ram ?? ""} GB RAM · ${item.color ?? ""} · ${item.estado ?? ""}</small></td>
@@ -18,60 +29,118 @@ function generateInvoiceHTML(compraId, items, total) {
   `).join("");
 
   return `<!DOCTYPE html>
-<html lang="es">
+<html lang="${dateLocale.split('-')[0]}">
 <head>
   <meta charset="UTF-8">
   <title>Factura ${invoiceNum}</title>
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
-    body { font-family: Arial, Helvetica, sans-serif; color: #1e293b; padding: 48px; font-size: 13px; }
-    .header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 40px; }
-    .brand { font-size: 26px; font-weight: 900; letter-spacing: -1px; color: #0f172a; }
+    body { font-family: Arial, Helvetica, sans-serif; color: #1e293b; padding: 52px; font-size: 13px; background: #fff; }
+
+    /* TOP BAR */
+    .top-bar { background: #0f172a; height: 5px; border-radius: 3px; margin-bottom: 40px; }
+
+    /* BRAND + META ROW */
+    .header-row { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 36px; }
+    .brand-block {}
+    .brand { font-size: 30px; font-weight: 900; letter-spacing: -1.5px; color: #0f172a; }
     .brand span { color: #6366f1; }
-    .meta { text-align: right; }
-    .meta h2 { font-size: 22px; font-weight: 800; color: #0f172a; margin-bottom: 4px; }
-    .meta p { color: #64748b; font-size: 12px; line-height: 1.7; }
-    hr { border: none; border-top: 2px solid #e2e8f0; margin: 28px 0; }
+    .tagline { color: #64748b; font-size: 11.5px; margin-top: 4px; }
+    .invoice-meta { text-align: right; }
+    .invoice-num { font-size: 24px; font-weight: 800; color: #0f172a; letter-spacing: -1px; }
+    .invoice-meta p { color: #64748b; font-size: 12px; margin-top: 4px; line-height: 1.6; }
+
+    /* TWO-COLUMN INFO */
+    .info-row { display: grid; grid-template-columns: 1fr 1fr; gap: 32px; margin-bottom: 36px; }
+    .info-block { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px; padding: 18px 20px; }
+    .info-block h3 { font-size: 9px; font-weight: 800; letter-spacing: 1.5px; text-transform: uppercase; color: #94a3b8; margin-bottom: 12px; }
+    .info-block p { font-size: 12.5px; color: #1e293b; line-height: 1.75; }
+    .info-block p strong { color: #0f172a; font-weight: 700; }
+
+    /* TABLE */
+    hr { border: none; border-top: 2px solid #e2e8f0; margin: 0 0 24px; }
     table { width: 100%; border-collapse: collapse; }
-    thead th { background: #0f172a; color: #fff; padding: 10px 14px; font-size: 11px; text-transform: uppercase; letter-spacing: .5px; text-align: left; }
+    thead th { background: #0f172a; color: #fff; padding: 11px 14px; font-size: 10px; text-transform: uppercase; letter-spacing: .8px; text-align: left; }
+    thead th:first-child { border-radius: 6px 0 0 6px; }
+    thead th:last-child  { border-radius: 0 6px 6px 0; }
     th:nth-child(2), th:nth-child(3), th:nth-child(4) { text-align: right; }
-    tbody td { padding: 12px 14px; border-bottom: 1px solid #f1f5f9; vertical-align: top; }
+    tbody td { padding: 13px 14px; border-bottom: 1px solid #f1f5f9; vertical-align: top; font-size: 12.5px; }
     tbody td:nth-child(2), tbody td:nth-child(3), tbody td:nth-child(4) { text-align: right; white-space: nowrap; }
     small { color: #64748b; font-size: 11px; }
+
+    /* TOTALS */
     .totals { margin-top: 24px; display: flex; justify-content: flex-end; }
-    .totals-inner { width: 260px; }
-    .total-final { display: flex; justify-content: space-between; padding: 12px 0; font-size: 17px; font-weight: 800; color: #0f172a; border-top: 2px solid #0f172a; margin-top: 8px; }
-    .footer { margin-top: 52px; padding-top: 20px; border-top: 1px solid #e2e8f0; text-align: center; color: #94a3b8; font-size: 11px; line-height: 1.8; }
-    @media print { body { padding: 20px; } }
+    .totals-inner { width: 280px; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px; padding: 16px 20px; }
+    .total-row { display: flex; justify-content: space-between; font-size: 12.5px; color: #64748b; padding: 4px 0; }
+    .total-final { display: flex; justify-content: space-between; padding: 12px 0 0; margin-top: 10px; border-top: 2px solid #0f172a; font-size: 17px; font-weight: 800; color: #0f172a; }
+
+    /* FOOTER */
+    .footer { margin-top: 48px; padding-top: 20px; border-top: 1px solid #e2e8f0; display: flex; justify-content: space-between; align-items: center; }
+    .footer-left { color: #94a3b8; font-size: 11px; line-height: 1.8; }
+    .footer-badge { background: #6366f1; color: #fff; font-size: 10px; font-weight: 800; padding: 5px 12px; border-radius: 20px; letter-spacing: .5px; }
+
+    @media print { body { padding: 28px; } .top-bar { display: none; } }
   </style>
 </head>
 <body>
-  <div class="header">
-    <div>
+  <div class="top-bar"></div>
+
+  <div class="header-row">
+    <div class="brand-block">
       <div class="brand">Re<span>Tech</span></div>
-      <p style="color:#64748b;font-size:12px;margin-top:6px;">Tecnologia reacondicionada de confiança</p>
+      <p class="tagline">${labels.tagline}</p>
     </div>
-    <div class="meta">
-      <h2>${invoiceNum}</h2>
-      <p>Data: ${date}</p>
-      <p>Comanda #${compraId}</p>
+    <div class="invoice-meta">
+      <div class="invoice-num">${invoiceNum}</div>
+      <p>${labels.issueDate} <strong style="color:#0f172a">${date}</strong></p>
+      <p>${labels.orderNum} #${compraId}</p>
     </div>
   </div>
+
+  <div class="info-row">
+    <div class="info-block">
+      <h3>${labels.seller}</h3>
+      <p>
+        <strong>ReTech SL</strong><br>
+        CIF: B-08700123<br>
+        Carrer de la Tecnologia, 12<br>
+        08700 Igualada, Barcelona<br>
+        Tel: +34 938 00 12 34<br>
+        info@retech.cat
+      </p>
+    </div>
+    <div class="info-block">
+      <h3>${labels.client}</h3>
+      <p>
+        <strong>${clienteName}</strong><br>
+        ${clienteNif       ? `NIF: ${clienteNif}<br>`             : ""}
+        ${clienteDireccion ? `${clienteDireccion}<br>`            : ""}
+        ${clienteTel       ? `Tel: ${clienteTel}<br>`             : ""}
+        ${clienteEmail}
+      </p>
+    </div>
+  </div>
+
   <hr>
   <table>
     <thead>
-      <tr><th>Producte</th><th>Quantitat</th><th>Preu unit.</th><th>Total</th></tr>
+      <tr><th>${labels.product}</th><th>${labels.quantity}</th><th>${labels.unitPrice}</th><th>${labels.total}</th></tr>
     </thead>
     <tbody>${rows}</tbody>
   </table>
+
   <div class="totals">
     <div class="totals-inner">
-      <div class="total-final"><span>Total</span><span>${fmt(total)}</span></div>
+      <div class="total-final"><span>${labels.total}</span><span>${fmt(total)}</span></div>
     </div>
   </div>
+
   <div class="footer">
-    <p>Gràcies per la teva compra a ReTech</p>
-    <p>Aquest document és la teva factura simplificada</p>
+    <div class="footer-left">
+      <p>${labels.thanks}</p>
+      <p>${labels.simplifiedInvoice}</p>
+    </div>
+    <div class="footer-badge">RETECH CERT</div>
   </div>
 </body>
 </html>`;
@@ -109,7 +178,7 @@ function PhoneIcon() {
   );
 }
 
-function OrderItem({ item, movil }) {
+function OrderItem({ item, movil, t }) {
   if (!movil) {
     return (
       <div style={{ display: "flex", gap: 12, padding: "14px 0", borderBottom: "1px solid #f1f5f9", alignItems: "center" }}>
@@ -144,7 +213,7 @@ function OrderItem({ item, movil }) {
               {fmt(subtotal)}
             </p>
             {item.cantidad > 1 && (
-              <p style={{ margin: 0, fontSize: 11, color: "#94a3b8" }}>{fmt(precio)} / ud.</p>
+              <p style={{ margin: 0, fontSize: 11, color: "#94a3b8" }}>{fmt(precio)} {t('orders.perUnit')}</p>
             )}
           </div>
         </div>
@@ -154,7 +223,7 @@ function OrderItem({ item, movil }) {
           </span>
           <BatteryBar value={movil.bateria} />
           <span style={{ fontSize: 11, color: "#94a3b8", marginLeft: "auto" }}>
-            × {item.cantidad} {item.cantidad === 1 ? "unitat" : "unitats"}
+            {t('orders.units')(item.cantidad)}
           </span>
         </div>
       </div>
@@ -162,14 +231,16 @@ function OrderItem({ item, movil }) {
   );
 }
 
-function OrderCard({ order, movilsCache, onToggle, isOpen }) {
+function OrderCard({ order, movilsCache, onToggle, isOpen, user, t }) {
   const handleInvoice = () => {
     const items = (order.items || []).map(item => {
       const movil = movilsCache[item.movil_id] || {};
       const precio = item.precio ?? item.precio_unitario ?? movil.precio ?? 0;
       return { ...movil, cantidad: item.cantidad, precio, subtotal: precio * item.cantidad };
     });
-    const html = generateInvoiceHTML(order.id, items, order.precio_total);
+    const labels = t('invoice');
+    const dateLocale = t('orders.dateLocale');
+    const html = generateInvoiceHTML(order.id, items, order.precio_total, user, labels, dateLocale);
     const win = window.open("", "_blank");
     if (!win) return;
     win.document.write(html);
@@ -177,11 +248,14 @@ function OrderCard({ order, movilsCache, onToggle, isOpen }) {
     win.focus();
     win.print();
   };
+
   const totalProductos = order.items?.reduce((acc, i) => acc + (Number(i.cantidad) || 0), 0) || 0;
+  const dateLocale = t('orders.dateLocale');
+  const estadoLabels = t('orders.status');
   const estadoConfig = {
-    pagado:    { bg: "#d1fae5", text: "#065f46",  label: "PAGAT" },
-    pendiente: { bg: "#fef9c3", text: "#854d0e",  label: "PENDENT" },
-    fallido:   { bg: "#fee2e2", text: "#991b1b",  label: "FALLAT" },
+    pagado:    { bg: "#d1fae5", text: "#065f46",  label: estadoLabels.pagado },
+    pendiente: { bg: "#fef9c3", text: "#854d0e",  label: estadoLabels.pendiente },
+    fallido:   { bg: "#fee2e2", text: "#991b1b",  label: estadoLabels.fallido },
   }[order.estado] ?? { bg: "#f1f5f9", text: "#475569", label: order.estado?.toUpperCase() };
 
   return (
@@ -193,7 +267,6 @@ function OrderCard({ order, movilsCache, onToggle, isOpen }) {
       boxShadow: isOpen ? "0 8px 32px rgba(15,23,42,.08)" : "0 2px 8px rgba(15,23,42,.04)",
       transition: "box-shadow .2s",
     }}>
-      {/* Header clicable */}
       <button
         onClick={onToggle}
         style={{
@@ -217,13 +290,13 @@ function OrderCard({ order, movilsCache, onToggle, isOpen }) {
           </div>
           <div style={{ minWidth: 0 }}>
             <p style={{ margin: 0, fontSize: 11, color: "#94a3b8", fontWeight: 800, letterSpacing: ".5px" }}>
-              COMANDA #{order.id}
+              {t('orders.order')} #{order.id}
             </p>
             <p style={{ margin: "2px 0 0", fontSize: 15, fontWeight: 700, color: "#0f172a", fontFamily: "'Sora', sans-serif" }}>
-              {new Date(order.created_at).toLocaleDateString("ca-ES", { day: "numeric", month: "long", year: "numeric" })}
+              {new Date(order.created_at).toLocaleDateString(dateLocale, { day: "numeric", month: "long", year: "numeric" })}
             </p>
             <p style={{ margin: 0, fontSize: 12, color: "#64748b" }}>
-              {totalProductos} {totalProductos === 1 ? "producte" : "productes"} · {order.metodo_pago}
+              {t('orders.productCount')(totalProductos)} · {order.metodo_pago}
             </p>
           </div>
         </div>
@@ -251,11 +324,10 @@ function OrderCard({ order, movilsCache, onToggle, isOpen }) {
         </div>
       </button>
 
-      {/* Desglose expandible */}
       {isOpen && (
         <div style={{ padding: "0 24px 20px", borderTop: "1px solid #f1f5f9" }}>
           <p style={{ margin: "16px 0 4px", fontSize: 11, fontWeight: 700, color: "#94a3b8", textTransform: "uppercase", letterSpacing: ".7px" }}>
-            Productes
+            {t('orders.products')}
           </p>
 
           {order.items?.map((item, i) => (
@@ -263,13 +335,13 @@ function OrderCard({ order, movilsCache, onToggle, isOpen }) {
               key={i}
               item={item}
               movil={movilsCache[item.movil_id]}
+              t={t}
             />
           ))}
 
-          {/* Totals */}
           <div style={{ marginTop: 16, padding: "16px", background: "#f8fafc", borderRadius: 12, border: "1px solid #e2e8f0" }}>
             <div style={{ display: "flex", justifyContent: "space-between" }}>
-              <span style={{ fontWeight: 800, fontSize: 15, color: "#0f172a", fontFamily: "'Sora', sans-serif" }}>Total</span>
+              <span style={{ fontWeight: 800, fontSize: 15, color: "#0f172a", fontFamily: "'Sora', sans-serif" }}>{t('orders.total')}</span>
               <span style={{ fontWeight: 800, fontSize: 17, color: "#4f46e5", fontFamily: "'Sora', sans-serif" }}>{fmt(order.precio_total)}</span>
             </div>
           </div>
@@ -279,7 +351,7 @@ function OrderCard({ order, movilsCache, onToggle, isOpen }) {
               onClick={handleInvoice}
               style={{ padding: "9px 18px", background: "#f8fafc", border: "1px solid #e2e8f0", borderRadius: 10, fontSize: 13, fontWeight: 700, cursor: "pointer", color: "#0f172a", fontFamily: "'Sora', sans-serif" }}
             >
-              Descargar factura
+              {t('orders.downloadInvoice')}
             </button>
           </div>
 
@@ -295,27 +367,28 @@ function OrderCard({ order, movilsCache, onToggle, isOpen }) {
 }
 
 export default function OrdersPage() {
+  const { t } = useLanguage();
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
   const [movilsCache, setMovilsCache] = useState({});
   const [openId, setOpenId] = useState(null);
+  const [user, setUser] = useState(null);
 
   useEffect(() => {
-    const fetchOrders = async () => {
+    const fetchData = async () => {
       try {
-        const response = await fetch("/api/compras", {
-          credentials: "include",
-          headers: { "Accept": "application/json" },
-        });
+        const [ordersRes, userRes] = await Promise.all([
+          fetch("/api/compras", { credentials: "include", headers: { "Accept": "application/json" } }),
+          fetch("/api/user",    { credentials: "include", headers: { "Accept": "application/json" } }),
+        ]);
 
-        if (response.ok) {
-          const data = await response.json();
+        if (userRes.ok) setUser(await userRes.json());
+
+        if (ordersRes.ok) {
+          const data = await ordersRes.json();
           setOrders(data);
 
-          // Recopilar todos los movil_id únicos de todos los pedidos
           const ids = [...new Set(data.flatMap(o => (o.items || []).map(i => i.movil_id)))];
-
-          // Cargar todos los móviles en paralelo
           const results = await Promise.all(
             ids.map(id =>
               fetch(`/api/products/${id}`, { headers: { "Accept": "application/json" } })
@@ -335,7 +408,7 @@ export default function OrdersPage() {
       }
     };
 
-    fetchOrders();
+    fetchData();
   }, []);
 
   return (
@@ -351,11 +424,11 @@ export default function OrdersPage() {
 
           <div style={{ marginBottom: 28 }}>
             <h2 style={{ margin: 0, fontSize: 26, fontWeight: 800, color: "#0f172a", fontFamily: "'Sora', sans-serif", letterSpacing: "-.5px" }}>
-              Les meves comandes
+              {t('orders.title')}
             </h2>
             {!loading && (
               <p style={{ margin: "4px 0 0", fontSize: 13, color: "#64748b" }}>
-                {orders.length} {orders.length === 1 ? "comanda" : "comandes"} realitzades
+                {t('orders.count')(orders.length)}
               </p>
             )}
           </div>
@@ -371,16 +444,16 @@ export default function OrdersPage() {
             <div style={{ textAlign: "center", padding: 60, background: "#fff", borderRadius: 24, border: "1px solid #e2e8f0" }}>
               <div style={{ fontSize: 48, marginBottom: 12 }}>📦</div>
               <p style={{ margin: 0, fontSize: 16, fontWeight: 700, color: "#0f172a", fontFamily: "'Sora', sans-serif" }}>
-                Cap comanda encara
+                {t('orders.empty')}
               </p>
               <p style={{ margin: "6px 0 20px", color: "#64748b", fontSize: 13.5 }}>
-                No hem trobat cap comanda vinculada al teu compte.
+                {t('orders.emptyDesc')}
               </p>
               <button
                 onClick={() => window.location.href = "/"}
                 style={{ padding: "10px 24px", background: "linear-gradient(135deg,#6366f1,#4f46e5)", color: "#fff", border: "none", borderRadius: 10, fontWeight: 700, cursor: "pointer", fontSize: 13.5, fontFamily: "'Sora', sans-serif" }}
               >
-                Anar a la botiga →
+                {t('orders.goToShop')}
               </button>
             </div>
           ) : (
@@ -392,6 +465,8 @@ export default function OrdersPage() {
                   movilsCache={movilsCache}
                   isOpen={openId === order.id}
                   onToggle={() => setOpenId(openId === order.id ? null : order.id)}
+                  user={user}
+                  t={t}
                 />
               ))}
             </div>

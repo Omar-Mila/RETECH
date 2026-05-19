@@ -1,26 +1,26 @@
-export default function StateImage({ selectedState }) {
-  let imageSrc = ""
-  let label = ""
+import { useLanguage } from "../../context/LanguageContext"
 
-  if (selectedState === "Como nuevo") {
-    imageSrc = "/A.png"
-    label = "Estado A"
-  } else if (selectedState === "Buen estado") {
-    imageSrc = "/B.png"
-    label = "Estado B"
-  } else if (selectedState === "Funcional") {
-    imageSrc = "/C.png"
-    label = "Estado C"
-  }
+const STATE_IMG = {
+  "Como nuevo": "/A.png",
+  "Buen estado": "/B.png",
+  "Funcional": "/C.png",
+}
+
+export default function StateImage({ selectedState }) {
+  const { t } = useLanguage()
 
   if (!selectedState) return null
 
+  const stateInfo = t('product.stateInfo')
+  const badge = stateInfo[selectedState]?.badge ?? selectedState
+  const imageSrc = STATE_IMG[selectedState] ?? ""
+
   return (
     <div className="mt-6 border rounded-lg p-4 bg-white">
-      <h3 className="font-semibold mb-3">Estat del mòbil</h3>
+      <h3 className="font-semibold mb-3">{t('productInfo.phoneCondition')}</h3>
       <img
         src={imageSrc}
-        alt={label}
+        alt={badge}
         className="w-full max-w-md mx-auto object-contain rounded"
       />
     </div>

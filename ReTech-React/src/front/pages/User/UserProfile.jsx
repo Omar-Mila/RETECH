@@ -1,7 +1,10 @@
 import { useState, useEffect } from "react";
 import { useAuth } from "../../../auth/AuthContext";
+import { useNavigate, useLocation } from "react-router-dom";
+import { getCurrentUser } from "../../../auth/authService";
 import Navbar from "../../components/Navbar";
 import Footer from "../../components/Footer";
+import { useLanguage } from "../../context/LanguageContext";
 
 // Fuera del componente para evitar re-renders que quitan el focus
 const ReadField = ({ label, value }) => (
@@ -48,13 +51,76 @@ const SectionTitle = ({ color = "#6366f1", children }) => (
   </h2>
 );
 
+function VerifiedBadge({ verified, label }) {
+  return (
+    <span style={{
+      display: "inline-flex", alignItems: "center", gap: 4,
+      fontSize: 11, fontWeight: 700, padding: "3px 8px", borderRadius: 20,
+      background: verified ? "#dbeafe" : "#fef3c7",
+      color: verified ? "#1d4ed8" : "#92400e",
+    }}>
+      {verified ? "✓" : "!"} {label}
+    </span>
+  );
+}
+
 export default function UserProfile() {
   const { user, setUser } = useAuth();
+  const { t } = useLanguage();
+  const location = useLocation();
+  const navigate = useNavigate();
   const cliente = user?.cliente;
 
   const [editing, setEditing] = useState(false);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
+  const [verifyToast, setVerifyToast] = useState(null);
+  const [resending, setResending] = useState(false);
+  const [resendMsg, setResendMsg] = useState(null);
+
+  const handleResendVerification = async () => {
+    setResending(true);
+    setResendMsg(null);
+    try {
+      const csrfToken = document.cookie
+        .split("; ")
+        .find(row => row.startsWith("XSRF-TOKEN="))
+        ?.split("=")[1];
+
+      const res = await fetch("/api/resend-verification", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "X-XSRF-TOKEN": decodeURIComponent(csrfToken || ""),
+        },
+        credentials: "include",
+        body: JSON.stringify({ lang: localStorage.getItem("retech-lang") || "es" }),
+      });
+      const data = await res.json();
+      if (res.ok && data.message !== "error") {
+        setResendMsg("success");
+      } else {
+        setResendMsg("error");
+      }
+    } catch {
+      setResendMsg("error");
+    } finally {
+      setResending(false);
+    }
+  };
+
+  useEffect(() => {
+    const params = new URLSearchParams(location.search);
+    const verified = params.get("verified");
+    if (verified === "1") {
+      setVerifyToast("success");
+      navigate("/perfil", { replace: true });
+      getCurrentUser().then(fresh => { if (fresh) setUser(fresh); });
+    } else if (verified === "invalid") {
+      setVerifyToast("invalid");
+      navigate("/perfil", { replace: true });
+    }
+  }, []);
 
   const [form, setForm] = useState({
     nombre:    user?.cliente?.nombre    || "",
@@ -109,7 +175,7 @@ export default function UserProfile() {
       setUser(updatedUser);
       setEditing(false);
     } catch {
-      setError("Error en desar els canvis. Torna-ho a intentar.");
+      setError(t('profile.saveError'));
     } finally {
       setSaving(false);
     }
@@ -132,6 +198,28 @@ export default function UserProfile() {
       <Navbar />
       <div style={{ maxWidth: 900, margin: "60px auto", padding: "0 20px" }}>
 
+        {/* Toast verificación */}
+        {verifyToast && (
+          <div style={{
+            marginBottom: 20, padding: "14px 20px", borderRadius: 12, fontWeight: 600, fontSize: 14,
+            display: "flex", alignItems: "center", justifyContent: "space-between",
+            background: verifyToast === "success" ? "#dcfce7" : "#fef3c7",
+            color: verifyToast === "success" ? "#15803d" : "#92400e",
+            border: `1px solid ${verifyToast === "success" ? "#bbf7d0" : "#fde68a"}`,
+          }}>
+            <span>
+              {verifyToast === "success" ? "✓ " : "! "}
+              {verifyToast === "success" ? t('profile.verifiedSuccess') : t('profile.verifiedInvalid')}
+            </span>
+            <button
+              onClick={() => setVerifyToast(null)}
+              style={{ background: "none", border: "none", cursor: "pointer", fontSize: 16, color: "inherit", padding: "0 4px" }}
+            >
+              ×
+            </button>
+          </div>
+        )}
+
         {/* Cabecera */}
         <div style={{ textAlign: "center", marginBottom: 32 }}>
           <div style={{
@@ -140,7 +228,21 @@ export default function UserProfile() {
           }}>
             <span style={{ fontSize: 32 }}>👤</span>
           </div>
-          <h1 style={{ margin: 0, fontSize: 24, fontWeight: 800, color: "#0f172a" }}>Tu Perfil</h1>
+          <h1 style={{ margin: 0, fontSize: 24, fontWeight: 800, color: "#0f172a", display: "flex", alignItems: "center", justifyContent: "center", gap: 8 }}>
+            {t('profile.title')}
+            {user?.email_verified_at && (
+              <span title={t('profile.verifiedAccount')} style={{
+                display: "inline-flex", alignItems: "center", justifyContent: "center",
+                width: 26, height: 26, borderRadius: "50%", background: "#3b82f6",
+                color: "#fff", fontSize: 14, fontWeight: 900, flexShrink: 0
+              }}>✓</span>
+            )}
+          </h1>
+          {user?.email_verified_at && (
+            <p style={{ margin: "6px 0 0", fontSize: 13, color: "#3b82f6", fontWeight: 600 }}>
+              {t('profile.verifiedAccount')}
+            </p>
+          )}
         </div>
 
         {/* Dos columnas */}
@@ -151,10 +253,55 @@ export default function UserProfile() {
             background: "#fff", padding: 32, borderRadius: 24,
             border: "1px solid #e2e8f0", boxShadow: "0 4px 20px rgba(0,0,0,0.03)"
           }}>
-            <SectionTitle>Compte</SectionTitle>
+            <SectionTitle>{t('profile.account')}</SectionTitle>
             <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
-              <ReadField label="Nom d'usuari" value={user?.name} />
-              <ReadField label="Correu Electrònic" value={user?.email} />
+              <ReadField label={t('profile.username')} value={user?.name} />
+              <section>
+                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 6 }}>
+                  <label style={{ fontSize: 11, color: "#94a3b8", textTransform: "uppercase", fontWeight: 800, letterSpacing: "0.05em" }}>
+                    {t('profile.email')}
+                  </label>
+                  <VerifiedBadge
+                    verified={!!user?.email_verified_at}
+                    label={user?.email_verified_at ? t('profile.verified') : t('profile.notVerified')}
+                  />
+                </div>
+                <div style={{
+                  padding: "12px 16px", background: "#f8fafc",
+                  borderRadius: 12, border: "1px solid #f1f5f9",
+                  fontSize: 15, fontWeight: 600, color: user?.email ? "#1e293b" : "#cbd5e1"
+                }}>
+                  {user?.email || "—"}
+                </div>
+                {!user?.email_verified_at && (
+                  <div style={{ marginTop: 10 }}>
+                    <button
+                      onClick={handleResendVerification}
+                      disabled={resending || resendMsg === "success"}
+                      style={{
+                        fontSize: 12, fontWeight: 700, padding: "7px 14px",
+                        borderRadius: 8, border: "1px solid #e2e8f0",
+                        background: resendMsg === "success" ? "#f0fdf4" : "#fff",
+                        color: resendMsg === "success" ? "#15803d" : "#6366f1",
+                        cursor: (resending || resendMsg === "success") ? "default" : "pointer",
+                        opacity: resending ? 0.7 : 1,
+                        transition: "all 0.2s",
+                      }}
+                    >
+                      {resending
+                        ? t('profile.resendingSending')
+                        : resendMsg === "success"
+                          ? "✓ " + t('profile.resendSent')
+                          : t('profile.resendVerification')}
+                    </button>
+                    {resendMsg === "error" && (
+                      <p style={{ margin: "6px 0 0", fontSize: 12, color: "#ef4444" }}>
+                        {t('profile.resendError')}
+                      </p>
+                    )}
+                  </div>
+                )}
+              </section>
             </div>
           </div>
 
@@ -165,7 +312,7 @@ export default function UserProfile() {
           }}>
             {/* Título + botón editar */}
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
-              <SectionTitle color="#10b981">Dades Personals</SectionTitle>
+              <SectionTitle color="#10b981">{t('profile.personalData')}</SectionTitle>
               {!editing && (
                 <button
                   onClick={() => setEditing(true)}
@@ -175,7 +322,7 @@ export default function UserProfile() {
                     padding: "6px 14px", cursor: "pointer", marginBottom: 16
                   }}
                 >
-                  ✏️ Editar
+                  {t('profile.edit')}
                 </button>
               )}
             </div>
@@ -185,11 +332,11 @@ export default function UserProfile() {
             <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
               {editing ? (
                 <>
-                  <EditField label="Nom"     name="nombre"    value={form.nombre}    onChange={handleChange} />
-                  <EditField label="Cognoms" name="apellidos" value={form.apellidos} onChange={handleChange} />
-                  <EditField label="NIF"     name="nif"       value={form.nif}       onChange={handleChange} />
-                  <EditField label="Adreça"  name="direccion" value={form.direccion} onChange={handleChange} />
-                  <EditField label="Telèfon" name="telefono"  value={form.telefono}  onChange={handleChange} />
+                  <EditField label={t('profile.name')}     name="nombre"    value={form.nombre}    onChange={handleChange} />
+                  <EditField label={t('profile.surnames')} name="apellidos" value={form.apellidos} onChange={handleChange} />
+                  <EditField label={t('profile.nif')}      name="nif"       value={form.nif}       onChange={handleChange} />
+                  <EditField label={t('profile.address')}  name="direccion" value={form.direccion} onChange={handleChange} />
+                  <EditField label={t('profile.phone')}    name="telefono"  value={form.telefono}  onChange={handleChange} />
 
                   <div style={{ display: "flex", gap: 10, marginTop: 4 }}>
                     <button
@@ -202,7 +349,7 @@ export default function UserProfile() {
                         opacity: saving ? 0.7 : 1
                       }}
                     >
-                      {saving ? "Desant..." : "Desar canvis"}
+                      {saving ? t('profile.saving') : t('profile.save')}
                     </button>
                     <button
                       onClick={handleCancel}
@@ -213,17 +360,17 @@ export default function UserProfile() {
                         fontSize: 14, cursor: "pointer"
                       }}
                     >
-                      Cancel·lar
+                      {t('profile.cancel')}
                     </button>
                   </div>
                 </>
               ) : (
                 <>
-                  <ReadField label="Nom"     value={cliente?.nombre} />
-                  <ReadField label="Cognoms" value={cliente?.apellidos} />
-                  <ReadField label="NIF"     value={cliente?.nif} />
-                  <ReadField label="Adreça"  value={cliente?.direccion} />
-                  <ReadField label="Telèfon" value={cliente?.telefono} />
+                  <ReadField label={t('profile.name')}     value={cliente?.nombre} />
+                  <ReadField label={t('profile.surnames')} value={cliente?.apellidos} />
+                  <ReadField label={t('profile.nif')}      value={cliente?.nif} />
+                  <ReadField label={t('profile.address')}  value={cliente?.direccion} />
+                  <ReadField label={t('profile.phone')}    value={cliente?.telefono} />
                 </>
               )}
             </div>

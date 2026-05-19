@@ -3,11 +3,14 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Mail\OrderConfirmed;
 use App\Models\Compra;
+use App\Models\ModeloImage;
 use App\Models\Movil;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Mail;
 use Stripe\Stripe;
 use Stripe\PaymentIntent;
 use Stripe\Exception\ApiErrorException;
@@ -109,6 +112,62 @@ class CheckoutApiController extends Controller
 
         DB::table('carrito_items')->where('user_id', Auth::id())->delete();
         $request->session()->forget('stripe_intent_id');
+
+        // Enviar email de confirmación
+        try {
+            $user    = Auth::user()->load('cliente');
+            $cliente = $user->cliente;
+
+            $clienteNombre = ($cliente?->nombre && $cliente?->apellidos)
+                ? $cliente->nombre . ' ' . $cliente->apellidos
+                : $user->name;
+
+            // Cargar imágenes de Cloudinary de todos los modelos de esta compra
+            $modeloIds = collect($moviles)->pluck('modelo_id')->unique()->values();
+            $imagenes  = ModeloImage::whereIn('modelo_id', $modeloIds)->get();
+
+            $itemsDetalle = collect($items)->map(function ($item) use ($moviles, $imagenes) {
+                $movil = $moviles[$item['movil_id']] ?? null;
+                if (!$movil) return null;
+                $movil->load(['modelo', 'color']);
+
+                // Buscar imagen: primero por color exacto, luego cualquier imagen del modelo
+                $imagen = $imagenes->where('modelo_id', $movil->modelo_id)
+                                   ->where('color_id', $movil->color_id)
+                                   ->first()
+                       ?? $imagenes->where('modelo_id', $movil->modelo_id)->first();
+
+                return [
+                    'modelo'        => $movil->modelo?->nombre ?? 'Producto',
+                    'almacenamiento'=> $movil->almacenamiento,
+                    'ram'           => $movil->ram,
+                    'color'         => $movil->color?->nombre ?? '—',
+                    'estado'        => $movil->estado,
+                    'cantidad'      => $item['cantidad'],
+                    'precio'        => $item['precio'],
+                    'subtotal'      => round($item['precio'] * $item['cantidad'], 2),
+                    'imagen_url'    => $imagen?->path,
+                ];
+            })->filter()->values()->toArray();
+
+            $orderData = [
+                'compra_id'          => $compra->id,
+                'fecha'              => now()->format('d/m/Y'),
+                'total'              => $total,
+                'items'              => $itemsDetalle,
+                'cliente_nombre'     => $clienteNombre,
+                'cliente_email'      => $user->email,
+                'cliente_nif'        => $cliente?->nif,
+                'cliente_direccion'  => $cliente?->direccion,
+                'cliente_telefono'   => $cliente?->telefono,
+            ];
+
+            $lang = in_array($request->lang, ['ca', 'es', 'en']) ? $request->lang : 'es';
+            Mail::to($user->email)->send(new OrderConfirmed($orderData, $lang));
+        } catch (\Exception $e) {
+            // El email falla silenciosamente — la compra ya está registrada
+            \Log::warning('Email de confirmación fallido: ' . $e->getMessage());
+        }
 
         return response()->json([
             'message'   => '¡Pagament completado!',

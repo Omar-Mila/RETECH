@@ -115,6 +115,14 @@ class ClienteResource extends Resource
                     ->label('Email')
                     ->icon('heroicon-s-mail')
                     ->copyable(),
+
+                Tables\Columns\IconColumn::make('user.email_verified_at')
+                    ->label('Verificado')
+                    ->boolean()
+                    ->trueIcon('heroicon-s-badge-check')
+                    ->falseIcon('heroicon-s-x-circle')
+                    ->trueColor('success')
+                    ->falseColor('danger'),
             ])
             ->filters([
 

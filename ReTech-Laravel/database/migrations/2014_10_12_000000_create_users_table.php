@@ -19,6 +19,9 @@ return new class extends Migration
             $table->string('email', 150)->unique();
             $table->string('password', 255); // hash
             $table->string('role', 30)->default('user'); // O 'admin'
+            $table->string('google_id')->nullable()->unique();
+            $table->timestamp('email_verified_at')->nullable();
+            $table->string('verification_token', 64)->nullable()->unique();
             $table->timestamps();
         });
     }
