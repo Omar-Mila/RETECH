@@ -15,16 +15,26 @@ class ModeloApiController extends Controller
     {
         $search = trim($request->query('search', ''));
 
-        $models = Modelo::query() //obtenir tots els models
+        $models = Modelo::query()
+            ->with('images')
             ->when($search !== '', function ($query) use ($search) {
                 $query->where('nombre', 'like', "%{$search}%");
             })
             ->orderBy('nombre')
             ->limit(10)
-            ->get([
-                'id',
-                'nombre',
-            ]);
+            ->get()
+            ->map(function ($modelo) {
+                $precioMinimo = Movil::where('modelo_id', $modelo->id)
+                    ->where('stock', '>', 0)
+                    ->min('precio');
+
+                return [
+                    'id' => $modelo->id,
+                    'nombre' => $modelo->nombre,
+                    'image_url' => $modelo->images->first()?->path,
+                    'precio_desde' => $precioMinimo,
+                ];
+            });
 
         return response()->json($models);
     }

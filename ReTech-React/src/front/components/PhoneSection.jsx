@@ -14,14 +14,14 @@ export default function PhonesSection() {
         .catch(err => console.error(err))
         .finally(() => setLoading(false))
     }, [])
+    
 
     if (loading) {
         return <div className="p-10">{t('phoneSection.loading')}</div>
     }
-
     return (
         <section className="w-full py-12">
-        <div className="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-8">
+            <div className="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-8">
 
             <div className="relative rounded-xl overflow-hidden">
             <div className="bg-gradient-to-br from-black to-gray-800 text-white p-10 h-full flex flex-col justify-center rounded-xl">
@@ -47,13 +47,13 @@ export default function PhonesSection() {
                     name={phone.modelo?.nombre ?? phone.modelo}
                     condition={phone.estado}
                     price={phone.precio}
-                    image="https://via.placeholder.com/300"
-                />
+                    image={phone.image_url ?? "https://via.placeholder.com/300"}
+                    />
                 ))}
             </div>
             </div>
 
-        </div>
+            </div>
         </section>
     )
 }

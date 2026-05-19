@@ -69,9 +69,13 @@ class MovilApiController extends Controller
         $topIds = array_slice(array_keys($counts), 0, 4);
 
         if (empty($topIds)) {
-            $moviles = Movil::with(['modelo.marca', 'color'])->where('stock', '>', 0)->latest()->limit(4)->get();
+            $moviles = Movil::with(['modelo.marca', 'modelo.images', 'color'])
+                ->where('stock', '>', 0)
+                ->latest()
+                ->limit(4)
+                ->get();
         } else {
-            $moviles = Movil::with(['modelo.marca', 'color'])
+            $moviles = Movil::with(['modelo.marca', 'modelo.images', 'color'])
                 ->whereIn('id', $topIds)
                 ->get()
                 ->sortBy(fn($m) => array_search($m->id, $topIds))
@@ -89,6 +93,7 @@ class MovilApiController extends Controller
                 'ram'            => $movil->ram,
                 'color'          => $movil->color?->nombre,
                 'stock'          => $movil->stock,
+                'image_url' => $movil->modelo?->images?->first()?->path,
             ];
         })->values());
     }
