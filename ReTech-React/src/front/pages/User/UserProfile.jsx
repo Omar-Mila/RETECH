@@ -165,14 +165,18 @@ export default function UserProfile() {
         body: JSON.stringify(form),
       });
 
+      const data = await res.json();
+
       if (!res.ok) {
-        const data = await res.json();
-        console.error("Error resposta:", data);
-        throw new Error();
+        if (data.errors?.nif) {
+          setError(t('profile.nifDuplicate'));
+        } else {
+          setError(t('profile.saveError'));
+        }
+        return;
       }
 
-      const updatedUser = await res.json();
-      setUser(updatedUser);
+      setUser(data);
       setEditing(false);
     } catch {
       setError(t('profile.saveError'));

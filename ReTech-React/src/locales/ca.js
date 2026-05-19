@@ -47,6 +47,7 @@ const ca = {
     address: "Adreça",
     phone: "Telèfon",
     saveError: "Error en desar els canvis. Torna-ho a intentar.",
+    nifDuplicate: "Aquest NIF ja està registrat amb un altre compte.",
     verified: "Verificat",
     verifiedAccount: "Compte verificat",
     notVerified: "Sense verificar",
