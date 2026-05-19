@@ -2,6 +2,7 @@
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
+use Illuminate\Validation\Rule;
 use App\Http\Controllers\Api\MarcaApiController;
 use App\Http\Controllers\Api\MovilApiController;
 use App\Http\Controllers\ProductosController;
@@ -93,7 +94,7 @@ Route::middleware('auth:sanctum')->put('/user/cliente', function (Request $reque
     $data = $request->validate([
         'nombre'    => 'nullable|string|max:100',
         'apellidos' => 'nullable|string|max:100',
-        'nif'       => 'nullable|string|max:20',
+        'nif'       => ['nullable', 'string', 'max:9', Rule::unique('clientes', 'nif')->ignore($user->id, 'user_id')],
         'direccion' => 'nullable|string|max:255',
         'telefono'  => 'nullable|string|max:20',
     ]);

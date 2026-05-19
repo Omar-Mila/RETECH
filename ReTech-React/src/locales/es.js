@@ -47,6 +47,7 @@ const es = {
     address: "Dirección",
     phone: "Teléfono",
     saveError: "Error al guardar los cambios. Inténtalo de nuevo.",
+    nifDuplicate: "Este NIF ya está registrado con otra cuenta.",
     verified: "Verificado",
     verifiedAccount: "Cuenta verificada",
     notVerified: "Sin verificar",

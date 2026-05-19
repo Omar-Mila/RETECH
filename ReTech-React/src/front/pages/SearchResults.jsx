@@ -4,6 +4,37 @@ import Navbar from "../components/Navbar"
 import Footer from "../components/Footer"
 import { useLanguage } from "../context/LanguageContext"
 
+function PhoneImage({ src, alt }) {
+    const [status, setStatus] = useState("loading")
+    return (
+        <div style={{ position: "relative", width: "100%", height: "100%" }}>
+            {status !== "loaded" && (
+                <div style={{
+                    position: "absolute", inset: 0,
+                    display: "flex", alignItems: "center", justifyContent: "center",
+                }}>
+                    {status === "error"
+                        ? <span style={{ fontSize: 36, opacity: 0.25 }}>📱</span>
+                        : <div style={{ width: 52, height: 80, background: "#e2e8f0", borderRadius: 8, animation: "pulse 1.5s ease-in-out infinite" }} />
+                    }
+                </div>
+            )}
+            <img
+                src={src}
+                alt={alt}
+                style={{
+                    height: "100%", width: "100%", objectFit: "contain",
+                    opacity: status === "loaded" ? 1 : 0,
+                    transition: "opacity 0.25s",
+                    display: "block",
+                }}
+                onLoad={() => setStatus("loaded")}
+                onError={() => setStatus("error")}
+            />
+        </div>
+    )
+}
+
 const ESTADO_LABELS = {
     "nuevo":        { label: "Nou",         color: "bg-green-100 text-green-700" },
     "muy_bueno":    { label: "Molt bo",     color: "bg-blue-100 text-blue-700" },
@@ -190,6 +221,7 @@ export default function SearchResults() {
     const query             = searchParams.get("q")
     const [productos, setProductos]             = useState([])
     const [cargando, setCargando]               = useState(true)
+    const [cargandoNueva, setCargandoNueva]     = useState(false)
     const [error, setError]                     = useState(null)
     const [filtroColapsado, setFiltroColapsado] = useState(window.innerWidth < 768)
     const [filtros, setFiltros]                 = useState({ modelos: [], colores: [], almacenamientos: [], precioMax: Infinity })
@@ -200,7 +232,9 @@ export default function SearchResults() {
 
     useEffect(() => {
         if (!query) return
-        setCargando(true)
+        const esPrimeraCarga = productos.length === 0
+        if (esPrimeraCarga) setCargando(true)
+        else setCargandoNueva(true)
         setError(null)
         setFiltros({ modelos: [], colores: [], almacenamientos: [], precioMax: Infinity })
         setOrdenPrecio(null)
@@ -215,10 +249,12 @@ export default function SearchResults() {
                 setProductos(data)
                 setFiltros(f => ({ ...f, precioMax: Math.ceil(Math.max(...data.map(p => p.precio), 0)) }))
                 setCargando(false)
+                setCargandoNueva(false)
             })
             .catch(err => {
                 setError(err.message)
                 setCargando(false)
+                setCargandoNueva(false)
             })
     }, [query])
 
@@ -310,7 +346,7 @@ export default function SearchResults() {
                             t={t}
                         />
 
-                        <div style={{ flex: 1, minWidth: 0 }}>
+                        <div style={{ flex: 1, minWidth: 0, opacity: cargandoNueva ? 0.5 : 1, transition: "opacity 0.2s" }}>
                             {/* Cabecera */}
                             <div style={{ display: "flex", flexWrap: "wrap", alignItems: "center", gap: 8, marginBottom: 4 }}>
                                 <h1 style={{ fontSize: 17, fontWeight: 700, margin: 0, whiteSpace: "nowrap" }}>
@@ -365,12 +401,10 @@ export default function SearchResults() {
                                                     key={producto.id}
                                                     className="border rounded-xl p-3 hover:shadow-lg transition flex flex-col"
                                                 >
-                                                    <div className="bg-gray-50 rounded-lg flex items-center justify-center h-44 mb-3">
-                                                        <img
+                                                    <div className="bg-gray-50 rounded-lg h-44 mb-3" style={{ overflow: "hidden" }}>
+                                                        <PhoneImage
                                                             src={producto.image_url}
                                                             alt={`${producto.marca} ${producto.modelo}`}
-                                                            className="h-40 object-contain"
-                                                            onError={(e) => { e.target.src = "/images/no-image.png" }}
                                                         />
                                                     </div>
                                                     <p className="text-xs text-gray-400 uppercase tracking-wide">{producto.marca}</p>
