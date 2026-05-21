@@ -4,9 +4,9 @@ import { useLanguage } from "../../context/LanguageContext"
 import { useAuth } from "../../../auth/AuthContext"
 
 const STATE_IMG = {
-  "Como nuevo": "/A.png",
-  "Buen estado": "/B.png",
-  "Funcional": "/C.png",
+  "Como nuevo": "/img/estado/new.avif",
+  "Buen estado": "/img/estado/mid.avif",
+  "Funcional": "/img/estado/low.avif",
 }
 
 const BATTERY_LABEL = (b) => {
