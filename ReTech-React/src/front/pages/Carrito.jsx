@@ -271,7 +271,6 @@ function OrderSummary({ items, onCheckout, loadingIntent, t, isGuest }) {
       </div>
 
       <div style={{ margin: "18px 0", background: "#f0fdf4", border: "1px solid #bbf7d0", borderRadius: 10, padding: "9px 13px", display: "flex", alignItems: "center", gap: 7 }}>
-        <span>🚚</span>
         <span style={{ fontSize: 12, color: "#15803d", fontWeight: 600 }}>{t('cart.freeShipping')}</span>
       </div>
 
@@ -317,6 +316,23 @@ function OrderSummary({ items, onCheckout, loadingIntent, t, isGuest }) {
   );
 }
 
+const COUNTRIES = [
+  { code: 'ES', label: 'España' },
+  { code: 'PT', label: 'Portugal' },
+  { code: 'FR', label: 'Francia' },
+  { code: 'DE', label: 'Alemania' },
+  { code: 'IT', label: 'Italia' },
+  { code: 'GB', label: 'Reino Unido' },
+  { code: 'NL', label: 'Países Bajos' },
+  { code: 'BE', label: 'Bélgica' },
+  { code: 'CH', label: 'Suiza' },
+  { code: 'AT', label: 'Austria' },
+  { code: 'MX', label: 'México' },
+  { code: 'AR', label: 'Argentina' },
+  { code: 'CO', label: 'Colombia' },
+  { code: 'US', label: 'Estados Unidos' },
+];
+
 function generateInvoiceHTML(compraId, items, total, user, labels, dateLocale) {
   const date = new Date().toLocaleDateString(dateLocale, { day: "numeric", month: "long", year: "numeric" });
   const invoiceNum = `FAC-${String(compraId).padStart(5, "0")}`;
@@ -324,9 +340,12 @@ function generateInvoiceHTML(compraId, items, total, user, labels, dateLocale) {
   const c = user?.cliente ?? {};
   const clienteName     = c.nombre && c.apellidos ? `${c.nombre} ${c.apellidos}` : user?.name ?? "—";
   const clienteEmail    = user?.email    ?? "—";
-  const clienteNif      = c.nif          ?? null;
-  const clienteTel      = c.telefono     ?? null;
-  const clienteDireccion = c.direccion   ?? null;
+  const clienteNif      = c.nif           ?? null;
+  const clienteTel      = c.telefono      ?? null;
+  const clienteMunicipio = c.municipio   ?? null;
+  const clienteProvincia = c.provincia   ?? null;
+  const clienteCp        = c.codigo_postal ?? null;
+  const clientePaisLabel = c.pais ? (COUNTRIES.find(x => x.code === c.pais)?.label ?? c.pais) : null;
 
   const rows = items.map(item => `
     <tr>
@@ -407,7 +426,8 @@ function generateInvoiceHTML(compraId, items, total, user, labels, dateLocale) {
       <p>
         <strong>${clienteName}</strong><br>
         ${clienteNif        ? `NIF: ${clienteNif}<br>`  : ""}
-        ${clienteDireccion  ? `${clienteDireccion}<br>` : ""}
+        ${clienteMunicipio  ? `${clienteMunicipio}${clienteProvincia ? `, ${clienteProvincia}` : ''}<br>` : ""}
+        ${clienteCp         ? `CP ${clienteCp}${clientePaisLabel ? ` — ${clientePaisLabel}` : ''}<br>` : ""}
         ${clienteTel        ? `Tel: ${clienteTel}<br>`  : ""}
         ${clienteEmail}
       </p>
@@ -543,34 +563,70 @@ function LockIcon() {
 }
 
 const VALIDATE = {
-  nombre:    v => v.trim() !== "",
-  apellidos: v => v.trim() !== "",
-  nif:       v => v === "" || /^\d{8}[A-Za-z]$/.test(v),
-  direccion: v => v.trim() !== "",
-  telefono:  v => v === "" || /^\d{9}$/.test(v),
+  nombre:        v => v.trim() !== "",
+  apellidos:     v => v.trim() !== "",
+  nif:           v => v === "" || /^\d{8}[A-Za-z]$/.test(v),
+  pais:          v => v.trim() !== "",
+  provincia:     () => true,
+  municipio:     () => true,
+  codigo_postal: v => v.trim() !== "",
+  telefono:      v => v === "" || /^\d{9}$/.test(v),
 };
 
 function ProfileForm({ user, onDataChange, t }) {
   const c = user?.cliente ?? {};
   const initial = {
-    nombre:    c.nombre    ?? "",
-    apellidos: c.apellidos ?? "",
-    nif:       c.nif       ?? "",
-    direccion: c.direccion ?? "",
-    telefono:  c.telefono  ?? "",
+    nombre:        c.nombre        ?? "",
+    apellidos:     c.apellidos     ?? "",
+    nif:           c.nif           ?? "",
+    pais:          c.pais          ?? "",
+    provincia:     c.provincia     ?? "",
+    municipio:     c.municipio     ?? "",
+    codigo_postal: c.codigo_postal ?? "",
+    telefono:      c.telefono      ?? "",
   };
   const [form,    setForm]    = useState(initial);
   const [touched, setTouched] = useState(() =>
     Object.fromEntries(Object.entries(initial).filter(([,v]) => v !== "").map(([k]) => [k, true]))
   );
+  const [cpStatus, setCpStatus] = useState(null); // null | 'loading' | 'valid' | 'invalid'
 
   const validity = Object.fromEntries(Object.keys(form).map(k => [k, VALIDATE[k](form[k])]));
 
   useEffect(() => {
     const allValid = Object.values(validity).every(Boolean) &&
-      form.nombre.trim() && form.apellidos.trim() && form.direccion.trim();
+      form.nombre.trim() && form.apellidos.trim() && form.pais.trim() && form.codigo_postal.trim();
     onDataChange?.(form, !!allValid);
   }, []);
+
+  // Validar código postal vía Zippopotam.us
+  useEffect(() => {
+    const cp = form.codigo_postal?.trim();
+    const pais = form.pais?.trim();
+    if (!cp || cp.length < 4 || !pais) { setCpStatus(null); return; }
+    setCpStatus('loading');
+    const timer = setTimeout(async () => {
+      try {
+        const res = await fetch(`https://api.zippopotam.us/${pais}/${cp}`);
+        if (!res.ok) { setCpStatus('invalid'); return; }
+        const data = await res.json();
+        const place = data.places?.[0];
+        if (place) {
+          setCpStatus('valid');
+          setForm(prev => ({
+            ...prev,
+            municipio: place['place name'] || prev.municipio,
+            provincia: place.state || prev.provincia,
+          }));
+        } else {
+          setCpStatus('invalid');
+        }
+      } catch {
+        setCpStatus(null);
+      }
+    }, 600);
+    return () => clearTimeout(timer);
+  }, [form.codigo_postal, form.pais]);
 
   const handleChange = (key, value) => {
     const newForm = { ...form, [key]: value };
@@ -578,16 +634,19 @@ function ProfileForm({ user, onDataChange, t }) {
     setTouched(p => ({ ...p, [key]: true }));
     const newValidity = Object.fromEntries(Object.keys(newForm).map(k => [k, VALIDATE[k](newForm[k])]));
     const allValid = Object.values(newValidity).every(Boolean) &&
-      newForm.nombre.trim() && newForm.apellidos.trim() && newForm.direccion.trim();
+      newForm.nombre.trim() && newForm.apellidos.trim() && newForm.pais.trim() && newForm.codigo_postal.trim();
     onDataChange?.(newForm, !!allValid);
   };
 
   const ERRORS = {
-    nombre:    t('cart.profileFieldRequired'),
-    apellidos: t('cart.profileFieldRequired'),
-    nif:       t('cart.profileNifError'),
-    direccion: t('cart.profileFieldRequired'),
-    telefono:  t('cart.profilePhoneError'),
+    nombre:        t('cart.profileFieldRequired'),
+    apellidos:     t('cart.profileFieldRequired'),
+    nif:           t('cart.profileNifError'),
+    pais:          t('cart.profileFieldRequired'),
+    provincia:     "",
+    municipio:     "",
+    codigo_postal: t('cart.profileFieldRequired'),
+    telefono:      t('cart.profilePhoneError'),
   };
 
   const field = (label, key) => {
@@ -637,7 +696,44 @@ function ProfileForm({ user, onDataChange, t }) {
         {field(t('profile.name'),     "nombre")}
         {field(t('profile.surnames'), "apellidos")}
         {field(t('profile.nif'),      "nif")}
-        {field(t('profile.address'),  "direccion")}
+
+        {/* País — selector */}
+        <div>
+          <label style={{ display:"block", fontSize:11, fontWeight:700, color:"#94a3b8", textTransform:"uppercase", letterSpacing:".05em", marginBottom:4 }}>
+            {t('profile.pais')}
+          </label>
+          <select
+            value={form.pais}
+            onChange={e => handleChange("pais", e.target.value)}
+            onBlur={() => setTouched(p => ({ ...p, pais: true }))}
+            style={{ width:"100%", boxSizing:"border-box", padding:"10px 13px", border:`1px solid ${touched.pais && !form.pais ? "#fca5a5" : form.pais ? "#86efac" : "#e2e8f0"}`, borderRadius:10, fontSize:13.5, outline:"none", fontFamily:"inherit", color: form.pais ? "#0f172a" : "#94a3b8", background: touched.pais && !form.pais ? "#fef2f2" : form.pais ? "#f0fdf4" : "#fff", cursor:"pointer" }}
+          >
+            <option value="">— {t('profile.pais')} —</option>
+            {COUNTRIES.map(c => <option key={c.code} value={c.code}>{c.label}</option>)}
+          </select>
+          {touched.pais && !form.pais && <p style={{ margin:"3px 0 0 2px", fontSize:11, color:"#ef4444" }}>{t('cart.profileFieldRequired')}</p>}
+        </div>
+
+        {/* Código postal con validación automática */}
+        <div>
+          <label style={{ display:"block", fontSize:11, fontWeight:700, color:"#94a3b8", textTransform:"uppercase", letterSpacing:".05em", marginBottom:4 }}>
+            {t('profile.codigoPostal')}
+          </label>
+          <input
+            type="text"
+            value={form.codigo_postal}
+            onChange={e => handleChange("codigo_postal", e.target.value)}
+            onBlur={() => setTouched(p => ({ ...p, codigo_postal: true }))}
+            style={{ width:"100%", boxSizing:"border-box", padding:"10px 13px", border:`1px solid ${touched.codigo_postal && !form.codigo_postal ? "#fca5a5" : cpStatus === 'valid' ? "#86efac" : cpStatus === 'invalid' ? "#fca5a5" : "#e2e8f0"}`, borderRadius:10, fontSize:13.5, outline:"none", fontFamily:"inherit", color:"#0f172a", background: cpStatus === 'valid' ? "#f0fdf4" : cpStatus === 'invalid' ? "#fef2f2" : "#fff" }}
+          />
+          {cpStatus === 'loading' && <p style={{ margin:"3px 0 0 2px", fontSize:11, color:"#6366f1" }}>Validando…</p>}
+          {cpStatus === 'valid'   && <p style={{ margin:"3px 0 0 2px", fontSize:11, color:"#22c55e" }}>✓ Código postal válido</p>}
+          {cpStatus === 'invalid' && <p style={{ margin:"3px 0 0 2px", fontSize:11, color:"#ef4444" }}>{t('cart.profileCpNotFound')}</p>}
+          {touched.codigo_postal && !form.codigo_postal && <p style={{ margin:"3px 0 0 2px", fontSize:11, color:"#ef4444" }}>{t('cart.profileFieldRequired')}</p>}
+        </div>
+
+        {field(t('profile.provincia'), "provincia")}
+        {field(t('profile.municipio'), "municipio")}
         {field(t('profile.phone'),    "telefono")}
       </div>
     </div>

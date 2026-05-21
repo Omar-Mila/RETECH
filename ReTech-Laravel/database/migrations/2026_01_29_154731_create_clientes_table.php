@@ -20,7 +20,10 @@ return new class extends Migration
             $table->string('nombre', 30);
             $table->string('apellidos', 50);
             $table->char('nif', 9)->unique();
-            $table->string('direccion', 100);
+            $table->string('pais', 60)->nullable();
+            $table->string('provincia', 80)->nullable();
+            $table->string('municipio', 80)->nullable();
+            $table->string('codigo_postal', 10)->nullable();
             $table->string('telefono', 15);
 
             $table->foreign('user_id')

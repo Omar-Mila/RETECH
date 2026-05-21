@@ -14,7 +14,7 @@ const ca = {
   },
   register: {
     title: "Crear compte",
-    fullName: "Nom complet",
+    fullName: "Nom d'usuari",
     email: "Correu electrònic",
     password: "Contrasenya",
     confirmPassword: "Confirmar contrasenya",
@@ -44,7 +44,10 @@ const ca = {
     name: "Nom",
     surnames: "Cognoms",
     nif: "NIF",
-    address: "Adreça",
+    pais: "País",
+    provincia: "Província",
+    municipio: "Municipi",
+    codigoPostal: "Codi Postal",
     phone: "Telèfon",
     saveError: "Error en desar els canvis. Torna-ho a intentar.",
     nifDuplicate: "Aquest NIF ja està registrat amb un altre compte.",
@@ -232,6 +235,7 @@ const ca = {
     profileFieldRequired: "Aquest camp és obligatori",
     profileNifError: "El NIF ha de tenir 8 números i 1 lletra (ex: 12345678A)",
     profilePhoneError: "El telèfon ha de tenir 9 dígits",
+    profileCpNotFound: "Codi postal no trobat",
   },
   phoneSection: {
     loading: "Carregant productes...",

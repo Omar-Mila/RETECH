@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useAuth } from "../../../auth/AuthContext";
 import { useNavigate, useLocation } from "react-router-dom";
 import { getCurrentUser } from "../../../auth/authService";
@@ -39,6 +39,49 @@ const EditField = ({ label, name, value, onChange }) => (
         color: "#1e293b", outline: "none"
       }}
     />
+  </section>
+);
+
+const COUNTRIES = [
+  { code: 'ES', label: 'España' },
+  { code: 'PT', label: 'Portugal' },
+  { code: 'FR', label: 'Francia' },
+  { code: 'DE', label: 'Alemania' },
+  { code: 'IT', label: 'Italia' },
+  { code: 'GB', label: 'Reino Unido' },
+  { code: 'NL', label: 'Países Bajos' },
+  { code: 'BE', label: 'Bélgica' },
+  { code: 'CH', label: 'Suiza' },
+  { code: 'AT', label: 'Austria' },
+  { code: 'MX', label: 'México' },
+  { code: 'AR', label: 'Argentina' },
+  { code: 'CO', label: 'Colombia' },
+  { code: 'US', label: 'Estados Unidos' },
+];
+
+const getCountryLabel = (code) => COUNTRIES.find(c => c.code === code)?.label ?? code ?? "—";
+
+const EditSelect = ({ label, name, value, onChange }) => (
+  <section>
+    <label style={{ fontSize: 11, color: "#94a3b8", textTransform: "uppercase", fontWeight: 800, letterSpacing: "0.05em" }}>
+      {label}
+    </label>
+    <select
+      name={name}
+      value={value}
+      onChange={onChange}
+      style={{
+        display: "block", marginTop: 6, padding: "12px 16px", width: "100%",
+        boxSizing: "border-box", background: "#fff", borderRadius: 12,
+        border: "1px solid #6366f1", fontSize: 15, fontWeight: 600,
+        color: value ? "#1e293b" : "#94a3b8", outline: "none", cursor: "pointer",
+      }}
+    >
+      <option value="">— Selecciona país —</option>
+      {COUNTRIES.map(c => (
+        <option key={c.code} value={c.code}>{c.label}</option>
+      ))}
+    </select>
   </section>
 );
 
@@ -123,25 +166,64 @@ export default function UserProfile() {
 
   }, []);
 
+  const [cpStatus, setCpStatus] = useState(null); // null | 'loading' | 'valid' | 'invalid'
+
   const [form, setForm] = useState({
-    nombre:    user?.cliente?.nombre    || "",
-    apellidos: user?.cliente?.apellidos || "",
-    nif:       user?.cliente?.nif       || "",
-    direccion: user?.cliente?.direccion || "",
-    telefono:  user?.cliente?.telefono  || "",
+    nombre:        user?.cliente?.nombre        || "",
+    apellidos:     user?.cliente?.apellidos     || "",
+    nif:           user?.cliente?.nif           || "",
+    pais:          user?.cliente?.pais          || "",
+    provincia:     user?.cliente?.provincia     || "",
+    municipio:     user?.cliente?.municipio     || "",
+    codigo_postal: user?.cliente?.codigo_postal || "",
+    telefono:      user?.cliente?.telefono      || "",
   });
 
   useEffect(() => {
     if (user?.cliente) {
       setForm({
-        nombre:    user.cliente.nombre    || "",
-        apellidos: user.cliente.apellidos || "",
-        nif:       user.cliente.nif       || "",
-        direccion: user.cliente.direccion || "",
-        telefono:  user.cliente.telefono  || "",
+        nombre:        user.cliente.nombre        || "",
+        apellidos:     user.cliente.apellidos     || "",
+        nif:           user.cliente.nif           || "",
+        pais:          user.cliente.pais          || "",
+        provincia:     user.cliente.provincia     || "",
+        municipio:     user.cliente.municipio     || "",
+        codigo_postal: user.cliente.codigo_postal || "",
+        telefono:      user.cliente.telefono      || "",
       });
     }
   }, [user]);
+
+  // Validar código postal vía Zippopotam.us cuando cambie el CP o el país
+  useEffect(() => {
+    if (!editing) return;
+    const cp = form.codigo_postal?.trim();
+    const pais = form.pais?.trim();
+    if (!cp || cp.length < 4 || !pais) { setCpStatus(null); return; }
+
+    setCpStatus('loading');
+    const timer = setTimeout(async () => {
+      try {
+        const res = await fetch(`https://api.zippopotam.us/${pais}/${cp}`);
+        if (!res.ok) { setCpStatus('invalid'); return; }
+        const data = await res.json();
+        const place = data.places?.[0];
+        if (place) {
+          setCpStatus('valid');
+          setForm(prev => ({
+            ...prev,
+            municipio: place['place name'] || prev.municipio,
+            provincia: place.state || prev.provincia,
+          }));
+        } else {
+          setCpStatus('invalid');
+        }
+      } catch {
+        setCpStatus(null);
+      }
+    }, 600);
+    return () => clearTimeout(timer);
+  }, [form.codigo_postal, form.pais, editing]);
 
   const handleChange = (e) => {
     setForm(prev => ({ ...prev, [e.target.name]: e.target.value }));
@@ -188,12 +270,16 @@ export default function UserProfile() {
 
   const handleCancel = () => {
     setForm({
-      nombre:    cliente?.nombre    || "",
-      apellidos: cliente?.apellidos || "",
-      nif:       cliente?.nif       || "",
-      direccion: cliente?.direccion || "",
-      telefono:  cliente?.telefono  || "",
+      nombre:        cliente?.nombre        || "",
+      apellidos:     cliente?.apellidos     || "",
+      nif:           cliente?.nif           || "",
+      pais:          cliente?.pais          || "",
+      provincia:     cliente?.provincia     || "",
+      municipio:     cliente?.municipio     || "",
+      codigo_postal: cliente?.codigo_postal || "",
+      telefono:      cliente?.telefono      || "",
     });
+    setCpStatus(null);
     setEditing(false);
     setError("");
   };
@@ -337,11 +423,19 @@ export default function UserProfile() {
             <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
               {editing ? (
                 <>
-                  <EditField label={t('profile.name')}     name="nombre"    value={form.nombre}    onChange={handleChange} />
-                  <EditField label={t('profile.surnames')} name="apellidos" value={form.apellidos} onChange={handleChange} />
-                  <EditField label={t('profile.nif')}      name="nif"       value={form.nif}       onChange={handleChange} />
-                  <EditField label={t('profile.address')}  name="direccion" value={form.direccion} onChange={handleChange} />
-                  <EditField label={t('profile.phone')}    name="telefono"  value={form.telefono}  onChange={handleChange} />
+                  <EditField label={t('profile.name')}         name="nombre"        value={form.nombre}        onChange={handleChange} />
+                  <EditField label={t('profile.surnames')}     name="apellidos"     value={form.apellidos}     onChange={handleChange} />
+                  <EditField label={t('profile.nif')}          name="nif"           value={form.nif}           onChange={handleChange} />
+                  <EditSelect label={t('profile.pais')}        name="pais"          value={form.pais}          onChange={handleChange} />
+                  <div>
+                    <EditField label={t('profile.codigoPostal')} name="codigo_postal" value={form.codigo_postal} onChange={handleChange} />
+                    {cpStatus === 'loading' && <p style={{ margin: "3px 0 0", fontSize: 11, color: "#6366f1" }}>Validando…</p>}
+                    {cpStatus === 'valid'   && <p style={{ margin: "3px 0 0", fontSize: 11, color: "#22c55e" }}>✓ Código postal válido</p>}
+                    {cpStatus === 'invalid' && <p style={{ margin: "3px 0 0", fontSize: 11, color: "#ef4444" }}>{t('cart.profileCpNotFound')}</p>}
+                  </div>
+                  <EditField label={t('profile.provincia')}    name="provincia"     value={form.provincia}     onChange={handleChange} />
+                  <EditField label={t('profile.municipio')}    name="municipio"     value={form.municipio}     onChange={handleChange} />
+                  <EditField label={t('profile.phone')}        name="telefono"      value={form.telefono}      onChange={handleChange} />
 
                   <div style={{ display: "flex", gap: 10, marginTop: 4 }}>
                     <button
@@ -371,11 +465,14 @@ export default function UserProfile() {
                 </>
               ) : (
                 <>
-                  <ReadField label={t('profile.name')}     value={cliente?.nombre} />
-                  <ReadField label={t('profile.surnames')} value={cliente?.apellidos} />
-                  <ReadField label={t('profile.nif')}      value={cliente?.nif} />
-                  <ReadField label={t('profile.address')}  value={cliente?.direccion} />
-                  <ReadField label={t('profile.phone')}    value={cliente?.telefono} />
+                  <ReadField label={t('profile.name')}         value={cliente?.nombre} />
+                  <ReadField label={t('profile.surnames')}     value={cliente?.apellidos} />
+                  <ReadField label={t('profile.nif')}          value={cliente?.nif} />
+                  <ReadField label={t('profile.pais')}         value={getCountryLabel(cliente?.pais)} />
+                  <ReadField label={t('profile.codigoPostal')} value={cliente?.codigo_postal} />
+                  <ReadField label={t('profile.provincia')}    value={cliente?.provincia} />
+                  <ReadField label={t('profile.municipio')}    value={cliente?.municipio} />
+                  <ReadField label={t('profile.phone')}        value={cliente?.telefono} />
                 </>
               )}
             </div>

@@ -19,7 +19,7 @@ return new class extends Migration
     {
         Schema::create('compras', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('cliente_user_id')->constrained('users');
+            $table->foreignId('cliente_user_id')->constrained('users')->cascadeOnDelete();
             $table->json('items');
             $table->decimal('precio_total', 10, 2)->default(0);
             $table->string('metodo_pago');

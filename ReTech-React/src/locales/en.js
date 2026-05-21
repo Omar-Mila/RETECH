@@ -14,7 +14,7 @@ const en = {
   },
   register: {
     title: "Create account",
-    fullName: "Full name",
+    fullName: "Username",
     email: "Email address",
     password: "Password",
     confirmPassword: "Confirm password",
@@ -44,7 +44,10 @@ const en = {
     name: "Name",
     surnames: "Surnames",
     nif: "ID",
-    address: "Address",
+    pais: "Country",
+    provincia: "Region / Province",
+    municipio: "City / Municipality",
+    codigoPostal: "Postal Code",
     phone: "Phone",
     saveError: "Error saving changes. Please try again.",
     nifDuplicate: "This NIF is already registered with another account.",
@@ -232,6 +235,7 @@ const en = {
     profileFieldRequired: "This field is required",
     profileNifError: "NIF must be 8 digits followed by 1 letter (e.g. 12345678A)",
     profilePhoneError: "Phone number must be 9 digits",
+    profileCpNotFound: "Postal code not found",
   },
   phoneSection: {
     loading: "Loading products...",
