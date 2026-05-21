@@ -2,7 +2,6 @@
 
 namespace Database\Seeders;
 
-use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
 use App\Models\Modelo;
 use App\Models\Marca;
@@ -10,186 +9,318 @@ use App\Models\SistemaOperativo;
 
 class ModeloSeeder extends Seeder
 {
-    /**
-     * Run the database seeds.
-     *
-     * @return void
-     */
     public function run()
     {
-        //
         $ios = SistemaOperativo::where('nombre', 'iOS')->first();
         $android = SistemaOperativo::where('nombre', 'Android')->first();
 
-        //apple
         $apple = Marca::where('nombre', 'Apple')->first();
-
-        $iphone = [
-            'iPhone X',
-            'iPhone XR',
-            'iPhone XS',
-            'iPhone XS Max',
-
-            'iPhone 11',
-            'iPhone 11 Pro',
-            'iPhone 11 Pro Max',
-
-            'iPhone SE (2ª generación)',
-
-            'iPhone 12 mini',
-            'iPhone 12',
-            'iPhone 12 Pro',
-            'iPhone 12 Pro Max',
-
-            'iPhone 13 mini',
-            'iPhone 13',
-            'iPhone 13 Pro',
-            'iPhone 13 Pro Max',
-
-            'iPhone SE (3ª generación)',
-
-            'iPhone 14',
-            'iPhone 14 Plus',
-            'iPhone 14 Pro',
-            'iPhone 14 Pro Max',
-
-            'iPhone 15',
-            'iPhone 15 Plus',
-            'iPhone 15 Pro',
-            'iPhone 15 Pro Max',
-
-            'iPhone 16',
-            'iPhone 16 Plus',
-            'iPhone 16 Pro',
-            'iPhone 16 Pro Max',
-
-            'iPhone Air',
-
-            'iPhone 17',
-            'iPhone 17 Plus',
-            'iPhone 17 Pro',
-            'iPhone 17 Pro Max'
-        ];
-
-        foreach ($iphone as $n) {
-            Modelo::firstOrCreate(
-                [
-                    'nombre' => $n,
-                    'marca_id' => $apple->id,
-                ],
-                [
-                    'sistema_operativo_id' => $ios->id,
-                    'conector' => 'Lightning',
-                    'procesador' => 'Apple Silicon',
-                    'cinco_g' => true,
-                    'camara_principal_mp' => 48,
-                    'camara_frontal_mp' => 12,
-                    'bateria_mah' => 3200,
-                    'pantalla_pulgadas' => 6.1,
-                    'hz_pantalla' => 60,
-                    'nfc' => true,
-                    'tipo_sim' => 'SIM + eSIM',
-                ]
-            );
-        }
-
-        //galaxy
         $samsung = Marca::where('nombre', 'Samsung')->first();
-
-        $galaxy = [
-            'Galaxy S20',
-            'Galaxy S21',
-            'Galaxy S22',
-            'Galaxy S23',
-            'Galaxy S24',
-            'Galaxy S25',
-        ];
-
-        foreach ($galaxy as $nombre) {
-            Modelo::firstOrCreate(
-                [
-                    'nombre' => $nombre,
-                    'marca_id' => $samsung->id,
-                ],
-                [
-                    'sistema_operativo_id' => $android->id,
-                    'conector' => 'Type-C',
-                    'procesador' => 'Exynos / Snapdragon',
-                    'cinco_g' => true,
-                    'camara_principal_mp' => 50,
-                    'camara_frontal_mp' => 12,
-                    'bateria_mah' => 4500,
-                    'pantalla_pulgadas' => 6.5,
-                    'hz_pantalla' => 120,
-                    'nfc' => true,
-                    'tipo_sim' => 'Dual SIM',
-                ]
-            );
-        }
-
-        //Xiaomi
         $xiaomi = Marca::where('nombre', 'Xiaomi')->first();
-
-        $redmi = [
-            'Redmi Note 10',
-            'Redmi Note 11',
-            'Redmi Note 12',
-            'Redmi Note 13',
-            'Redmi Note 14',
-            'Redmi Note 15',
-        ];
-
-        foreach ($redmi as $nombre) {
-            Modelo::firstOrCreate(
-                [
-                    'nombre' => $nombre,
-                    'marca_id' => $xiaomi->id,
-                ],
-                [
-                    'sistema_operativo_id' => $android->id,
-                    'conector' => 'Type-C',
-                    'procesador' => 'Snapdragon',
-                    'cinco_g' => true,
-                    'camara_principal_mp' => 48,
-                    'camara_frontal_mp' => 13,
-                    'bateria_mah' => 5000,
-                    'pantalla_pulgadas' => 6.6,
-                    'hz_pantalla' => 120,
-                    'nfc' => true,
-                    'tipo_sim' => 'Dual SIM',
-                ]
-            );
-        }
-
-        //Google
         $google = Marca::where('nombre', 'Google')->first();
 
-        $pixels = [
-            'Pixel 5',
-            'Pixel 6',
-            'Pixel 7',
-            'Pixel 8',
-            'Pixel 9',
+        $modelos = [
+            // APPLE
+            [
+                'nombre' => 'iPhone 15',
+                'marca_id' => $apple?->id,
+                'sistema_operativo_id' => $ios?->id,
+                'conector' => 'Type-C',
+                'procesador' => 'A16 Bionic',
+                'cinco_g' => true,
+                'camara_principal_mp' => 48,
+                'camara_frontal_mp' => 12,
+                'bateria_mah' => 3349,
+                'pantalla_pulgadas' => 6.1,
+                'hz_pantalla' => 60,
+                'nfc' => true,
+                'tipo_sim' => 'SIM + eSIM',
+            ],
+            [
+                'nombre' => 'iPhone 16',
+                'marca_id' => $apple?->id,
+                'sistema_operativo_id' => $ios?->id,
+                'conector' => 'Type-C',
+                'procesador' => 'A18',
+                'cinco_g' => true,
+                'camara_principal_mp' => 48,
+                'camara_frontal_mp' => 12,
+                'bateria_mah' => 3561,
+                'pantalla_pulgadas' => 6.1,
+                'hz_pantalla' => 60,
+                'nfc' => true,
+                'tipo_sim' => 'SIM + eSIM',
+            ],
+            [
+                'nombre' => 'iPhone 16 Pro',
+                'marca_id' => $apple?->id,
+                'sistema_operativo_id' => $ios?->id,
+                'conector' => 'Type-C',
+                'procesador' => 'A18 Pro',
+                'cinco_g' => true,
+                'camara_principal_mp' => 48,
+                'camara_frontal_mp' => 12,
+                'bateria_mah' => 3582,
+                'pantalla_pulgadas' => 6.3,
+                'hz_pantalla' => 120,
+                'nfc' => true,
+                'tipo_sim' => 'SIM + eSIM',
+            ],
+            [
+                'nombre' => 'iPhone 17',
+                'marca_id' => $apple?->id,
+                'sistema_operativo_id' => $ios?->id,
+                'conector' => 'Type-C',
+                'procesador' => 'A19',
+                'cinco_g' => true,
+                'camara_principal_mp' => 48,
+                'camara_frontal_mp' => 18,
+                'bateria_mah' => 3692,
+                'pantalla_pulgadas' => 6.3,
+                'hz_pantalla' => 120,
+                'nfc' => true,
+                'tipo_sim' => 'SIM + eSIM',
+            ],
+            [
+                'nombre' => 'iPhone 17 Pro',
+                'marca_id' => $apple?->id,
+                'sistema_operativo_id' => $ios?->id,
+                'conector' => 'Type-C',
+                'procesador' => 'A19 Pro',
+                'cinco_g' => true,
+                'camara_principal_mp' => 48,
+                'camara_frontal_mp' => 18,
+                'bateria_mah' => 3988,
+                'pantalla_pulgadas' => 6.3,
+                'hz_pantalla' => 120,
+                'nfc' => true,
+                'tipo_sim' => 'SIM + eSIM',
+            ],
+            [
+                'nombre' => 'iPhone Air',
+                'marca_id' => $apple?->id,
+                'sistema_operativo_id' => $ios?->id,
+                'conector' => 'Type-C',
+                'procesador' => 'A19 Pro',
+                'cinco_g' => true,
+                'camara_principal_mp' => 48,
+                'camara_frontal_mp' => 18,
+                'bateria_mah' => 3149,
+                'pantalla_pulgadas' => 6.5,
+                'hz_pantalla' => 120,
+                'nfc' => true,
+                'tipo_sim' => 'eSIM',
+            ],
+
+            // SAMSUNG
+            [
+                'nombre' => 'Galaxy A16',
+                'marca_id' => $samsung?->id,
+                'sistema_operativo_id' => $android?->id,
+                'conector' => 'Type-C',
+                'procesador' => 'Exynos 1330 / Dimensity 6300',
+                'cinco_g' => true,
+                'camara_principal_mp' => 50,
+                'camara_frontal_mp' => 13,
+                'bateria_mah' => 5000,
+                'pantalla_pulgadas' => 6.7,
+                'hz_pantalla' => 90,
+                'nfc' => true,
+                'tipo_sim' => 'Dual SIM',
+            ],
+            [
+                'nombre' => 'Galaxy A56',
+                'marca_id' => $samsung?->id,
+                'sistema_operativo_id' => $android?->id,
+                'conector' => 'Type-C',
+                'procesador' => 'Exynos 1580',
+                'cinco_g' => true,
+                'camara_principal_mp' => 50,
+                'camara_frontal_mp' => 12,
+                'bateria_mah' => 5000,
+                'pantalla_pulgadas' => 6.7,
+                'hz_pantalla' => 120,
+                'nfc' => true,
+                'tipo_sim' => 'Dual SIM',
+            ],
+            [
+                'nombre' => 'Galaxy S25',
+                'marca_id' => $samsung?->id,
+                'sistema_operativo_id' => $android?->id,
+                'conector' => 'Type-C',
+                'procesador' => 'Snapdragon 8 Elite for Galaxy',
+                'cinco_g' => true,
+                'camara_principal_mp' => 50,
+                'camara_frontal_mp' => 12,
+                'bateria_mah' => 4000,
+                'pantalla_pulgadas' => 6.2,
+                'hz_pantalla' => 120,
+                'nfc' => true,
+                'tipo_sim' => 'SIM + eSIM',
+            ],
+            [
+                'nombre' => 'Galaxy Z Flip',
+                'marca_id' => $samsung?->id,
+                'sistema_operativo_id' => $android?->id,
+                'conector' => 'Type-C',
+                'procesador' => 'Snapdragon 8 Gen 3 for Galaxy',
+                'cinco_g' => true,
+                'camara_principal_mp' => 50,
+                'camara_frontal_mp' => 10,
+                'bateria_mah' => 4000,
+                'pantalla_pulgadas' => 6.7,
+                'hz_pantalla' => 120,
+                'nfc' => true,
+                'tipo_sim' => 'SIM + eSIM',
+            ],
+
+            // GOOGLE
+            [
+                'nombre' => 'Google Pixel 7 Pro',
+                'marca_id' => $google?->id,
+                'sistema_operativo_id' => $android?->id,
+                'conector' => 'Type-C',
+                'procesador' => 'Google Tensor G2',
+                'cinco_g' => true,
+                'camara_principal_mp' => 50,
+                'camara_frontal_mp' => 10,
+                'bateria_mah' => 5000,
+                'pantalla_pulgadas' => 6.7,
+                'hz_pantalla' => 120,
+                'nfc' => true,
+                'tipo_sim' => 'SIM + eSIM',
+            ],
+            [
+                'nombre' => 'Google Pixel 8 Pro',
+                'marca_id' => $google?->id,
+                'sistema_operativo_id' => $android?->id,
+                'conector' => 'Type-C',
+                'procesador' => 'Google Tensor G3',
+                'cinco_g' => true,
+                'camara_principal_mp' => 50,
+                'camara_frontal_mp' => 10,
+                'bateria_mah' => 5050,
+                'pantalla_pulgadas' => 6.7,
+                'hz_pantalla' => 120,
+                'nfc' => true,
+                'tipo_sim' => 'SIM + eSIM',
+            ],
+            [
+                'nombre' => 'Google Pixel 9 Pro',
+                'marca_id' => $google?->id,
+                'sistema_operativo_id' => $android?->id,
+                'conector' => 'Type-C',
+                'procesador' => 'Google Tensor G4',
+                'cinco_g' => true,
+                'camara_principal_mp' => 50,
+                'camara_frontal_mp' => 42,
+                'bateria_mah' => 4700,
+                'pantalla_pulgadas' => 6.3,
+                'hz_pantalla' => 120,
+                'nfc' => true,
+                'tipo_sim' => 'SIM + eSIM',
+            ],
+            [
+                'nombre' => 'Google Pixel 10 Pro',
+                'marca_id' => $google?->id,
+                'sistema_operativo_id' => $android?->id,
+                'conector' => 'Type-C',
+                'procesador' => 'Google Tensor G5',
+                'cinco_g' => true,
+                'camara_principal_mp' => 50,
+                'camara_frontal_mp' => 42,
+                'bateria_mah' => 4970,
+                'pantalla_pulgadas' => 6.3,
+                'hz_pantalla' => 120,
+                'nfc' => true,
+                'tipo_sim' => 'SIM + eSIM',
+            ],
+
+            // XIAOMI / REDMI
+            [
+                'nombre' => 'Redmi A5',
+                'marca_id' => $xiaomi?->id,
+                'sistema_operativo_id' => $android?->id,
+                'conector' => 'Type-C',
+                'procesador' => 'Unisoc T7250',
+                'cinco_g' => false,
+                'camara_principal_mp' => 32,
+                'camara_frontal_mp' => 8,
+                'bateria_mah' => 5200,
+                'pantalla_pulgadas' => 6.88,
+                'hz_pantalla' => 120,
+                'nfc' => false,
+                'tipo_sim' => 'Dual SIM',
+            ],
+            [
+                'nombre' => 'Redmi Note 13',
+                'marca_id' => $xiaomi?->id,
+                'sistema_operativo_id' => $android?->id,
+                'conector' => 'Type-C',
+                'procesador' => 'MediaTek Dimensity 6080',
+                'cinco_g' => true,
+                'camara_principal_mp' => 108,
+                'camara_frontal_mp' => 16,
+                'bateria_mah' => 5000,
+                'pantalla_pulgadas' => 6.67,
+                'hz_pantalla' => 120,
+                'nfc' => true,
+                'tipo_sim' => 'Dual SIM',
+            ],
+            [
+                'nombre' => 'Redmi Note 14',
+                'marca_id' => $xiaomi?->id,
+                'sistema_operativo_id' => $android?->id,
+                'conector' => 'Type-C',
+                'procesador' => 'MediaTek Helio G99-Ultra',
+                'cinco_g' => false,
+                'camara_principal_mp' => 108,
+                'camara_frontal_mp' => 20,
+                'bateria_mah' => 5500,
+                'pantalla_pulgadas' => 6.67,
+                'hz_pantalla' => 120,
+                'nfc' => true,
+                'tipo_sim' => 'Dual SIM',
+            ],
+            [
+                'nombre' => 'Redmi Note 15',
+                'marca_id' => $xiaomi?->id,
+                'sistema_operativo_id' => $android?->id,
+                'conector' => 'Type-C',
+                'procesador' => 'MediaTek Helio G100-Ultra',
+                'cinco_g' => false,
+                'camara_principal_mp' => 108,
+                'camara_frontal_mp' => 8,
+                'bateria_mah' => 6000,
+                'pantalla_pulgadas' => 6.77,
+                'hz_pantalla' => 120,
+                'nfc' => true,
+                'tipo_sim' => 'Dual SIM',
+            ],
         ];
 
-        foreach ($pixels as $nombre) {
-            Modelo::firstOrCreate(
+        foreach ($modelos as $modelo) {
+            if (!$modelo['marca_id'] || !$modelo['sistema_operativo_id']) {
+                continue;
+            }
+
+            Modelo::updateOrCreate(
                 [
-                    'nombre' => $nombre,
-                    'marca_id' => $google->id,
+                    'nombre' => $modelo['nombre'],
+                    'marca_id' => $modelo['marca_id'],
                 ],
                 [
-                    'sistema_operativo_id' => $android->id,
-                    'conector' => 'Type-C',
-                    'procesador' => 'Google Tensor',
-                    'cinco_g' => true,
-                    'camara_principal_mp' => 50,
-                    'camara_frontal_mp' => 10,
-                    'bateria_mah' => 4400,
-                    'pantalla_pulgadas' => 6.3,
-                    'hz_pantalla' => 90,
-                    'nfc' => true,
-                    'tipo_sim' => 'eSIM',
+                    'sistema_operativo_id' => $modelo['sistema_operativo_id'],
+                    'conector' => $modelo['conector'],
+                    'procesador' => $modelo['procesador'],
+                    'cinco_g' => $modelo['cinco_g'],
+                    'camara_principal_mp' => $modelo['camara_principal_mp'],
+                    'camara_frontal_mp' => $modelo['camara_frontal_mp'],
+                    'bateria_mah' => $modelo['bateria_mah'],
+                    'pantalla_pulgadas' => $modelo['pantalla_pulgadas'],
+                    'hz_pantalla' => $modelo['hz_pantalla'],
+                    'nfc' => $modelo['nfc'],
+                    'tipo_sim' => $modelo['tipo_sim'],
                 ]
             );
         }
