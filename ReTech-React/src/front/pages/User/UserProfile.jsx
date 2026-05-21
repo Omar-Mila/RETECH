@@ -120,6 +120,7 @@ export default function UserProfile() {
       setVerifyToast("invalid");
       navigate("/perfil", { replace: true });
     }
+
   }, []);
 
   const [form, setForm] = useState({

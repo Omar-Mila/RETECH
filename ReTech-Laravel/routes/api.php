@@ -99,12 +99,15 @@ Route::middleware('auth:sanctum')->put('/user/cliente', function (Request $reque
         'telefono'  => 'nullable|string|max:20',
     ]);
 
+    // Convertir strings vacíos a null para evitar conflictos de unicidad en NIF
+    $cleaned = array_map(fn($v) => $v === '' ? null : $v, $data);
+
     $user->cliente()->updateOrCreate(
         ['user_id' => $user->id],
-        $data
+        $cleaned
     );
 
-    return $user->load('cliente');
+    return response()->json($user->load('cliente'));
 });
 
 Route::post('/register', [RegisterController::class, 'store']);
@@ -127,7 +130,7 @@ Route::middleware(['web'])->get('/verify-email/{token}', function (string $token
     Auth::login($user);
     $request->session()->regenerate();
 
-    return redirect($frontendUrl . '/perfil?verified=1');
+    return redirect($frontendUrl . '/verificado');
 });
 
 Route::get('/products/search', [ProductosController::class, 'search']);

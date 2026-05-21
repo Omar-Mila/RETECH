@@ -91,7 +91,7 @@ class CarritoApiController extends Controller
     {
         if (empty($carrito)) return [];
 
-        $moviles = Movil::with(['modelo.marca', 'color'])
+        $moviles = Movil::with(['modelo.marca', 'modelo.images', 'color'])
             ->whereIn('id', array_keys($carrito))
             ->get()
             ->keyBy('id');
@@ -115,6 +115,9 @@ class CarritoApiController extends Controller
                 'salud_bateria'  => $movil->salud_bateria,
                 'stock'          => $movil->stock,
                 'subtotal'       => round($precio * $row['cantidad'], 2),
+                'imagen_url'     => $movil->modelo?->images
+                                        ?->firstWhere('color_id', $movil->color_id)?->path
+                                        ?? $movil->modelo?->images?->first()?->path,
             ];
         }
         return $items;
