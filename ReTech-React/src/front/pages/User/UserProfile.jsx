@@ -1,48 +1,34 @@
-import { useState, useEffect, useRef } from "react";
-import { useAuth } from "../../../auth/AuthContext";
+import { useState, useEffect } from "react";
+import { useAutenticacion } from "../../../auth/AuthContext";
 import { useNavigate, useLocation } from "react-router-dom";
-import { getCurrentUser } from "../../../auth/authService";
+import { obtenerUsuarioActual } from "../../../auth/authService";
 import Navbar from "../../components/Navbar";
 import Footer from "../../components/Footer";
-import { useLanguage } from "../../context/LanguageContext";
+import { useIdioma } from "../../context/LanguageContext";
 
-// Fuera del componente para evitar re-renders que quitan el focus
-const ReadField = ({ label, value }) => (
+const CampoLectura = ({ label, value }) => (
   <section>
-    <label style={{ fontSize: 11, color: "#94a3b8", textTransform: "uppercase", fontWeight: 800, letterSpacing: "0.05em" }}>
-      {label}
-    </label>
-    <div style={{
-      marginTop: 6, padding: "12px 16px", background: "#f8fafc",
-      borderRadius: 12, border: "1px solid #f1f5f9",
-      fontSize: 15, fontWeight: 600, color: value ? "#1e293b" : "#cbd5e1"
-    }}>
+    <label className="campo-etiq">{label}</label>
+    <div className={`campo-lectura${value ? "" : " vacio"}`}>
       {value || "—"}
     </div>
   </section>
 );
 
-const EditField = ({ label, name, value, onChange }) => (
+const CampoEdicion = ({ label, name, value, onChange }) => (
   <section>
-    <label style={{ fontSize: 11, color: "#94a3b8", textTransform: "uppercase", fontWeight: 800, letterSpacing: "0.05em" }}>
-      {label}
-    </label>
+    <label className="campo-etiq">{label}</label>
     <input
       type="text"
       name={name}
       value={value}
       onChange={onChange}
-      style={{
-        display: "block", marginTop: 6, padding: "12px 16px", width: "100%",
-        boxSizing: "border-box", background: "#fff", borderRadius: 12,
-        border: "1px solid #6366f1", fontSize: 15, fontWeight: 600,
-        color: "#1e293b", outline: "none"
-      }}
+      className="campo-input"
     />
   </section>
 );
 
-const COUNTRIES = [
+const PAISES = [
   { code: 'ES', label: 'España' },
   { code: 'PT', label: 'Portugal' },
   { code: 'FR', label: 'Francia' },
@@ -59,116 +45,100 @@ const COUNTRIES = [
   { code: 'US', label: 'Estados Unidos' },
 ];
 
-const getCountryLabel = (code) => COUNTRIES.find(c => c.code === code)?.label ?? code ?? "—";
+const etiqPais = (code) => PAISES.find(p => p.code === code)?.label ?? code ?? "—";
 
-const EditSelect = ({ label, name, value, onChange }) => (
+const SelectEdicion = ({ label, name, value, onChange }) => (
   <section>
-    <label style={{ fontSize: 11, color: "#94a3b8", textTransform: "uppercase", fontWeight: 800, letterSpacing: "0.05em" }}>
-      {label}
-    </label>
+    <label className="campo-etiq">{label}</label>
     <select
       name={name}
       value={value}
       onChange={onChange}
-      style={{
-        display: "block", marginTop: 6, padding: "12px 16px", width: "100%",
-        boxSizing: "border-box", background: "#fff", borderRadius: 12,
-        border: "1px solid #6366f1", fontSize: 15, fontWeight: 600,
-        color: value ? "#1e293b" : "#94a3b8", outline: "none", cursor: "pointer",
-      }}
+      className={`campo-select${value ? " tiene-valor" : ""}`}
     >
       <option value="">— Selecciona país —</option>
-      {COUNTRIES.map(c => (
-        <option key={c.code} value={c.code}>{c.label}</option>
+      {PAISES.map(p => (
+        <option key={p.code} value={p.code}>{p.label}</option>
       ))}
     </select>
   </section>
 );
 
-const SectionTitle = ({ color = "#6366f1", children }) => (
-  <h2 style={{
-    fontSize: 12, fontWeight: 800, color,
-    textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: 16, marginTop: 0
-  }}>
+const TituloSeccion = ({ color = "#6366f1", children }) => (
+  <h2 className="seccion-titulo" style={{ color }}>
     {children}
   </h2>
 );
 
-function VerifiedBadge({ verified, label }) {
+function BadgeVerificado({ verified, label }) {
   return (
-    <span style={{
-      display: "inline-flex", alignItems: "center", gap: 4,
-      fontSize: 11, fontWeight: 700, padding: "3px 8px", borderRadius: 20,
-      background: verified ? "#dbeafe" : "#fef3c7",
-      color: verified ? "#1d4ed8" : "#92400e",
-    }}>
+    <span className={`badge-verif${verified ? " verificado" : " pendiente"}`}>
       {verified ? "✓" : "!"} {label}
     </span>
   );
 }
 
 export default function UserProfile() {
-  const { user, setUser } = useAuth();
-  const { t } = useLanguage();
-  const location = useLocation();
-  const navigate = useNavigate();
+  const { user, setUser } = useAutenticacion();
+  const { t } = useIdioma();
+  const ubicacion = useLocation();
+  const navegar = useNavigate();
   const cliente = user?.cliente;
 
-  const [editing, setEditing] = useState(false);
-  const [saving, setSaving] = useState(false);
-  const [error, setError] = useState("");
-  const [verifyToast, setVerifyToast] = useState(null);
-  const [resending, setResending] = useState(false);
-  const [resendMsg, setResendMsg] = useState(null);
+  const [editando, fijarEditando] = useState(false);
+  const [guardando, fijarGuardando] = useState(false);
+  const [error, fijarError] = useState("");
+  const [toastVerif, fijarToastVerif] = useState(null);
+  const [reenviando, fijarReenviando] = useState(false);
+  const [msgReenvio, fijarMsgReenvio] = useState(null);
 
-  const handleResendVerification = async () => {
-    setResending(true);
-    setResendMsg(null);
+  const reenviarVerificacion = async () => {
+    fijarReenviando(true);
+    fijarMsgReenvio(null);
     try {
-      const csrfToken = document.cookie
+      const tokenXsrf = document.cookie
         .split("; ")
-        .find(row => row.startsWith("XSRF-TOKEN="))
+        .find(fila => fila.startsWith("XSRF-TOKEN="))
         ?.split("=")[1];
 
       const res = await fetch("/api/resend-verification", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          "X-XSRF-TOKEN": decodeURIComponent(csrfToken || ""),
+          "X-XSRF-TOKEN": decodeURIComponent(tokenXsrf || ""),
         },
         credentials: "include",
         body: JSON.stringify({ lang: localStorage.getItem("retech-lang") || "es" }),
       });
-      const data = await res.json();
-      if (res.ok && data.message !== "error") {
-        setResendMsg("success");
+      const respData = await res.json();
+      if (res.ok && respData.message !== "error") {
+        fijarMsgReenvio("success");
       } else {
-        setResendMsg("error");
+        fijarMsgReenvio("error");
       }
     } catch {
-      setResendMsg("error");
+      fijarMsgReenvio("error");
     } finally {
-      setResending(false);
+      fijarReenviando(false);
     }
   };
 
   useEffect(() => {
-    const params = new URLSearchParams(location.search);
-    const verified = params.get("verified");
-    if (verified === "1") {
-      setVerifyToast("success");
-      navigate("/perfil", { replace: true });
-      getCurrentUser().then(fresh => { if (fresh) setUser(fresh); });
-    } else if (verified === "invalid") {
-      setVerifyToast("invalid");
-      navigate("/perfil", { replace: true });
+    const params = new URLSearchParams(ubicacion.search);
+    const verificado = params.get("verified");
+    if (verificado === "1") {
+      fijarToastVerif("success");
+      navegar("/perfil", { replace: true });
+      obtenerUsuarioActual().then(fresco => { if (fresco) setUser(fresco); });
+    } else if (verificado === "invalid") {
+      fijarToastVerif("invalid");
+      navegar("/perfil", { replace: true });
     }
-
   }, []);
 
-  const [cpStatus, setCpStatus] = useState(null); // null | 'loading' | 'valid' | 'invalid'
+  const [estadoCp, fijarEstadoCp] = useState(null);
 
-  const [form, setForm] = useState({
+  const [datos, fijarDatos] = useState({
     nombre:        user?.cliente?.nombre        || "",
     apellidos:     user?.cliente?.apellidos     || "",
     nif:           user?.cliente?.nif           || "",
@@ -176,12 +146,13 @@ export default function UserProfile() {
     provincia:     user?.cliente?.provincia     || "",
     municipio:     user?.cliente?.municipio     || "",
     codigo_postal: user?.cliente?.codigo_postal || "",
+    calle:         user?.cliente?.calle         || "",
     telefono:      user?.cliente?.telefono      || "",
   });
 
   useEffect(() => {
     if (user?.cliente) {
-      setForm({
+      fijarDatos({
         nombre:        user.cliente.nombre        || "",
         apellidos:     user.cliente.apellidos     || "",
         nif:           user.cliente.nif           || "",
@@ -189,87 +160,87 @@ export default function UserProfile() {
         provincia:     user.cliente.provincia     || "",
         municipio:     user.cliente.municipio     || "",
         codigo_postal: user.cliente.codigo_postal || "",
+        calle:         user.cliente.calle         || "",
         telefono:      user.cliente.telefono      || "",
       });
     }
   }, [user]);
 
-  // Validar código postal vía Zippopotam.us cuando cambie el CP o el país
   useEffect(() => {
-    if (!editing) return;
-    const cp = form.codigo_postal?.trim();
-    const pais = form.pais?.trim();
-    if (!cp || cp.length < 4 || !pais) { setCpStatus(null); return; }
+    if (!editando) return;
+    const cp = datos.codigo_postal?.trim();
+    const pais = datos.pais?.trim();
+    if (!cp || cp.length < 4 || !pais) { fijarEstadoCp(null); return; }
 
-    setCpStatus('loading');
-    const timer = setTimeout(async () => {
+    fijarEstadoCp('loading');
+    const temporizador = setTimeout(async () => {
       try {
         const res = await fetch(`https://api.zippopotam.us/${pais}/${cp}`);
-        if (!res.ok) { setCpStatus('invalid'); return; }
-        const data = await res.json();
-        const place = data.places?.[0];
-        if (place) {
-          setCpStatus('valid');
-          setForm(prev => ({
+        if (!res.ok) { fijarEstadoCp('invalid'); return; }
+        const lugar = await res.json();
+        const sitio = lugar.places?.[0];
+        if (sitio) {
+          fijarEstadoCp('valid');
+          fijarDatos(prev => ({
             ...prev,
-            municipio: place['place name'] || prev.municipio,
-            provincia: place.state || prev.provincia,
+            municipio: sitio['place name'] || prev.municipio,
+            provincia: sitio.state || prev.provincia,
           }));
         } else {
-          setCpStatus('invalid');
+          fijarEstadoCp('invalid');
         }
       } catch {
-        setCpStatus(null);
+        fijarEstadoCp(null);
       }
     }, 600);
-    return () => clearTimeout(timer);
-  }, [form.codigo_postal, form.pais, editing]);
+    return () => clearTimeout(temporizador);
+  }, [datos.codigo_postal, datos.pais, editando]);
 
-  const handleChange = (e) => {
-    setForm(prev => ({ ...prev, [e.target.name]: e.target.value }));
+  const alCambiar = (e) => {
+    fijarDatos(prev => ({ ...prev, [e.target.name]: e.target.value }));
   };
 
-  const handleSave = async () => {
-    setSaving(true);
-    setError("");
+  const guardar = async () => {
+    fijarGuardando(true);
+    fijarError("");
     try {
-      const csrfToken = document.cookie
+      const tokenXsrf = document.cookie
         .split("; ")
-        .find(row => row.startsWith("XSRF-TOKEN="))
+        .find(fila => fila.startsWith("XSRF-TOKEN="))
         ?.split("=")[1];
 
       const res = await fetch("/api/user/cliente", {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",
-          "X-XSRF-TOKEN": decodeURIComponent(csrfToken || ""),
+          "X-XSRF-TOKEN": decodeURIComponent(tokenXsrf || ""),
         },
         credentials: "include",
-        body: JSON.stringify(form),
+        body: JSON.stringify(datos),
       });
 
-      const data = await res.json();
+      const respData = await res.json();
 
       if (!res.ok) {
-        if (data.errors?.nif) {
-          setError(t('profile.nifDuplicate'));
+        if (respData.errors?.nif) {
+          fijarError(t('profile.nifDuplicate'));
         } else {
-          setError(t('profile.saveError'));
+          fijarError(t('profile.saveError'));
         }
         return;
       }
 
-      setUser(data);
-      setEditing(false);
+      setUser(respData);
+      fijarEditando(false);
     } catch {
-      setError(t('profile.saveError'));
+      fijarError(t('profile.saveError'));
     } finally {
-      setSaving(false);
+      fijarGuardando(false);
     }
   };
 
-  const handleCancel = () => {
-    setForm({
+  const cancelar = () => {
+    fijarDatos({
       nombre:        cliente?.nombre        || "",
       apellidos:     cliente?.apellidos     || "",
       nif:           cliente?.nif           || "",
@@ -277,118 +248,188 @@ export default function UserProfile() {
       provincia:     cliente?.provincia     || "",
       municipio:     cliente?.municipio     || "",
       codigo_postal: cliente?.codigo_postal || "",
+      calle:         cliente?.calle         || "",
       telefono:      cliente?.telefono      || "",
     });
-    setCpStatus(null);
-    setEditing(false);
-    setError("");
+    fijarEstadoCp(null);
+    fijarEditando(false);
+    fijarError("");
   };
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <Navbar />
-      <div style={{ maxWidth: 900, margin: "60px auto", padding: "0 20px" }}>
+      <style>{`
+        .campo-etiq {
+          font-size: 11px;
+          color: #94a3b8;
+          text-transform: uppercase;
+          font-weight: 800;
+          letter-spacing: 0.05em;
+        }
+        .campo-lectura {
+          margin-top: 6px;
+          padding: 12px 16px;
+          background: #f8fafc;
+          border-radius: 12px;
+          border: 1px solid #f1f5f9;
+          font-size: 15px;
+          font-weight: 600;
+          color: #1e293b;
+        }
+        .campo-lectura.vacio { color: #cbd5e1; }
+        .campo-input {
+          display: block;
+          margin-top: 6px;
+          padding: 12px 16px;
+          width: 100%;
+          box-sizing: border-box;
+          background: #fff;
+          border-radius: 12px;
+          border: 1px solid #6366f1;
+          font-size: 15px;
+          font-weight: 600;
+          color: #1e293b;
+          outline: none;
+        }
+        .campo-select {
+          display: block;
+          margin-top: 6px;
+          padding: 12px 16px;
+          width: 100%;
+          box-sizing: border-box;
+          background: #fff;
+          border-radius: 12px;
+          border: 1px solid #6366f1;
+          font-size: 15px;
+          font-weight: 600;
+          color: #94a3b8;
+          outline: none;
+          cursor: pointer;
+        }
+        .campo-select.tiene-valor { color: #1e293b; }
+        .seccion-titulo {
+          font-size: 12px;
+          font-weight: 800;
+          text-transform: uppercase;
+          letter-spacing: 0.08em;
+          margin-bottom: 16px;
+          margin-top: 0;
+        }
+        .badge-verif {
+          display: inline-flex;
+          align-items: center;
+          gap: 4px;
+          font-size: 11px;
+          font-weight: 700;
+          padding: 3px 8px;
+          border-radius: 20px;
+        }
+        .badge-verif.verificado { background: #dbeafe; color: #1d4ed8; }
+        .badge-verif.pendiente  { background: #fef3c7; color: #92400e; }
+        .toast-verif {
+          margin-bottom: 20px;
+          padding: 14px 20px;
+          border-radius: 12px;
+          font-weight: 600;
+          font-size: 14px;
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+        }
+        .toast-verif.exito { background: #dcfce7; color: #15803d; border: 1px solid #bbf7d0; }
+        .toast-verif.invalido { background: #fef3c7; color: #92400e; border: 1px solid #fde68a; }
+        .btn-cerrar-toast { background: none; border: none; cursor: pointer; font-size: 16px; color: inherit; padding: 0 4px; }
+        #perfil-wrap { max-width: 900px; margin: 60px auto; padding: 0 20px; }
+        #perfil-cab { text-align: center; margin-bottom: 32px; }
+        #perfil-avatar { width: 80px; height: 80px; background: #f1f5f9; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 16px; }
+        #perfil-avatar-icono { font-size: 32px; }
+        #perfil-titulo { margin: 0; font-size: 24px; font-weight: 800; color: #0f172a; display: flex; align-items: center; justify-content: center; gap: 8px; }
+        #perfil-verif-icono { display: inline-flex; align-items: center; justify-content: center; width: 26px; height: 26px; border-radius: 50%; background: #3b82f6; color: #fff; font-size: 14px; font-weight: 900; flex-shrink: 0; }
+        #perfil-verif-texto { margin: 6px 0 0; font-size: 13px; color: #3b82f6; font-weight: 600; }
+        #perfil-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; align-items: start; }
+        .perfil-tarjeta { background: #fff; padding: 32px; border-radius: 24px; border: 1px solid #e2e8f0; box-shadow: 0 4px 20px rgba(0, 0, 0, 0.03); }
+        .perfil-campos { display: flex; flex-direction: column; gap: 16px; }
+        .email-fila { display: flex; align-items: center; justify-content: space-between; margin-bottom: 6px; }
+        .btn-reenviar { font-size: 12px; font-weight: 700; padding: 7px 14px; border-radius: 8px; border: 1px solid #e2e8f0; cursor: pointer; transition: all 0.2s; }
+        .btn-reenviar.exito { background: #f0fdf4; color: #15803d; cursor: default; }
+        .btn-reenviar.normal { background: #fff; color: #6366f1; }
+        .btn-reenviar.enviando { opacity: 0.7; }
+        .resend-wrap { margin-top: 10px; }
+        .btn-reenviar-error { margin: 6px 0 0; font-size: 12px; color: #ef4444; }
+        .perfil-der-cab { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; }
+        .btn-editar { font-size: 12px; font-weight: 700; color: #6366f1; background: #eef2ff; border: none; border-radius: 8px; padding: 6px 14px; cursor: pointer; margin-bottom: 16px; }
+        .perfil-error { color: #ef4444; font-size: 13px; margin-bottom: 12px; }
+        .cp-estado { margin: 3px 0 0; font-size: 11px; }
+        .cp-validando { color: #6366f1; }
+        .cp-valido    { color: #22c55e; }
+        .cp-invalido  { color: #ef4444; }
+        .perfil-botones { display: flex; gap: 10px; margin-top: 4px; }
+        .btn-guardar { flex: 1; background: #10b981; color: #fff; border: none; border-radius: 10px; padding: 11px 0; font-weight: 700; font-size: 14px; }
+        .btn-guardar.guardando { cursor: not-allowed; opacity: 0.7; }
+        .btn-guardar:not(.guardando) { cursor: pointer; }
+        .btn-cancelar { flex: 1; background: #f1f5f9; color: #64748b; border: none; border-radius: 10px; padding: 11px 0; font-weight: 700; font-size: 14px; cursor: pointer; }
+      `}</style>
 
-        {/* Toast verificación */}
-        {verifyToast && (
-          <div style={{
-            marginBottom: 20, padding: "14px 20px", borderRadius: 12, fontWeight: 600, fontSize: 14,
-            display: "flex", alignItems: "center", justifyContent: "space-between",
-            background: verifyToast === "success" ? "#dcfce7" : "#fef3c7",
-            color: verifyToast === "success" ? "#15803d" : "#92400e",
-            border: `1px solid ${verifyToast === "success" ? "#bbf7d0" : "#fde68a"}`,
-          }}>
+      <Navbar />
+      <div id="perfil-wrap">
+
+        {toastVerif && (
+          <div className={`toast-verif${toastVerif === "success" ? " exito" : " invalido"}`}>
             <span>
-              {verifyToast === "success" ? "✓ " : "! "}
-              {verifyToast === "success" ? t('profile.verifiedSuccess') : t('profile.verifiedInvalid')}
+              {toastVerif === "success" ? "✓ " : "! "}
+              {toastVerif === "success" ? t('profile.verifiedSuccess') : t('profile.verifiedInvalid')}
             </span>
-            <button
-              onClick={() => setVerifyToast(null)}
-              style={{ background: "none", border: "none", cursor: "pointer", fontSize: 16, color: "inherit", padding: "0 4px" }}
-            >
-              ×
-            </button>
+            <button className="btn-cerrar-toast" onClick={() => fijarToastVerif(null)}>×</button>
           </div>
         )}
 
-        {/* Cabecera */}
-        <div style={{ textAlign: "center", marginBottom: 32 }}>
-          <div style={{
-            width: 80, height: 80, background: "#f1f5f9", borderRadius: "50%",
-            display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto 16px"
-          }}>
-            <span style={{ fontSize: 32 }}>👤</span>
+        <div id="perfil-cab">
+          <div id="perfil-avatar">
+            <span id="perfil-avatar-icono">👤</span>
           </div>
-          <h1 style={{ margin: 0, fontSize: 24, fontWeight: 800, color: "#0f172a", display: "flex", alignItems: "center", justifyContent: "center", gap: 8 }}>
+          <h1 id="perfil-titulo">
             {t('profile.title')}
             {user?.email_verified_at && (
-              <span title={t('profile.verifiedAccount')} style={{
-                display: "inline-flex", alignItems: "center", justifyContent: "center",
-                width: 26, height: 26, borderRadius: "50%", background: "#3b82f6",
-                color: "#fff", fontSize: 14, fontWeight: 900, flexShrink: 0
-              }}>✓</span>
+              <span id="perfil-verif-icono" title={t('profile.verifiedAccount')}>✓</span>
             )}
           </h1>
           {user?.email_verified_at && (
-            <p style={{ margin: "6px 0 0", fontSize: 13, color: "#3b82f6", fontWeight: 600 }}>
-              {t('profile.verifiedAccount')}
-            </p>
+            <p id="perfil-verif-texto">{t('profile.verifiedAccount')}</p>
           )}
         </div>
 
-        {/* Dos columnas */}
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 24, alignItems: "start" }}>
+        <div id="perfil-grid">
 
-          {/* Izquierda — solo lectura */}
-          <div style={{
-            background: "#fff", padding: 32, borderRadius: 24,
-            border: "1px solid #e2e8f0", boxShadow: "0 4px 20px rgba(0,0,0,0.03)"
-          }}>
-            <SectionTitle>{t('profile.account')}</SectionTitle>
-            <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
-              <ReadField label={t('profile.username')} value={user?.name} />
+          <div className="perfil-tarjeta">
+            <TituloSeccion>{t('profile.account')}</TituloSeccion>
+            <div className="perfil-campos">
+              <CampoLectura label={t('profile.username')} value={user?.name} />
               <section>
-                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 6 }}>
-                  <label style={{ fontSize: 11, color: "#94a3b8", textTransform: "uppercase", fontWeight: 800, letterSpacing: "0.05em" }}>
-                    {t('profile.email')}
-                  </label>
-                  <VerifiedBadge
+                <div className="email-fila">
+                  <label className="campo-etiq">{t('profile.email')}</label>
+                  <BadgeVerificado
                     verified={!!user?.email_verified_at}
                     label={user?.email_verified_at ? t('profile.verified') : t('profile.notVerified')}
                   />
                 </div>
-                <div style={{
-                  padding: "12px 16px", background: "#f8fafc",
-                  borderRadius: 12, border: "1px solid #f1f5f9",
-                  fontSize: 15, fontWeight: 600, color: user?.email ? "#1e293b" : "#cbd5e1"
-                }}>
+                <div className={`campo-lectura${user?.email ? "" : " vacio"}`}>
                   {user?.email || "—"}
                 </div>
                 {!user?.email_verified_at && (
-                  <div style={{ marginTop: 10 }}>
+                  <div className="resend-wrap">
                     <button
-                      onClick={handleResendVerification}
-                      disabled={resending || resendMsg === "success"}
-                      style={{
-                        fontSize: 12, fontWeight: 700, padding: "7px 14px",
-                        borderRadius: 8, border: "1px solid #e2e8f0",
-                        background: resendMsg === "success" ? "#f0fdf4" : "#fff",
-                        color: resendMsg === "success" ? "#15803d" : "#6366f1",
-                        cursor: (resending || resendMsg === "success") ? "default" : "pointer",
-                        opacity: resending ? 0.7 : 1,
-                        transition: "all 0.2s",
-                      }}
+                      onClick={reenviarVerificacion}
+                      disabled={reenviando || msgReenvio === "success"}
+                      className={`btn-reenviar${msgReenvio === "success" ? " exito" : " normal"}${reenviando ? " enviando" : ""}`}
                     >
-                      {resending
+                      {reenviando
                         ? t('profile.resendingSending')
-                        : resendMsg === "success"
+                        : msgReenvio === "success"
                           ? "✓ " + t('profile.resendSent')
                           : t('profile.resendVerification')}
                     </button>
-                    {resendMsg === "error" && (
-                      <p style={{ margin: "6px 0 0", fontSize: 12, color: "#ef4444" }}>
-                        {t('profile.resendError')}
-                      </p>
+                    {msgReenvio === "error" && (
+                      <p className="btn-reenviar-error">{t('profile.resendError')}</p>
                     )}
                   </div>
                 )}
@@ -396,83 +437,60 @@ export default function UserProfile() {
             </div>
           </div>
 
-          {/* Derecha — editable */}
-          <div style={{
-            background: "#fff", padding: 32, borderRadius: 24,
-            border: "1px solid #e2e8f0", boxShadow: "0 4px 20px rgba(0,0,0,0.03)"
-          }}>
-            {/* Título + botón editar */}
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
-              <SectionTitle color="#10b981">{t('profile.personalData')}</SectionTitle>
-              {!editing && (
-                <button
-                  onClick={() => setEditing(true)}
-                  style={{
-                    fontSize: 12, fontWeight: 700, color: "#6366f1",
-                    background: "#eef2ff", border: "none", borderRadius: 8,
-                    padding: "6px 14px", cursor: "pointer", marginBottom: 16
-                  }}
-                >
+          <div className="perfil-tarjeta">
+            <div className="perfil-der-cab">
+              <TituloSeccion color="#10b981">{t('profile.personalData')}</TituloSeccion>
+              {!editando && (
+                <button className="btn-editar" onClick={() => fijarEditando(true)}>
                   {t('profile.edit')}
                 </button>
               )}
             </div>
 
-            {error && <p style={{ color: "#ef4444", fontSize: 13, marginBottom: 12 }}>{error}</p>}
+            {error && <p className="perfil-error">{error}</p>}
 
-            <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
-              {editing ? (
+            <div className="perfil-campos">
+              {editando ? (
                 <>
-                  <EditField label={t('profile.name')}         name="nombre"        value={form.nombre}        onChange={handleChange} />
-                  <EditField label={t('profile.surnames')}     name="apellidos"     value={form.apellidos}     onChange={handleChange} />
-                  <EditField label={t('profile.nif')}          name="nif"           value={form.nif}           onChange={handleChange} />
-                  <EditSelect label={t('profile.pais')}        name="pais"          value={form.pais}          onChange={handleChange} />
+                  <CampoEdicion label={t('profile.name')}         name="nombre"        value={datos.nombre}        onChange={alCambiar} />
+                  <CampoEdicion label={t('profile.surnames')}     name="apellidos"     value={datos.apellidos}     onChange={alCambiar} />
+                  <CampoEdicion label={t('profile.nif')}          name="nif"           value={datos.nif}           onChange={alCambiar} />
+                  <SelectEdicion label={t('profile.pais')}        name="pais"          value={datos.pais}          onChange={alCambiar} />
                   <div>
-                    <EditField label={t('profile.codigoPostal')} name="codigo_postal" value={form.codigo_postal} onChange={handleChange} />
-                    {cpStatus === 'loading' && <p style={{ margin: "3px 0 0", fontSize: 11, color: "#6366f1" }}>Validando…</p>}
-                    {cpStatus === 'valid'   && <p style={{ margin: "3px 0 0", fontSize: 11, color: "#22c55e" }}>✓ Código postal válido</p>}
-                    {cpStatus === 'invalid' && <p style={{ margin: "3px 0 0", fontSize: 11, color: "#ef4444" }}>{t('cart.profileCpNotFound')}</p>}
+                    <CampoEdicion label={t('profile.codigoPostal')} name="codigo_postal" value={datos.codigo_postal} onChange={alCambiar} />
+                    {estadoCp === 'loading' && <p className="cp-estado cp-validando">Validando…</p>}
+                    {estadoCp === 'valid'   && <p className="cp-estado cp-valido">✓ Código postal válido</p>}
+                    {estadoCp === 'invalid' && <p className="cp-estado cp-invalido">{t('cart.profileCpNotFound')}</p>}
                   </div>
-                  <EditField label={t('profile.provincia')}    name="provincia"     value={form.provincia}     onChange={handleChange} />
-                  <EditField label={t('profile.municipio')}    name="municipio"     value={form.municipio}     onChange={handleChange} />
-                  <EditField label={t('profile.phone')}        name="telefono"      value={form.telefono}      onChange={handleChange} />
+                  <CampoEdicion label={t('profile.provincia')}    name="provincia"     value={datos.provincia}     onChange={alCambiar} />
+                  <CampoEdicion label={t('profile.municipio')}    name="municipio"     value={datos.municipio}     onChange={alCambiar} />
+                  <CampoEdicion label={t('profile.calle')}        name="calle"         value={datos.calle}         onChange={alCambiar} />
+                  <CampoEdicion label={t('profile.phone')}        name="telefono"      value={datos.telefono}      onChange={alCambiar} />
 
-                  <div style={{ display: "flex", gap: 10, marginTop: 4 }}>
+                  <div className="perfil-botones">
                     <button
-                      onClick={handleSave}
-                      disabled={saving}
-                      style={{
-                        flex: 1, background: "#10b981", color: "#fff", border: "none",
-                        borderRadius: 10, padding: "11px 0", fontWeight: 700,
-                        fontSize: 14, cursor: saving ? "not-allowed" : "pointer",
-                        opacity: saving ? 0.7 : 1
-                      }}
+                      onClick={guardar}
+                      disabled={guardando}
+                      className={`btn-guardar${guardando ? " guardando" : ""}`}
                     >
-                      {saving ? t('profile.saving') : t('profile.save')}
+                      {guardando ? t('profile.saving') : t('profile.save')}
                     </button>
-                    <button
-                      onClick={handleCancel}
-                      disabled={saving}
-                      style={{
-                        flex: 1, background: "#f1f5f9", color: "#64748b", border: "none",
-                        borderRadius: 10, padding: "11px 0", fontWeight: 700,
-                        fontSize: 14, cursor: "pointer"
-                      }}
-                    >
+                    <button onClick={cancelar} disabled={guardando} className="btn-cancelar">
                       {t('profile.cancel')}
                     </button>
                   </div>
                 </>
               ) : (
                 <>
-                  <ReadField label={t('profile.name')}         value={cliente?.nombre} />
-                  <ReadField label={t('profile.surnames')}     value={cliente?.apellidos} />
-                  <ReadField label={t('profile.nif')}          value={cliente?.nif} />
-                  <ReadField label={t('profile.pais')}         value={getCountryLabel(cliente?.pais)} />
-                  <ReadField label={t('profile.codigoPostal')} value={cliente?.codigo_postal} />
-                  <ReadField label={t('profile.provincia')}    value={cliente?.provincia} />
-                  <ReadField label={t('profile.municipio')}    value={cliente?.municipio} />
-                  <ReadField label={t('profile.phone')}        value={cliente?.telefono} />
+                  <CampoLectura label={t('profile.name')}         value={cliente?.nombre} />
+                  <CampoLectura label={t('profile.surnames')}     value={cliente?.apellidos} />
+                  <CampoLectura label={t('profile.nif')}          value={cliente?.nif} />
+                  <CampoLectura label={t('profile.pais')}         value={etiqPais(cliente?.pais)} />
+                  <CampoLectura label={t('profile.codigoPostal')} value={cliente?.codigo_postal} />
+                  <CampoLectura label={t('profile.provincia')}    value={cliente?.provincia} />
+                  <CampoLectura label={t('profile.municipio')}    value={cliente?.municipio} />
+                  <CampoLectura label={t('profile.calle')}        value={cliente?.calle} />
+                  <CampoLectura label={t('profile.phone')}        value={cliente?.telefono} />
                 </>
               )}
             </div>

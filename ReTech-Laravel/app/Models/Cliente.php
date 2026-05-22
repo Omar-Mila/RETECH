@@ -28,6 +28,7 @@ class Cliente extends Model
         'provincia',
         'municipio',
         'codigo_postal',
+        'calle',
         'telefono',
     ];
 

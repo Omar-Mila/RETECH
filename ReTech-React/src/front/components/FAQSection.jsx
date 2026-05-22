@@ -1,14 +1,14 @@
 import { useState } from "react";
 import { ChevronDownIcon } from "@heroicons/react/24/outline";
-import { useLanguage } from "../context/LanguageContext";
+import { useIdioma } from "../context/LanguageContext";
 
 export default function FAQSection() {
-  const { t } = useLanguage();
-  const faqs = t('faq.items');
-  const [openIndex, setOpenIndex] = useState(null);
+  const { t } = useIdioma();
+  const preguntas = t('faq.items');
+  const [indiceAbierto, fijarIndiceAbierto] = useState(null);
 
-  const toggle = (index) => {
-    setOpenIndex(openIndex === index ? null : index);
+  const alternar = (indice) => {
+    fijarIndiceAbierto(indiceAbierto === indice ? null : indice);
   };
 
   return (
@@ -19,29 +19,29 @@ export default function FAQSection() {
         </h2>
 
         <div className="space-y-4">
-          {faqs.map((item, index) => (
+          {preguntas.map((elemento, indice) => (
             <div
-              key={index}
+              key={indice}
               className="bg-white rounded-xl border border-gray-100"
             >
               <button
-                onClick={() => toggle(index)}
+                onClick={() => alternar(indice)}
                 className="w-full flex justify-between items-center p-6 text-left"
               >
                 <span className="font-semibold">
-                  {item.q}
+                  {elemento.q}
                 </span>
 
                 <ChevronDownIcon
                   className={`w-5 h-5 transition-transform ${
-                    openIndex === index ? "rotate-180" : ""
+                    indiceAbierto === indice ? "rotate-180" : ""
                   }`}
                 />
               </button>
 
-              {openIndex === index && (
+              {indiceAbierto === indice && (
                 <div className="px-6 pb-6 text-gray-600">
-                  {item.a}
+                  {elemento.a}
                 </div>
               )}
             </div>

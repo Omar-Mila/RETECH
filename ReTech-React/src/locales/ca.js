@@ -48,6 +48,7 @@ const ca = {
     provincia: "Província",
     municipio: "Municipi",
     codigoPostal: "Codi Postal",
+    calle: "Carrer / Adreça",
     phone: "Telèfon",
     saveError: "Error en desar els canvis. Torna-ho a intentar.",
     nifDuplicate: "Aquest NIF ja està registrat amb un altre compte.",

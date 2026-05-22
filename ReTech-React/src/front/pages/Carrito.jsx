@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
-import { useAuth } from "../../auth/AuthContext";
-import { getGuestCart, setGuestCart, clearGuestCart } from "../../services/guestCart";
+import { useAutenticacion } from "../../auth/AuthContext";
+import { obtenerCarritoInvitado, guardarCarritoInvitado, limpiarCarritoInvitado } from "../../services/guestCart";
 import { loadStripe } from "@stripe/stripe-js";
 import {
   Elements,
@@ -11,52 +11,57 @@ import {
 } from "@stripe/react-stripe-js";
 import Navbar from "../components/Navbar";
 import Footer from "../components/Footer";
-import { useLanguage } from "../context/LanguageContext";
+import { useIdioma } from "../context/LanguageContext";
 
-const stripePromise = loadStripe("pk_test_51SehVv68Ge0SylH5spiVqLpHaRCt8s3RsIiwyPi2VINaXKBYxbhDyzF6YThlNyVb0WHAp16SnJ5plSMoMxswIy8S00lVuCfPjV");
+const promesaStripe = loadStripe("pk_test_51SehVv68Ge0SylH5spiVqLpHaRCt8s3RsIiwyPi2VINaXKBYxbhDyzF6YThlNyVb0WHAp16SnJ5plSMoMxswIy8S00lVuCfPjV");
 const API = "http://localhost:8000";
 
-const apiFetch = async (path, opts = {}) => {
-    if (opts.method && opts.method !== 'GET') {
+const llamarApi = async (ruta, opciones = {}) => {
+    if (opciones.method && opciones.method !== 'GET') {
         await fetch(`${API}/sanctum/csrf-cookie`, { credentials: "include" });
     }
-    const xsrfToken = document.cookie
+    const tokenXsrf = document.cookie
       .split("; ")
       .find(r => r.startsWith("XSRF-TOKEN="))
       ?.split("=")[1];
-    const response = await fetch(`${API}/api${path}`, {
+    const respuesta = await fetch(`${API}/api${ruta}`, {
       credentials: "include",
       headers: {
         "Content-Type": "application/json",
         "Accept": "application/json",
         "X-Requested-With": "XMLHttpRequest",
-        ...(xsrfToken ? { "X-XSRF-TOKEN": decodeURIComponent(xsrfToken) } : {}),
+        ...(tokenXsrf ? { "X-XSRF-TOKEN": decodeURIComponent(tokenXsrf) } : {}),
       },
-      ...opts,
+      ...opciones,
     });
 
-    // Si el servidor da error (401, 500, etc), lanzamos error antes de hacer .json()
-    if (!response.ok) {
-      const errorData = await response.json().catch(() => ({}));
-      throw new Error(errorData.message || `Error ${response.status}`);
+    if (!respuesta.ok) {
+      const datosError = await respuesta.json().catch(() => ({}));
+      throw new Error(datosError.message || `Error ${respuesta.status}`);
     }
 
-    return response.json();
+    return respuesta.json();
 };
 
-const fmt = (n) =>
+const fmtPrecio = (n) =>
   new Intl.NumberFormat("es-ES", { style: "currency", currency: "EUR" }).format(n);
 
-const ESTADO_BADGE = {
-  Excelente:   { bg: "#d1fae5", text: "#065f46" },
-  "Muy Bueno": { bg: "#dbeafe", text: "#1e40af" },
-  Bueno:       { bg: "#fef9c3", text: "#854d0e" },
-  Aceptable:   { bg: "#fee2e2", text: "#991b1b" },
+const ESTADO_CLASE = {
+  Excelente:   "est-excelente",
+  "Muy Bueno": "est-mbueno",
+  Bueno:       "est-bueno",
+  Aceptable:   "est-aceptable",
 };
 
-function PhoneIcon({ hex }) {
+function IconoMovil({ hex }) {
   return (
-    <div style={{ width:52,height:52,borderRadius:13,background:`${hex}22`,border:`2px solid ${hex}55`,display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0 }}>
+    <div
+      className="phone-icono"
+      style={{
+        background: `${hex}22`,
+        border: `2px solid ${hex}55`,
+      }}
+    >
       <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
         <rect x="6" y="2" width="12" height="20" rx="3" stroke={hex} strokeWidth="1.8"/>
         <circle cx="12" cy="18.5" r="1" fill={hex}/>
@@ -66,80 +71,89 @@ function PhoneIcon({ hex }) {
   );
 }
 
-function BatteryBar({ value }) {
-  const color = value >= 85 ? "#22c55e" : value >= 70 ? "#f59e0b" : "#ef4444";
+function BarraBateria({ valor }) {
+  const claseColor = valor >= 85 ? "bat-alta" : valor >= 70 ? "bat-media" : "bat-baja";
   return (
-    <div style={{ display:"flex",alignItems:"center",gap:5 }}>
-      <div style={{ width:34,height:7,background:"#e5e7eb",borderRadius:4,overflow:"hidden" }}>
-        <div style={{ width:`${value}%`,height:"100%",background:color,borderRadius:4,transition:"width .5s" }}/>
+    <div className="bat-wrap">
+      <div className="bat-fondo">
+        <div className={`bat-relleno ${claseColor}`} style={{ width: `${valor}%` }} />
       </div>
-      <span style={{ fontSize:10,color,fontWeight:700 }}>{value}%</span>
+      <span className={`bat-valor ${claseColor}`}>{valor}%</span>
     </div>
   );
 }
 
-function QtyBtn({ label, onClick, disabled }) {
+function BtnCantidad({ etiq, alClick, deshabilitado }) {
   return (
-    <button onClick={onClick} disabled={disabled}
-      style={{ width:30,height:30,border:"none",background:"none",cursor:disabled?"not-allowed":"pointer",fontSize:17,color:disabled?"#cbd5e1":"#475569",display:"flex",alignItems:"center",justifyContent:"center" }}>
-      {label}
+    <button
+      onClick={alClick}
+      disabled={deshabilitado}
+      className={`btn-cant${deshabilitado ? " deshabilitado" : ""}`}
+    >
+      {etiq}
     </button>
   );
 }
 
-function CartItem({ item, onRemove, onQty, disabled }) {
-  const badge = ESTADO_BADGE[item.estado] ?? ESTADO_BADGE["Bueno"];
+function ItemCarro({ art, alQuitar, alCant, deshabilitado }) {
+  const claseEstado = ESTADO_CLASE[art.estado] ?? ESTADO_CLASE["Bueno"];
   return (
-    <div style={{ display:"flex",gap:14,padding:"18px 0",borderBottom:"1px solid #f1f5f9" }}>
-      <div style={{ width:52,height:52,borderRadius:13,background:`${item.color_hex ?? "#94a3b8"}22`,border:`1.5px solid ${item.color_hex ?? "#94a3b8"}44`,display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0,overflow:"hidden",position:"relative" }}>
-        <PhoneIcon hex={item.color_hex ?? "#94a3b8"}/>
-        {item.imagen_url && (
-          <img src={item.imagen_url} alt={item.modelo}
-            style={{ position:"absolute",inset:0,width:"100%",height:"100%",objectFit:"contain",padding:4 }}
+    <div className="carro-item-fila">
+      <div
+        className="carro-item-thumb"
+        style={{
+          background: `${art.color_hex ?? "#94a3b8"}22`,
+          border: `1.5px solid ${art.color_hex ?? "#94a3b8"}44`,
+        }}
+      >
+        <IconoMovil hex={art.color_hex ?? "#94a3b8"} />
+        {art.imagen_url && (
+          <img src={art.imagen_url} alt={art.modelo}
+            className="carro-item-thumb-img"
             onError={e => { e.currentTarget.style.display = "none" }}
           />
         )}
       </div>
-      <div style={{ flex:1,minWidth:0 }}>
-        <div style={{ display:"flex",justifyContent:"space-between",alignItems:"flex-start",gap:8 }}>
+      <div className="carro-item-body">
+        <div className="carro-item-top">
           <div>
-            <p style={{ margin:0,fontWeight:700,fontSize:14.5,color:"#0f172a",fontFamily:"'Sora',sans-serif" }}>
-              {item.modelo}
-            </p>
-            <p style={{ margin:"2px 0 0",fontSize:12,color:"#64748b" }}>
-              {item.almacenamiento} GB · {item.ram} GB RAM ·{" "}
-              <span style={{ display:"inline-flex",alignItems:"center",gap:3 }}>
-                <span style={{ width:7,height:7,borderRadius:"50%",background:item.color_hex,display:"inline-block",border:"1px solid #cbd5e1" }}/>
-                {item.color}
+            <p className="carro-item-modelo">{art.modelo}</p>
+            <p className="carro-item-specs">
+              {art.almacenamiento} GB · {art.ram} GB RAM ·{" "}
+              <span className="carro-color-wrap">
+                <span
+                  className="carro-color-punto"
+                  style={{ background: art.color_hex }}
+                />
+                {art.color}
               </span>
             </p>
           </div>
-          <button onClick={() => !disabled && onRemove(item.movil_id)} disabled={disabled}
-            style={{ background:"none",border:"none",cursor:disabled?"not-allowed":"pointer",color:"#94a3b8",padding:3,lineHeight:1 }}
-            onMouseEnter={(e) => { if (!disabled) e.currentTarget.style.color = "#ef4444"; }}
-            onMouseLeave={(e) => { e.currentTarget.style.color = "#94a3b8"; }}>
+          <button
+            onClick={() => !deshabilitado && alQuitar(art.movil_id)}
+            disabled={deshabilitado}
+            className={`btn-quitar-item${deshabilitado ? " deshabilitado" : ""}`}
+          >
             <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2">
               <path d="M18 6L6 18M6 6l12 12"/>
             </svg>
           </button>
         </div>
 
-        <div style={{ display:"flex",alignItems:"center",gap:8,marginTop:7 }}>
-          <span style={{ fontSize:10.5,fontWeight:700,padding:"2px 7px",borderRadius:20,background:badge.bg,color:badge.text }}>
-            {item.estado}
-          </span>
-          <BatteryBar value={item.salud_bateria}/>
+        <div className="carro-item-badges">
+          <span className={`carro-estado ${claseEstado}`}>{art.estado}</span>
+          <BarraBateria valor={art.salud_bateria}/>
         </div>
 
-        <div style={{ display:"flex",alignItems:"center",justifyContent:"space-between",marginTop:10 }}>
-          <div style={{ display:"flex",alignItems:"center",background:"#f8fafc",border:"1px solid #e2e8f0",borderRadius:8 }}>
-            <QtyBtn label="−" onClick={() => !disabled && onQty(item.movil_id, item.cantidad - 1)} disabled={disabled || item.cantidad <= 1}/>
-            <span style={{ width:26,textAlign:"center",fontSize:13,fontWeight:700,color:"#0f172a" }}>{item.cantidad}</span>
-            <QtyBtn label="+" onClick={() => !disabled && onQty(item.movil_id, item.cantidad + 1)} disabled={disabled || item.cantidad >= item.stock}/>
+        <div className="carro-item-acciones">
+          <div className="carro-qty-wrap">
+            <BtnCantidad etiq="−" alClick={() => !deshabilitado && alCant(art.movil_id, art.cantidad - 1)} deshabilitado={deshabilitado || art.cantidad <= 1}/>
+            <span className="carro-qty-num">{art.cantidad}</span>
+            <BtnCantidad etiq="+" alClick={() => !deshabilitado && alCant(art.movil_id, art.cantidad + 1)} deshabilitado={deshabilitado || art.cantidad >= art.stock}/>
           </div>
-          <div style={{ textAlign:"right" }}>
-            <p style={{ margin:0,fontWeight:800,fontSize:16,color:"#0f172a",fontFamily:"'Sora',sans-serif" }}>{fmt(item.subtotal)}</p>
-            {item.cantidad > 1 && <p style={{ margin:0,fontSize:10.5,color:"#94a3b8" }}>{fmt(item.precio)} / ud.</p>}
+          <div className="carro-precio-col">
+            <p className="carro-subtotal">{fmtPrecio(art.subtotal)}</p>
+            {art.cantidad > 1 && <p className="carro-precio-ud">{fmtPrecio(art.precio)} / ud.</p>}
           </div>
         </div>
       </div>
@@ -147,168 +161,159 @@ function CartItem({ item, onRemove, onQty, disabled }) {
   );
 }
 
-function PaymentForm({ total, onSuccess, onCancel, t, profileFormData, onProfileSaved }) {
-  const stripe   = useStripe();
-  const elements = useElements();
-  const [error,   setError]   = useState(null);
-  const [loading, setLoading] = useState(false);
+function FormPago({ total, alExito, alCancelar, t, datosPerfil, alGuardarPerfil }) {
+  const pagoStripe  = useStripe();
+  const elemsPago   = useElements();
+  const [errorPago, fijarErrorPago] = useState(null);
+  const [cargando,  fijarCargando]  = useState(false);
 
-  const handlePay = async () => {
-    if (!stripe || !elements) return;
-    setLoading(true);
-    setError(null);
-    const { error: stripeError, paymentIntent } = await stripe.confirmPayment({
-      elements,
+  const pagar = async () => {
+    if (!pagoStripe || !elemsPago) return;
+    fijarCargando(true);
+    fijarErrorPago(null);
+    const { error: errStripe, paymentIntent: intento } = await pagoStripe.confirmPayment({
+      elements: elemsPago,
       redirect: "if_required",
       confirmParams: {
         return_url: window.location.href,
         payment_method_data: { billing_details: { address: { country: "ES" } } },
       },
     });
-    if (stripeError) {
-      setError(stripeError.message);
-      setLoading(false);
+    if (errStripe) {
+      fijarErrorPago(errStripe.message);
+      fijarCargando(false);
       return;
     }
-    if (paymentIntent?.status === "succeeded") {
-      if (profileFormData && Object.values(profileFormData).some(v => v !== "")) {
+    if (intento?.status === "succeeded") {
+      if (datosPerfil && Object.values(datosPerfil).some(v => v !== "")) {
         try {
-          const updatedUser = await apiFetch("/user/cliente", {
+          const usuarioActual = await llamarApi("/user/cliente", {
             method: "PUT",
-            body: JSON.stringify(profileFormData),
+            body: JSON.stringify(datosPerfil),
           });
-          onProfileSaved?.(updatedUser);
+          alGuardarPerfil?.(usuarioActual);
         } catch (err) {
           console.error("Error guardando perfil:", err);
         }
       }
-      const res = await apiFetch("/checkout/confirm", {
+      const res = await llamarApi("/checkout/confirm", {
         method: "POST",
-        body: JSON.stringify({ payment_intent_id: paymentIntent.id, lang: localStorage.getItem("retech-lang") || "es" }),
+        body: JSON.stringify({ payment_intent_id: intento.id, lang: localStorage.getItem("retech-lang") || "es" }),
       });
       if (res.compra_id) {
-        onSuccess(res.compra_id);
+        alExito(res.compra_id);
       } else {
-        setError(res.message ?? "Error al registrar la compra.");
+        fijarErrorPago(res.message ?? "Error al registrar la compra.");
       }
     }
-    setLoading(false);
+    fijarCargando(false);
   };
 
   return (
     <div>
       <PaymentElement options={{ layout:"tabs", fields:{ billingDetails:{ address:{ country:"never" } } } }}/>
-      {error && (
-        <div style={{ marginTop:12,padding:"10px 14px",background:"#fef2f2",border:"1px solid #fecaca",borderRadius:8,fontSize:12.5,color:"#dc2626" }}>
-          {error}
-        </div>
+      {errorPago && (
+        <div id="error-pago">{errorPago}</div>
       )}
-      <div style={{ display:"flex",gap:10,marginTop:20 }}>
-        <button onClick={onCancel} disabled={loading}
-          style={{ flex:1,padding:"13px",background:"#f8fafc",border:"1px solid #e2e8f0",borderRadius:10,fontSize:13.5,fontWeight:600,cursor:"pointer",color:"#475569" }}>
+      <div className="pago-botones">
+        <button onClick={alCancelar} disabled={cargando} className="btn-volver-pago">
           {t('cart.back')}
         </button>
-        <button onClick={handlePay} disabled={!stripe || loading}
-          style={{ flex:2,padding:"13px",background:loading||!stripe?"#94a3b8":"linear-gradient(135deg,#6366f1,#4f46e5)",color:"#fff",border:"none",borderRadius:10,fontSize:14,fontWeight:700,cursor:loading||!stripe?"not-allowed":"pointer",fontFamily:"'Sora',sans-serif",boxShadow:loading?"none":"0 4px 14px rgba(99,102,241,.4)",display:"flex",alignItems:"center",justifyContent:"center",gap:8 }}>
-          {loading ? <><Spinner/> {t('cart.processing')}</> : <><LockIcon/> {t('cart.pay')(fmt(total))}</>}
+        <button
+          onClick={pagar}
+          disabled={!pagoStripe || cargando}
+          className={`btn-pagar${cargando || !pagoStripe ? " inactivo" : " activo"}`}
+        >
+          {cargando ? <><Girador/> {t('cart.processing')}</> : <><IconoCandado/> {t('cart.pay')(fmtPrecio(total))}</>}
         </button>
       </div>
     </div>
   );
 }
 
-function Row({ label, value, muted, bold, large }) {
+function FilaResumen({ etiq, valor, opaco, negrita, grande }) {
   return (
-    <div style={{ display:"flex",justifyContent:"space-between",alignItems:"center" }}>
-      <span style={{ fontSize:large?14.5:13,color:muted?"#94a3b8":bold?"#0f172a":"#475569",fontWeight:bold?800:400,fontFamily:bold?"'Sora',sans-serif":"inherit" }}>
-        {label}
+    <div className="fila-resumen">
+      <span className={`fila-etiq${grande ? " grande" : ""}${opaco ? " opaco" : ""}${negrita ? " negrita" : ""}`}>
+        {etiq}
       </span>
-      <span style={{ fontSize:large?19:13,fontWeight:bold?800:600,color:bold?"#4f46e5":muted?"#94a3b8":"#0f172a",fontFamily:"'Sora',sans-serif" }}>
-        {value}
+      <span className={`fila-valor${grande ? " grande" : ""}${negrita ? " negrita" : ""}${opaco ? " opaco" : ""}`}>
+        {valor}
       </span>
     </div>
   );
 }
 
-function OrderSummary({ items, onCheckout, loadingIntent, t, isGuest }) {
-  const total = items.reduce((s, i) => s + i.subtotal, 0);
-  const totalItems = items.reduce((s, i) => s + i.cantidad, 0);
+function ResumenPedido({ arts, alPagar, cargandoIntento, t, esInvitado }) {
+  const total       = arts.reduce((s, a) => s + a.subtotal, 0);
+  const totalPiezas = arts.reduce((s, a) => s + a.cantidad, 0);
 
   return (
-    <div style={{ position: "sticky", top: 24, background: "#fff", border: "1px solid #e2e8f0", borderRadius: 20, padding: 26, boxShadow: "0 4px 24px rgba(15,23,42,.07)" }}>
-      <h2 style={{ margin: "0 0 16px", fontSize: 17, fontWeight: 800, color: "#0f172a", fontFamily: "'Sora',sans-serif", letterSpacing: "-.3px" }}>
-        {t('cart.summaryTitle')}
-      </h2>
+    <div id="resumen-pedido">
+      <h2 id="resumen-titulo">{t('cart.summaryTitle')}</h2>
 
-      {/* Miniaturas de los artículos */}
-      <div style={{ display:"flex", flexDirection:"column", gap:8, marginBottom:16 }}>
-        {items.map(item => (
-          <div key={item.movil_id} style={{ display:"flex", alignItems:"center", gap:10 }}>
-            <div style={{ width:38,height:38,borderRadius:9,background:`${item.color_hex ?? "#94a3b8"}22`,border:`1.5px solid ${item.color_hex ?? "#94a3b8"}44`,flexShrink:0,overflow:"hidden",position:"relative",display:"flex",alignItems:"center",justifyContent:"center" }}>
+      <div id="resumen-items">
+        {arts.map(art => (
+          <div key={art.movil_id} className="resumen-item">
+            <div
+              className="resumen-item-thumb"
+              style={{
+                background: `${art.color_hex ?? "#94a3b8"}22`,
+                border: `1.5px solid ${art.color_hex ?? "#94a3b8"}44`,
+              }}
+            >
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
-                <rect x="6" y="2" width="12" height="20" rx="3" stroke={item.color_hex ?? "#94a3b8"} strokeWidth="1.8"/>
-                <circle cx="12" cy="18.5" r="1" fill={item.color_hex ?? "#94a3b8"}/>
+                <rect x="6" y="2" width="12" height="20" rx="3" stroke={art.color_hex ?? "#94a3b8"} strokeWidth="1.8"/>
+                <circle cx="12" cy="18.5" r="1" fill={art.color_hex ?? "#94a3b8"}/>
               </svg>
-              {item.imagen_url && (
-                <img src={item.imagen_url} alt={item.modelo}
-                  style={{ position:"absolute",inset:0,width:"100%",height:"100%",objectFit:"contain",padding:2 }}
+              {art.imagen_url && (
+                <img src={art.imagen_url} alt={art.modelo}
+                  className="resumen-item-thumb-img"
                   onError={e => { e.currentTarget.style.display = "none" }}
                 />
               )}
             </div>
-            <div style={{ flex:1,minWidth:0 }}>
-              <p style={{ margin:0,fontSize:12,fontWeight:700,color:"#0f172a",whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis" }}>{item.modelo}</p>
-              <p style={{ margin:0,fontSize:11,color:"#64748b" }}>{item.almacenamiento}GB · x{item.cantidad}</p>
+            <div className="resumen-item-info">
+              <p className="resumen-item-modelo">{art.modelo}</p>
+              <p className="resumen-item-specs">{art.almacenamiento}GB · x{art.cantidad}</p>
             </div>
-            <span style={{ fontSize:12,fontWeight:700,color:"#0f172a",flexShrink:0 }}>{fmt(item.subtotal)}</span>
+            <span className="resumen-item-precio">{fmtPrecio(art.subtotal)}</span>
           </div>
         ))}
       </div>
 
-      <div style={{ borderTop:"1px solid #f1f5f9", paddingTop:14, display: "flex", flexDirection: "column", gap: 11 }}>
-        <Row label={t('cart.subtotal')(totalItems)} value={fmt(total)} />
-        <Row label={t('cart.total')} value={fmt(total)} bold large />
+      <div id="resumen-totales">
+        <FilaResumen etiq={t('cart.subtotal')(totalPiezas)} valor={fmtPrecio(total)} />
+        <FilaResumen etiq={t('cart.total')} valor={fmtPrecio(total)} negrita grande />
       </div>
 
-      <div style={{ margin: "18px 0", background: "#f0fdf4", border: "1px solid #bbf7d0", borderRadius: 10, padding: "9px 13px", display: "flex", alignItems: "center", gap: 7 }}>
-        <span style={{ fontSize: 12, color: "#15803d", fontWeight: 600 }}>{t('cart.freeShipping')}</span>
+      <div id="resumen-envio">
+        <span id="resumen-envio-texto">{t('cart.freeShipping')}</span>
       </div>
 
-      {isGuest ? (
-        <div style={{ marginTop: 4 }}>
-          <div style={{ padding: "12px 14px", background: "#fefce8", border: "1px solid #fde68a", borderRadius: 10, marginBottom: 12, fontSize: 12.5, color: "#92400e", lineHeight: 1.5 }}>
-            {t('cart.guestCheckout')}
-          </div>
-          <button
-            onClick={onCheckout}
-            style={{ width: "100%", padding: "15px", background: "linear-gradient(135deg,#6366f1,#4f46e5)", color: "#fff", border: "none", borderRadius: 12, fontSize: 14.5, fontWeight: 700, cursor: "pointer", fontFamily: "'Sora',sans-serif", boxShadow: "0 4px 14px rgba(99,102,241,.4)", display: "flex", alignItems: "center", justifyContent: "center", gap: 9 }}
-          >
-            <LockIcon /> {t('cart.loginToBuy')}
+      {esInvitado ? (
+        <div id="resumen-guest">
+          <div id="resumen-guest-aviso">{t('cart.guestCheckout')}</div>
+          <button onClick={alPagar} className="btn-comprar activo">
+            <IconoCandado /> {t('cart.loginToBuy')}
           </button>
         </div>
       ) : (
         <>
           <button
-            onClick={onCheckout}
-            disabled={loadingIntent || items.length === 0}
-            style={{
-              width: "100%", padding: "15px",
-              background: loadingIntent || items.length === 0 ? "#94a3b8" : "linear-gradient(135deg,#6366f1,#4f46e5)",
-              color: "#fff", border: "none", borderRadius: 12, fontSize: 14.5, fontWeight: 700,
-              cursor: loadingIntent ? "not-allowed" : "pointer", fontFamily: "'Sora',sans-serif",
-              boxShadow: loadingIntent ? "none" : "0 4px 14px rgba(99,102,241,.4)",
-              display: "flex", alignItems: "center", justifyContent: "center", gap: 9, transition: "transform .15s"
-            }}
-            onMouseEnter={(e) => { if (!loadingIntent) e.currentTarget.style.transform = "translateY(-1px)"; }}
-            onMouseLeave={(e) => { e.currentTarget.style.transform = "translateY(0)"; }}
+            onClick={alPagar}
+            disabled={cargandoIntento || arts.length === 0}
+            className={`btn-comprar${cargandoIntento || arts.length === 0 ? " inactivo" : " activo"}`}
+            onMouseEnter={(e) => { if (!cargandoIntento) e.currentTarget.classList.add("hover"); }}
+            onMouseLeave={(e) => { e.currentTarget.classList.remove("hover"); }}
           >
-            {loadingIntent ? <><Spinner /> {t('cart.preparingPay')}</> : <><LockIcon /> {t('cart.checkout')}</>}
+            {cargandoIntento ? <><Girador /> {t('cart.preparingPay')}</> : <><IconoCandado /> {t('cart.checkout')}</>}
           </button>
-          <div style={{ marginTop: 12, display: "flex", alignItems: "center", justifyContent: "center", gap: 5 }}>
+          <div id="resumen-stripe">
             <svg width="34" height="14" viewBox="0 0 60 25">
               <text x="0" y="18" fontFamily="Arial" fontSize="18" fontWeight="bold" fill="#635bff">stripe</text>
             </svg>
-            <span style={{ fontSize: 10.5, color: "#94a3b8" }}>{t('cart.stripeSecure')}</span>
+            <span id="resumen-stripe-texto">{t('cart.stripeSecure')}</span>
           </div>
         </>
       )}
@@ -316,7 +321,7 @@ function OrderSummary({ items, onCheckout, loadingIntent, t, isGuest }) {
   );
 }
 
-const COUNTRIES = [
+const PAISES = [
   { code: 'ES', label: 'España' },
   { code: 'PT', label: 'Portugal' },
   { code: 'FR', label: 'Francia' },
@@ -333,34 +338,35 @@ const COUNTRIES = [
   { code: 'US', label: 'Estados Unidos' },
 ];
 
-function generateInvoiceHTML(compraId, items, total, user, labels, dateLocale) {
-  const date = new Date().toLocaleDateString(dateLocale, { day: "numeric", month: "long", year: "numeric" });
-  const invoiceNum = `FAC-${String(compraId).padStart(5, "0")}`;
+function generarFacturaHTML(compraId, arts, total, usuario, etiquetas, localeFecha) {
+  const fecha      = new Date().toLocaleDateString(localeFecha, { day: "numeric", month: "long", year: "numeric" });
+  const numFactura = `FAC-${String(compraId).padStart(5, "0")}`;
 
-  const c = user?.cliente ?? {};
-  const clienteName     = c.nombre && c.apellidos ? `${c.nombre} ${c.apellidos}` : user?.name ?? "—";
-  const clienteEmail    = user?.email    ?? "—";
-  const clienteNif      = c.nif           ?? null;
-  const clienteTel      = c.telefono      ?? null;
-  const clienteMunicipio = c.municipio   ?? null;
-  const clienteProvincia = c.provincia   ?? null;
-  const clienteCp        = c.codigo_postal ?? null;
-  const clientePaisLabel = c.pais ? (COUNTRIES.find(x => x.code === c.pais)?.label ?? c.pais) : null;
+  const c = usuario?.cliente ?? {};
+  const clienteNombre    = c.nombre && c.apellidos ? `${c.nombre} ${c.apellidos}` : usuario?.name ?? "—";
+  const clienteEmail     = usuario?.email    ?? "—";
+  const clienteNif       = c.nif             ?? null;
+  const clienteTel       = c.telefono        ?? null;
+  const clienteMunicipio = c.municipio       ?? null;
+  const clienteProvincia = c.provincia       ?? null;
+  const clienteCp        = c.codigo_postal   ?? null;
+  const clienteCalle     = c.calle           ?? null;
+  const clienteEtiqPais  = c.pais ? (PAISES.find(x => x.code === c.pais)?.label ?? c.pais) : null;
 
-  const rows = items.map(item => `
+  const filas = arts.map(art => `
     <tr>
-      <td><strong>${item.modelo ?? ""}</strong><br><small>${item.almacenamiento ?? ""} GB · ${item.ram ?? ""} GB RAM · ${item.color ?? ""} · ${item.estado ?? ""}</small></td>
-      <td>${item.cantidad}</td>
-      <td>${fmt(item.precio)}</td>
-      <td>${fmt(item.subtotal)}</td>
+      <td><strong>${art.modelo ?? ""}</strong><br><small>${art.almacenamiento ?? ""} GB · ${art.ram ?? ""} GB RAM · ${art.color ?? ""} · ${art.estado ?? ""}</small></td>
+      <td>${art.cantidad}</td>
+      <td>${fmtPrecio(art.precio)}</td>
+      <td>${fmtPrecio(art.subtotal)}</td>
     </tr>
   `).join("");
 
   return `<!DOCTYPE html>
-<html lang="${dateLocale.split('-')[0]}">
+<html lang="${localeFecha.split('-')[0]}">
 <head>
   <meta charset="UTF-8">
-  <title>Factura ${invoiceNum}</title>
+  <title>Factura ${numFactura}</title>
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
     body { font-family: Arial, Helvetica, sans-serif; color: #1e293b; padding: 52px; font-size: 13px; background: #fff; }
@@ -400,18 +406,18 @@ function generateInvoiceHTML(compraId, items, total, user, labels, dateLocale) {
   <div class="header-row">
     <div>
       <div class="brand">Re<span>Tech</span></div>
-      <p class="tagline">${labels.tagline}</p>
+      <p class="tagline">${etiquetas.tagline}</p>
     </div>
     <div class="invoice-meta">
-      <div class="invoice-num">${invoiceNum}</div>
-      <p>${labels.issueDate} <strong style="color:#0f172a">${date}</strong></p>
-      <p>${labels.orderNum} #${compraId}</p>
+      <div class="invoice-num">${numFactura}</div>
+      <p>${etiquetas.issueDate} <strong style="color:#0f172a">${fecha}</strong></p>
+      <p>${etiquetas.orderNum} #${compraId}</p>
     </div>
   </div>
 
   <div class="info-row">
     <div class="info-block">
-      <h3>${labels.seller}</h3>
+      <h3>${etiquetas.seller}</h3>
       <p>
         <strong>ReTech SL</strong><br>
         CIF: B-08700123<br>
@@ -422,12 +428,13 @@ function generateInvoiceHTML(compraId, items, total, user, labels, dateLocale) {
       </p>
     </div>
     <div class="info-block">
-      <h3>${labels.client}</h3>
+      <h3>${etiquetas.client}</h3>
       <p>
-        <strong>${clienteName}</strong><br>
+        <strong>${clienteNombre}</strong><br>
         ${clienteNif        ? `NIF: ${clienteNif}<br>`  : ""}
+        ${clienteCalle      ? `${clienteCalle}<br>`     : ""}
         ${clienteMunicipio  ? `${clienteMunicipio}${clienteProvincia ? `, ${clienteProvincia}` : ''}<br>` : ""}
-        ${clienteCp         ? `CP ${clienteCp}${clientePaisLabel ? ` — ${clientePaisLabel}` : ''}<br>` : ""}
+        ${clienteCp         ? `CP ${clienteCp}${clienteEtiqPais ? ` — ${clienteEtiqPais}` : ''}<br>` : ""}
         ${clienteTel        ? `Tel: ${clienteTel}<br>`  : ""}
         ${clienteEmail}
       </p>
@@ -437,19 +444,19 @@ function generateInvoiceHTML(compraId, items, total, user, labels, dateLocale) {
   <hr>
   <table>
     <thead>
-      <tr><th>${labels.product}</th><th>${labels.quantity}</th><th>${labels.unitPrice}</th><th>${labels.total}</th></tr>
+      <tr><th>${etiquetas.product}</th><th>${etiquetas.quantity}</th><th>${etiquetas.unitPrice}</th><th>${etiquetas.total}</th></tr>
     </thead>
-    <tbody>${rows}</tbody>
+    <tbody>${filas}</tbody>
   </table>
   <div class="totals">
     <div class="totals-inner">
-      <div class="total-final"><span>${labels.total}</span><span>${fmt(total)}</span></div>
+      <div class="total-final"><span>${etiquetas.total}</span><span>${fmtPrecio(total)}</span></div>
     </div>
   </div>
   <div class="footer">
     <div class="footer-left">
-      <p>${labels.thanks}</p>
-      <p>${labels.simplifiedInvoice}</p>
+      <p>${etiquetas.thanks}</p>
+      <p>${etiquetas.simplifiedInvoice}</p>
     </div>
     <div class="footer-badge">RETECH CERT</div>
   </div>
@@ -457,103 +464,185 @@ function generateInvoiceHTML(compraId, items, total, user, labels, dateLocale) {
 </html>`;
 }
 
-function SuccessScreen({ compraId }) {
-  const { t } = useLanguage();
-  const { user } = useAuth();
-  const [items, setItems] = useState([]);
-  const [total, setTotal] = useState(0);
-  const [loadingOrder, setLoadingOrder] = useState(true);
+function PantallaExito({ compraId, datosPerfil, usuario: usuarioProp }) {
+  const { t } = useIdioma();
+  const { user: usuarioCtx } = useAutenticacion();
+  const usuario = usuarioProp ?? usuarioCtx;
+  const [arts,            fijarArts]            = useState([]);
+  const [total,           fijarTotal]           = useState(0);
+  const [cargandoPedido,  fijarCargandoPedido]  = useState(true);
 
   useEffect(() => {
-    const load = async () => {
+    const cargar = async () => {
       try {
         const res = await fetch(`/api/compras/${compraId}`, {
           credentials: "include",
           headers: { "Accept": "application/json" },
         });
         if (!res.ok) throw new Error();
-        const order = await res.json();
+        const pedido = await res.json();
 
-        const ids = [...new Set((order.items || []).map(i => i.movil_id))];
-        const results = await Promise.all(
+        const ids = [...new Set((pedido.items || []).map(i => i.movil_id))];
+        const resultados = await Promise.all(
           ids.map(id =>
             fetch(`/api/products/${id}`, { headers: { "Accept": "application/json" } })
               .then(r => r.ok ? r.json() : null).catch(() => null)
           )
         );
         const cache = {};
-        ids.forEach((id, i) => { if (results[i]) cache[id] = results[i]; });
+        ids.forEach((id, i) => { if (resultados[i]) cache[id] = resultados[i]; });
 
-        const merged = (order.items || []).map(item => {
-          const movil = cache[item.movil_id] || {};
-          const precio = item.precio ?? item.precio_unitario ?? movil.precio ?? 0;
-          return { ...movil, cantidad: item.cantidad, precio, subtotal: precio * item.cantidad };
+        const artsFusion = (pedido.items || []).map(art => {
+          const movil  = cache[art.movil_id] || {};
+          const precio = art.precio ?? art.precio_unitario ?? movil.precio ?? 0;
+          return { ...movil, cantidad: art.cantidad, precio, subtotal: precio * art.cantidad };
         });
 
-        setItems(merged);
-        setTotal(order.precio_total ?? merged.reduce((s, i) => s + i.subtotal, 0));
+        fijarArts(artsFusion);
+        fijarTotal(pedido.precio_total ?? artsFusion.reduce((s, a) => s + a.subtotal, 0));
       } catch {
-        // Si falla la carga, se muestran los botones igual sin items
+        // Si falla la carga se muestran los botones igual sin artículos
       } finally {
-        setLoadingOrder(false);
+        fijarCargandoPedido(false);
       }
     };
-    load();
+    cargar();
   }, [compraId]);
 
-  const handleInvoice = () => {
-    const html = generateInvoiceHTML(compraId, items, total, user, t('invoice'), t('orders.dateLocale'));
-    const win = window.open("", "_blank");
-    if (!win) return;
-    win.document.write(html);
-    win.document.close();
-    win.focus();
-    win.print();
+  const verFactura = () => {
+    const usuarioFactura = {
+      ...usuario,
+      cliente: { ...(usuario?.cliente ?? {}), ...(datosPerfil ?? {}) },
+    };
+    const htmlFactura = generarFacturaHTML(compraId, arts, total, usuarioFactura, t('invoice'), t('orders.dateLocale'));
+    const ventana = window.open("", "_blank");
+    if (!ventana) return;
+    ventana.document.write(htmlFactura);
+    ventana.document.close();
+    ventana.focus();
+    ventana.print();
   };
 
   return (
-    <div style={{ minHeight:"100vh",background:"#f8fafc",display:"flex",alignItems:"center",justifyContent:"center",padding:24 }}>
-      <div style={{ background:"#fff",borderRadius:24,padding:"40px",textAlign:"center",maxWidth:480,width:"100%",border:"1px solid #e2e8f0",boxShadow:"0 8px 32px rgba(15,23,42,.08)" }}>
-        <div style={{ width:72,height:72,borderRadius:"50%",background:"#0f172a",margin:"0 auto 20px",display:"flex",alignItems:"center",justifyContent:"center",boxShadow:"0 8px 20px rgba(15,23,42,.2)" }}>
+    <>
+    <style>{`
+      @import url('https://fonts.googleapis.com/css2?family=Sora:wght@400;600;700;800&family=Inter:wght@400;500;600&display=swap');
+      * { box-sizing: border-box; }
+      body { margin: 0; font-family: 'Inter', sans-serif; background: #f8fafc; }
+      @keyframes spin { to { transform: rotate(360deg); } }
+      .spinner { animation: spin .8s linear infinite; }
+      #exito-wrap {
+        min-height: 100vh;
+        background: #f8fafc;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 24px;
+      }
+      #exito-caja {
+        background: #fff;
+        border-radius: 24px;
+        padding: 40px;
+        text-align: center;
+        max-width: 480px;
+        width: 100%;
+        border: 1px solid #e2e8f0;
+        box-shadow: 0 8px 32px rgba(15, 23, 42, .08);
+      }
+      #exito-icono {
+        width: 72px;
+        height: 72px;
+        border-radius: 50%;
+        background: #0f172a;
+        margin: 0 auto 20px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        box-shadow: 0 8px 20px rgba(15, 23, 42, .2);
+      }
+      #exito-titulo {
+        margin: 0 0 8px;
+        font-size: 24px;
+        font-weight: 800;
+        color: #0f172a;
+        font-family: 'Sora', sans-serif;
+      }
+      #exito-procesado { margin: 0 0 4px; color: #64748b; font-size: 14px; }
+      #exito-num       { margin: 0 0 24px; color: #94a3b8; font-size: 12.5px; }
+      #exito-spinner   { margin-bottom: 24px; }
+      #exito-botones {
+        display: flex;
+        gap: 12px;
+        justify-content: center;
+        flex-wrap: wrap;
+      }
+      .btn-factura-exito {
+        padding: 12px 22px;
+        background: #f8fafc;
+        border: 1px solid #e2e8f0;
+        border-radius: 10px;
+        font-size: 13.5px;
+        font-weight: 700;
+        cursor: pointer;
+        color: #0f172a;
+        font-family: 'Sora', sans-serif;
+      }
+      .btn-factura-exito.inactivo { cursor: not-allowed; opacity: 0.5; }
+      .btn-seguir-comprando {
+        padding: 12px 22px;
+        background: linear-gradient(135deg, #6366f1, #4f46e5);
+        color: #fff;
+        border-radius: 10px;
+        text-decoration: none;
+        font-size: 13.5px;
+        font-weight: 700;
+        font-family: 'Sora', sans-serif;
+        box-shadow: 0 4px 12px rgba(99, 102, 241, .35);
+      }
+    `}</style>
+    <div id="exito-wrap">
+      <div id="exito-caja">
+        <div id="exito-icono">
           <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5">
             <polyline points="20 6 9 17 4 12"/>
           </svg>
         </div>
-        <h1 style={{ margin:"0 0 8px",fontSize:24,fontWeight:800,color:"#0f172a",fontFamily:"'Sora',sans-serif" }}>{t('cart.orderConfirmed')}</h1>
-        <p style={{ margin:"0 0 4px",color:"#64748b",fontSize:14 }}>{t('cart.orderProcessed')}</p>
-        <p style={{ margin:"0 0 24px",color:"#94a3b8",fontSize:12.5 }}>{t('cart.orderNumber')} #{compraId}</p>
+        <h1 id="exito-titulo">{t('cart.orderConfirmed')}</h1>
+        <p id="exito-procesado">{t('cart.orderProcessed')}</p>
+        <p id="exito-num">#{compraId}</p>
 
-        {loadingOrder && (
-          <div style={{ marginBottom:24 }}><Spinner size={22} color="#6366f1"/></div>
+        {cargandoPedido && (
+          <div id="exito-spinner"><Girador tamano={22} color="#6366f1"/></div>
         )}
 
-        <div style={{ display:"flex",gap:12,justifyContent:"center",flexWrap:"wrap" }}>
+        <div id="exito-botones">
           <button
-            onClick={handleInvoice}
-            disabled={loadingOrder || items.length === 0}
-            style={{ padding:"12px 22px",background:"#f8fafc",border:"1px solid #e2e8f0",borderRadius:10,fontSize:13.5,fontWeight:700,cursor:loadingOrder||items.length===0?"not-allowed":"pointer",color:"#0f172a",fontFamily:"'Sora',sans-serif",opacity:loadingOrder||items.length===0?0.5:1 }}
+            onClick={verFactura}
+            disabled={cargandoPedido || arts.length === 0}
+            className={`btn-factura-exito${cargandoPedido || arts.length === 0 ? " inactivo" : ""}`}
           >
             {t('cart.downloadInvoice')}
           </button>
-          <a href="/" style={{ padding:"12px 22px",background:"linear-gradient(135deg,#6366f1,#4f46e5)",color:"#fff",borderRadius:10,textDecoration:"none",fontSize:13.5,fontWeight:700,fontFamily:"'Sora',sans-serif",boxShadow:"0 4px 12px rgba(99,102,241,.35)" }}>
+          <a href="/" className="btn-seguir-comprando">
             {t('cart.keepShopping')}
           </a>
         </div>
       </div>
     </div>
+    </>
   );
 }
 
-function Spinner({ size = 18, color = "white" }) {
+function Girador({ tamano = 18, color = "white" }) {
   return (
-    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2.5"
-      style={{ animation:"spin .8s linear infinite" }}>
+    <svg width={tamano} height={tamano} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2.5"
+      className="spinner">
       <path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"/>
     </svg>
   );
 }
 
-function LockIcon() {
+function IconoCandado() {
   return (
     <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5">
       <rect x="3" y="11" width="18" height="11" rx="2"/>
@@ -562,7 +651,7 @@ function LockIcon() {
   );
 }
 
-const VALIDATE = {
+const VALIDAR = {
   nombre:        v => v.trim() !== "",
   apellidos:     v => v.trim() !== "",
   nif:           v => v === "" || /^\d{8}[A-Za-z]$/.test(v),
@@ -570,12 +659,13 @@ const VALIDATE = {
   provincia:     () => true,
   municipio:     () => true,
   codigo_postal: v => v.trim() !== "",
+  calle:         () => true,
   telefono:      v => v === "" || /^\d{9}$/.test(v),
 };
 
-function ProfileForm({ user, onDataChange, t }) {
-  const c = user?.cliente ?? {};
-  const initial = {
+function FormPerfil({ usuario, alCambiarDatos, t }) {
+  const c = usuario?.cliente ?? {};
+  const inicial = {
     nombre:        c.nombre        ?? "",
     apellidos:     c.apellidos     ?? "",
     nif:           c.nif           ?? "",
@@ -583,62 +673,62 @@ function ProfileForm({ user, onDataChange, t }) {
     provincia:     c.provincia     ?? "",
     municipio:     c.municipio     ?? "",
     codigo_postal: c.codigo_postal ?? "",
+    calle:         c.calle         ?? "",
     telefono:      c.telefono      ?? "",
   };
-  const [form,    setForm]    = useState(initial);
-  const [touched, setTouched] = useState(() =>
-    Object.fromEntries(Object.entries(initial).filter(([,v]) => v !== "").map(([k]) => [k, true]))
+  const [datos,      fijarDatos]      = useState(inicial);
+  const [tocados,    fijarTocados]    = useState(() =>
+    Object.fromEntries(Object.entries(inicial).filter(([,v]) => v !== "").map(([k]) => [k, true]))
   );
-  const [cpStatus, setCpStatus] = useState(null); // null | 'loading' | 'valid' | 'invalid'
+  const [estadoCp,   fijarEstadoCp]   = useState(null);
 
-  const validity = Object.fromEntries(Object.keys(form).map(k => [k, VALIDATE[k](form[k])]));
+  const validez = Object.fromEntries(Object.keys(datos).map(k => [k, VALIDAR[k](datos[k])]));
 
   useEffect(() => {
-    const allValid = Object.values(validity).every(Boolean) &&
-      form.nombre.trim() && form.apellidos.trim() && form.pais.trim() && form.codigo_postal.trim();
-    onDataChange?.(form, !!allValid);
+    const todoValido = Object.values(validez).every(Boolean) &&
+      datos.nombre.trim() && datos.apellidos.trim() && datos.pais.trim() && datos.codigo_postal.trim();
+    alCambiarDatos?.(datos, !!todoValido);
   }, []);
 
-  // Validar código postal vía Zippopotam.us
   useEffect(() => {
-    const cp = form.codigo_postal?.trim();
-    const pais = form.pais?.trim();
-    if (!cp || cp.length < 4 || !pais) { setCpStatus(null); return; }
-    setCpStatus('loading');
-    const timer = setTimeout(async () => {
+    const cp   = datos.codigo_postal?.trim();
+    const pais = datos.pais?.trim();
+    if (!cp || cp.length < 4 || !pais) { fijarEstadoCp(null); return; }
+    fijarEstadoCp('loading');
+    const temporizador = setTimeout(async () => {
       try {
         const res = await fetch(`https://api.zippopotam.us/${pais}/${cp}`);
-        if (!res.ok) { setCpStatus('invalid'); return; }
+        if (!res.ok) { fijarEstadoCp('invalid'); return; }
         const data = await res.json();
-        const place = data.places?.[0];
-        if (place) {
-          setCpStatus('valid');
-          setForm(prev => ({
+        const lugar = data.places?.[0];
+        if (lugar) {
+          fijarEstadoCp('valid');
+          fijarDatos(prev => ({
             ...prev,
-            municipio: place['place name'] || prev.municipio,
-            provincia: place.state || prev.provincia,
+            municipio: lugar['place name'] || prev.municipio,
+            provincia: lugar.state || prev.provincia,
           }));
         } else {
-          setCpStatus('invalid');
+          fijarEstadoCp('invalid');
         }
       } catch {
-        setCpStatus(null);
+        fijarEstadoCp(null);
       }
     }, 600);
-    return () => clearTimeout(timer);
-  }, [form.codigo_postal, form.pais]);
+    return () => clearTimeout(temporizador);
+  }, [datos.codigo_postal, datos.pais]);
 
-  const handleChange = (key, value) => {
-    const newForm = { ...form, [key]: value };
-    setForm(newForm);
-    setTouched(p => ({ ...p, [key]: true }));
-    const newValidity = Object.fromEntries(Object.keys(newForm).map(k => [k, VALIDATE[k](newForm[k])]));
-    const allValid = Object.values(newValidity).every(Boolean) &&
-      newForm.nombre.trim() && newForm.apellidos.trim() && newForm.pais.trim() && newForm.codigo_postal.trim();
-    onDataChange?.(newForm, !!allValid);
+  const alCambiar = (campo, valor) => {
+    const nuevosDatos = { ...datos, [campo]: valor };
+    fijarDatos(nuevosDatos);
+    fijarTocados(p => ({ ...p, [campo]: true }));
+    const nuevaValidez = Object.fromEntries(Object.keys(nuevosDatos).map(k => [k, VALIDAR[k](nuevosDatos[k])]));
+    const todoValido = Object.values(nuevaValidez).every(Boolean) &&
+      nuevosDatos.nombre.trim() && nuevosDatos.apellidos.trim() && nuevosDatos.pais.trim() && nuevosDatos.codigo_postal.trim();
+    alCambiarDatos?.(nuevosDatos, !!todoValido);
   };
 
-  const ERRORS = {
+  const MENSAJES_ERROR = {
     nombre:        t('cart.profileFieldRequired'),
     apellidos:     t('cart.profileFieldRequired'),
     nif:           t('cart.profileNifError'),
@@ -646,287 +736,219 @@ function ProfileForm({ user, onDataChange, t }) {
     provincia:     "",
     municipio:     "",
     codigo_postal: t('cart.profileFieldRequired'),
+    calle:         "",
     telefono:      t('cart.profilePhoneError'),
   };
 
-  const field = (label, key) => {
-    const isValid   = validity[key];
-    const hasValue  = form[key] !== "";
-    const isTouched = touched[key];
-    const showTick  = hasValue && isValid;
-    const showError = isTouched && !isValid;
-    const border    = showError ? "#fca5a5" : showTick ? "#86efac" : "#e2e8f0";
-    const bg        = showError ? "#fef2f2" : showTick ? "#f0fdf4" : "#fff";
+  const campoInput = (etiq, campo) => {
+    const esValido    = validez[campo];
+    const tieneValor  = datos[campo] !== "";
+    const fueTocado   = tocados[campo];
+    const mostrarTick  = tieneValor && esValido;
+    const mostrarError = fueTocado && !esValido;
+    const estado       = mostrarError ? "error" : mostrarTick ? "valido" : "neutro";
 
     return (
       <div>
-        <label style={{ display:"block", fontSize:11, fontWeight:700, color:"#94a3b8", textTransform:"uppercase", letterSpacing:".05em", marginBottom:4 }}>
-          {label}
-        </label>
-        <div style={{ position:"relative" }}>
+        <label className="form-campo-etiq">{etiq}</label>
+        <div className="form-campo-rel">
           <input
             type="text"
-            value={form[key]}
-            onChange={e => handleChange(key, e.target.value)}
-            onBlur={() => setTouched(p => ({ ...p, [key]: true }))}
-            style={{ width:"100%", boxSizing:"border-box", padding:"10px 36px 10px 13px", border:`1px solid ${border}`, borderRadius:10, fontSize:13.5, outline:"none", fontFamily:"inherit", color:"#0f172a", background:bg, transition:"border-color .15s, background .15s" }}
+            value={datos[campo]}
+            onChange={e => alCambiar(campo, e.target.value)}
+            onBlur={() => fijarTocados(p => ({ ...p, [campo]: true }))}
+            className={`form-campo-input ${estado}`}
           />
-          {showTick && (
-            <svg style={{ position:"absolute", right:11, top:"50%", transform:"translateY(-50%)", color:"#22c55e", flexShrink:0 }} width="15" height="15" viewBox="0 0 20 20" fill="currentColor">
+          {mostrarTick && (
+            <svg className="form-campo-tick" width="15" height="15" viewBox="0 0 20 20" fill="currentColor">
               <path fillRule="evenodd" d="M16.704 4.153a.75.75 0 01.143 1.052l-8 10.5a.75.75 0 01-1.127.075l-4.5-4.5a.75.75 0 011.06-1.06l3.894 3.893 7.48-9.817a.75.75 0 011.05-.143z" clipRule="evenodd"/>
             </svg>
           )}
         </div>
-        {showError && (
-          <p style={{ margin:"3px 0 0 2px", fontSize:11, color:"#ef4444" }}>{ERRORS[key]}</p>
+        {mostrarError && (
+          <p className="form-campo-error">{MENSAJES_ERROR[campo]}</p>
         )}
       </div>
     );
   };
 
   return (
-    <div style={{ background:"#fff", border:"1px solid #e2e8f0", borderRadius:20, padding:22, boxShadow:"0 4px 24px rgba(15,23,42,.07)" }}>
-      <h3 style={{ margin:"0 0 4px", fontSize:14, fontWeight:800, color:"#0f172a", fontFamily:"'Sora',sans-serif" }}>
-        {t('cart.profileModalTitle')}
-      </h3>
-      <p style={{ margin:"0 0 16px", fontSize:12, color:"#64748b" }}>
-        {t('cart.profileModalDesc')}
-      </p>
-      <div style={{ display:"flex", flexDirection:"column", gap:11 }}>
-        {field(t('profile.name'),     "nombre")}
-        {field(t('profile.surnames'), "apellidos")}
-        {field(t('profile.nif'),      "nif")}
+    <div id="form-perfil">
+      <h3 id="form-perfil-titulo">{t('cart.profileModalTitle')}</h3>
+      <p id="form-perfil-desc">{t('cart.profileModalDesc')}</p>
+      <div id="form-perfil-campos">
+        {campoInput(t('profile.name'),     "nombre")}
+        {campoInput(t('profile.surnames'), "apellidos")}
+        {campoInput(t('profile.nif'),      "nif")}
 
         {/* País — selector */}
         <div>
-          <label style={{ display:"block", fontSize:11, fontWeight:700, color:"#94a3b8", textTransform:"uppercase", letterSpacing:".05em", marginBottom:4 }}>
-            {t('profile.pais')}
-          </label>
+          <label className="form-campo-etiq">{t('profile.pais')}</label>
           <select
-            value={form.pais}
-            onChange={e => handleChange("pais", e.target.value)}
-            onBlur={() => setTouched(p => ({ ...p, pais: true }))}
-            style={{ width:"100%", boxSizing:"border-box", padding:"10px 13px", border:`1px solid ${touched.pais && !form.pais ? "#fca5a5" : form.pais ? "#86efac" : "#e2e8f0"}`, borderRadius:10, fontSize:13.5, outline:"none", fontFamily:"inherit", color: form.pais ? "#0f172a" : "#94a3b8", background: touched.pais && !form.pais ? "#fef2f2" : form.pais ? "#f0fdf4" : "#fff", cursor:"pointer" }}
+            value={datos.pais}
+            onChange={e => alCambiar("pais", e.target.value)}
+            onBlur={() => fijarTocados(p => ({ ...p, pais: true }))}
+            className={`form-select${tocados.pais && !datos.pais ? " error" : datos.pais ? " valido" : " neutro"}${datos.pais ? " tiene-valor" : ""}`}
           >
             <option value="">— {t('profile.pais')} —</option>
-            {COUNTRIES.map(c => <option key={c.code} value={c.code}>{c.label}</option>)}
+            {PAISES.map(p => <option key={p.code} value={p.code}>{p.label}</option>)}
           </select>
-          {touched.pais && !form.pais && <p style={{ margin:"3px 0 0 2px", fontSize:11, color:"#ef4444" }}>{t('cart.profileFieldRequired')}</p>}
+          {tocados.pais && !datos.pais && <p className="form-campo-error">{t('cart.profileFieldRequired')}</p>}
         </div>
 
         {/* Código postal con validación automática */}
         <div>
-          <label style={{ display:"block", fontSize:11, fontWeight:700, color:"#94a3b8", textTransform:"uppercase", letterSpacing:".05em", marginBottom:4 }}>
-            {t('profile.codigoPostal')}
-          </label>
+          <label className="form-campo-etiq">{t('profile.codigoPostal')}</label>
           <input
             type="text"
-            value={form.codigo_postal}
-            onChange={e => handleChange("codigo_postal", e.target.value)}
-            onBlur={() => setTouched(p => ({ ...p, codigo_postal: true }))}
-            style={{ width:"100%", boxSizing:"border-box", padding:"10px 13px", border:`1px solid ${touched.codigo_postal && !form.codigo_postal ? "#fca5a5" : cpStatus === 'valid' ? "#86efac" : cpStatus === 'invalid' ? "#fca5a5" : "#e2e8f0"}`, borderRadius:10, fontSize:13.5, outline:"none", fontFamily:"inherit", color:"#0f172a", background: cpStatus === 'valid' ? "#f0fdf4" : cpStatus === 'invalid' ? "#fef2f2" : "#fff" }}
+            value={datos.codigo_postal}
+            onChange={e => alCambiar("codigo_postal", e.target.value)}
+            onBlur={() => fijarTocados(p => ({ ...p, codigo_postal: true }))}
+            className={`form-campo-input${
+              tocados.codigo_postal && !datos.codigo_postal ? " error"
+              : estadoCp === 'valid'   ? " valido"
+              : estadoCp === 'invalid' ? " error"
+              : " neutro"
+            }`}
           />
-          {cpStatus === 'loading' && <p style={{ margin:"3px 0 0 2px", fontSize:11, color:"#6366f1" }}>Validando…</p>}
-          {cpStatus === 'valid'   && <p style={{ margin:"3px 0 0 2px", fontSize:11, color:"#22c55e" }}>✓ Código postal válido</p>}
-          {cpStatus === 'invalid' && <p style={{ margin:"3px 0 0 2px", fontSize:11, color:"#ef4444" }}>{t('cart.profileCpNotFound')}</p>}
-          {touched.codigo_postal && !form.codigo_postal && <p style={{ margin:"3px 0 0 2px", fontSize:11, color:"#ef4444" }}>{t('cart.profileFieldRequired')}</p>}
+          {estadoCp === 'loading' && <p className="form-campo-estado validando">Validando…</p>}
+          {estadoCp === 'valid'   && <p className="form-campo-estado cp-ok">✓ Código postal válido</p>}
+          {estadoCp === 'invalid' && <p className="form-campo-estado cp-err">{t('cart.profileCpNotFound')}</p>}
+          {tocados.codigo_postal && !datos.codigo_postal && <p className="form-campo-error">{t('cart.profileFieldRequired')}</p>}
         </div>
 
-        {field(t('profile.provincia'), "provincia")}
-        {field(t('profile.municipio'), "municipio")}
-        {field(t('profile.phone'),    "telefono")}
+        {campoInput(t('profile.provincia'), "provincia")}
+        {campoInput(t('profile.municipio'), "municipio")}
+        {campoInput(t('profile.calle'),     "calle")}
+        {campoInput(t('profile.phone'),     "telefono")}
       </div>
     </div>
   );
 }
 
-export default function CartCheckoutPage() {
-  const navigate = useNavigate();
-  const location = useLocation();
-  const { t } = useLanguage();
-  const { isAuthenticated, user, setUser } = useAuth();
-  const [items,         setItems]         = useState([]);
-  const [fetchLoading,  setFetchLoading]  = useState(true);
-  const [intentLoading, setIntentLoading] = useState(false);
-  const [clientSecret,  setClientSecret]  = useState(null);
-  const [intentTotal,   setIntentTotal]   = useState(0);
-  const [successId,     setSuccessId]     = useState(null);
-  const [apiError,      setApiError]      = useState(null);
-  const [isGuest,       setIsGuest]       = useState(!isAuthenticated);
-  const [profileFormData, setProfileFormData] = useState(null);
+export default function PaginaCarrito() {
+  const navegar   = useNavigate();
+  const ubicacion = useLocation();
+  const { t } = useIdioma();
+  const { isAuthenticated: estaAuth, user: usuario, setUser: fijarUsuario } = useAutenticacion();
+  const [arts,            fijarArts]            = useState([]);
+  const [cargando,        fijarCargando]        = useState(true);
+  const [cargandoIntento, fijarCargandoIntento] = useState(false);
+  const [secretoCliente,  fijarSecretoCliente]  = useState(null);
+  const [totalIntento,    fijarTotalIntento]    = useState(0);
+  const [idExito,         fijarIdExito]         = useState(null);
+  const [errorApi,        fijarErrorApi]        = useState(null);
+  const [esInvitado,      fijarEsInvitado]      = useState(!estaAuth);
+  const [datosPerfil,     fijarDatosPerfil]     = useState(null);
 
-  const loadCart = useCallback(async () => {
-    setFetchLoading(true);
-    if (!isAuthenticated) {
-      setIsGuest(true);
-      const stored = getGuestCart();
-      setItems(stored.map(item => ({ ...item, subtotal: item.precio * item.cantidad })));
-      setFetchLoading(false);
+  const cargarCarro = useCallback(async () => {
+    fijarCargando(true);
+    if (!estaAuth) {
+      fijarEsInvitado(true);
+      const guardado = obtenerCarritoInvitado();
+      fijarArts(guardado.map(art => ({ ...art, subtotal: art.precio * art.cantidad })));
+      fijarCargando(false);
       return;
     }
     try {
-      const data = await apiFetch("/carrito");
-      setItems(data.items ?? []);
-      setIsGuest(false);
+      const datos = await llamarApi("/carrito");
+      fijarArts(datos.items ?? []);
+      fijarEsInvitado(false);
     } catch (err) {
-      setApiError(t('cart.loadError'));
+      fijarErrorApi(t('cart.loadError'));
     } finally {
-      setFetchLoading(false);
+      fijarCargando(false);
     }
-  }, [isAuthenticated]);
+  }, [estaAuth]);
 
-// const loadCart = useCallback(async () => {
-//   setFetchLoading(true);
-//   // MOCK - quitar cuando conectes la API real
-//   setItems([
-//     {
-//       movil_id: 1,
-//       cantidad: 1,
-//       precio: 749.99,
-//       subtotal: 749.99,
-//       modelo: "iPhone 14 Pro",
-//       marca: "Apple",
-//       color: "Negro Espacial",
-//       color_hex: "#1c1c1e",
-//       almacenamiento: 256,
-//       ram: 6,
-//       estado: "Excelente",
-//       salud_bateria: 92,
-//       stock: 5,
-//     },
-//     {
-//       movil_id: 2,
-//       cantidad: 2,
-//       precio: 619.00,
-//       subtotal: 1238.00,
-//       modelo: "Galaxy S23 Ultra",
-//       marca: "Samsung",
-//       color: "Crema",
-//       color_hex: "#c8b89a",
-//       almacenamiento: 512,
-//       ram: 12,
-//       estado: "Muy Bueno",
-//       salud_bateria: 87,
-//       stock: 3,
-//     },
-//     {
-//       movil_id: 3,
-//       cantidad: 1,
-//       precio: 439.50,
-//       subtotal: 439.50,
-//       modelo: "Pixel 8 Pro",
-//       marca: "Google",
-//       color: "Azul Bahía",
-//       color_hex: "#4a90d9",
-//       almacenamiento: 128,
-//       ram: 12,
-//       estado: "Bueno",
-//       salud_bateria: 81,
-//       stock: 2,
-//     },
-//   ]);
-//   setFetchLoading(false);
-// }, []);
+  useEffect(() => { cargarCarro(); }, [cargarCarro]);
 
-  useEffect(() => { loadCart(); }, [loadCart]);
-
-  // Si el usuario venía del botón de compra, disparar checkout automáticamente al autenticarse
   useEffect(() => {
-    if (!isAuthenticated || fetchLoading) return;
+    if (!estaAuth || cargando) return;
     if (sessionStorage.getItem('retech-auto-checkout') !== '1') return;
     sessionStorage.removeItem('retech-auto-checkout');
-    handleCheckout();
-  }, [isAuthenticated, fetchLoading]);
+    irAPagar();
+  }, [estaAuth, cargando]);
 
-  const handleRemove = async (movilId) => {
-    if (!isAuthenticated) {
-      const updated = getGuestCart().filter(i => i.movil_id !== movilId);
-      setGuestCart(updated);
-      setItems(prev => prev.filter(i => i.movil_id !== movilId));
+  const quitarArt = async (movilId) => {
+    if (!estaAuth) {
+      const actualizado = obtenerCarritoInvitado().filter(a => a.movil_id !== movilId);
+      guardarCarritoInvitado(actualizado);
+      fijarArts(prev => prev.filter(a => a.movil_id !== movilId));
       window.dispatchEvent(new Event("cart-updated"));
       return;
     }
-    await apiFetch(`/carrito/${movilId}`, { method: "DELETE" });
-    await loadCart();
+    await llamarApi(`/carrito/${movilId}`, { method: "DELETE" });
+    await cargarCarro();
   };
 
-  const handleQty = async (movilId, nuevaCantidad) => {
-    if (!isAuthenticated) {
-      const updated = getGuestCart().map(i =>
-        i.movil_id === movilId ? { ...i, cantidad: nuevaCantidad } : i
+  const cambiarCant = async (movilId, nuevaCantidad) => {
+    if (!estaAuth) {
+      const actualizado = obtenerCarritoInvitado().map(a =>
+        a.movil_id === movilId ? { ...a, cantidad: nuevaCantidad } : a
       );
-      setGuestCart(updated);
-      setItems(prev => prev.map(i =>
-        i.movil_id === movilId
-          ? { ...i, cantidad: nuevaCantidad, subtotal: i.precio * nuevaCantidad }
-          : i
+      guardarCarritoInvitado(actualizado);
+      fijarArts(prev => prev.map(a =>
+        a.movil_id === movilId
+          ? { ...a, cantidad: nuevaCantidad, subtotal: a.precio * nuevaCantidad }
+          : a
       ));
       window.dispatchEvent(new Event("cart-updated"));
       return;
     }
-    await apiFetch(`/carrito/${movilId}`, {
+    await llamarApi(`/carrito/${movilId}`, {
       method: "PATCH",
       body: JSON.stringify({ cantidad: nuevaCantidad }),
     });
-    await loadCart();
+    await cargarCarro();
   };
 
-  const handleClear = async () => {
-    if (!isAuthenticated) {
-      clearGuestCart();
-      setItems([]);
+  const vaciarCarro = async () => {
+    if (!estaAuth) {
+      limpiarCarritoInvitado();
+      fijarArts([]);
       window.dispatchEvent(new Event("cart-updated"));
       return;
     }
-    await apiFetch("/carrito/vaciar", { method: "DELETE" });
-    setItems([]);
+    await llamarApi("/carrito/vaciar", { method: "DELETE" });
+    fijarArts([]);
   };
 
-  const handleCheckout = async () => {
-    if (!isAuthenticated) {
+  const irAPagar = async () => {
+    if (!estaAuth) {
       sessionStorage.setItem('retech-auto-checkout', '1');
-      navigate("/login", { state: { from: location.pathname } });
+      navegar("/login", { state: { from: ubicacion.pathname } });
       return;
     }
 
-    setIntentLoading(true);
-    setApiError(null);
-    
+    fijarCargandoIntento(true);
+    fijarErrorApi(null);
+
     try {
-      // 1. Inicializamos la protección CSRF
       await fetch(`${API}/sanctum/csrf-cookie`, { credentials: 'include' });
+      const datos = await llamarApi("/checkout/intent", { method: "POST" });
 
-      // 2. Realizamos la petición real para crear el pago
-      // Usamos apiFetch porque ya tiene las credentials y headers configurados
-      const data = await apiFetch("/checkout/intent", { 
-        method: "POST" 
-      });
-
-      // 3. Procesamos la respuesta del servidor
-      if (data && data.client_secret) {
-        setClientSecret(data.client_secret);
-        setIntentTotal(data.amount);
+      if (datos && datos.client_secret) {
+        fijarSecretoCliente(datos.client_secret);
+        fijarTotalIntento(datos.amount);
       } else {
-        // Si el error es "Unauthenticated", es que el middleware 'auth' falló
-        setApiError(data.message ?? "No se pudo iniciar el pago. ¿Has iniciado sesión?");
+        fijarErrorApi(datos.message ?? "No se pudo iniciar el pago. ¿Has iniciado sesión?");
       }
     } catch (err) {
       if (err.message === "Unauthenticated.") {
         sessionStorage.setItem('retech-auto-checkout', '1');
-        setAuthToast(true);
         setTimeout(() => {
-          setAuthToast(false);
-          navigate("/login", { state: { from: location.pathname } });
+          navegar("/login", { state: { from: ubicacion.pathname } });
         }, 2500);
       } else {
-        setApiError(err.message || "Error desconocido: " + err);
+        fijarErrorApi(err.message || "Error desconocido: " + err);
       }
     } finally {
-      setIntentLoading(false);
+      fijarCargandoIntento(false);
     }
   };
 
-  if (successId) return <SuccessScreen compraId={successId}/>;
+  if (idExito) return <PantallaExito compraId={idExito} datosPerfil={datosPerfil} usuario={usuario}/>;
 
   return (
     <>
@@ -934,16 +956,595 @@ export default function CartCheckoutPage() {
         @import url('https://fonts.googleapis.com/css2?family=Sora:wght@400;600;700;800&family=Inter:wght@400;500;600&display=swap');
         * { box-sizing: border-box; }
         body { margin: 0; font-family: 'Inter', sans-serif; background: #f8fafc; }
-        @keyframes fadeIn { from { opacity:0; transform:translateY(8px); } to { opacity:1; transform:translateY(0); } }
-        @keyframes spin { to { transform:rotate(360deg); } }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+        /* Spinner */
+        .spinner { animation: spin .8s linear infinite; }
+
+        /* Batería */
+        .bat-wrap  { display: flex; align-items: center; gap: 5px; }
+        .bat-fondo { width: 34px; height: 7px; background: #e5e7eb; border-radius: 4px; overflow: hidden; }
+        .bat-relleno { height: 100%; border-radius: 4px; transition: width .5s; }
+        .bat-alta  { background: #22c55e; color: #22c55e; }
+        .bat-media { background: #f59e0b; color: #f59e0b; }
+        .bat-baja  { background: #ef4444; color: #ef4444; }
+        .bat-valor { font-size: 10px; font-weight: 700; background: transparent; }
+
+        /* Icono de teléfono */
+        .phone-icono {
+          width: 52px;
+          height: 52px;
+          border-radius: 13px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          flex-shrink: 0;
+        }
+
+        /* Botón de cantidad */
+        .btn-cant {
+          width: 30px;
+          height: 30px;
+          border: none;
+          background: none;
+          font-size: 17px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+        }
+        .btn-cant.deshabilitado { cursor: not-allowed; color: #cbd5e1; }
+        .btn-cant:not(.deshabilitado) { cursor: pointer; color: #475569; }
+
+        /* Estados de producto */
+        .est-excelente { background: #d1fae5; color: #065f46; }
+        .est-mbueno    { background: #dbeafe; color: #1e40af; }
+        .est-bueno     { background: #fef9c3; color: #854d0e; }
+        .est-aceptable { background: #fee2e2; color: #991b1b; }
+
+        /* Item del carrito */
+        .carro-item-fila {
+          display: flex;
+          gap: 14px;
+          padding: 18px 0;
+          border-bottom: 1px solid #f1f5f9;
+        }
+        .carro-item-thumb {
+          width: 52px;
+          height: 52px;
+          border-radius: 13px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          flex-shrink: 0;
+          overflow: hidden;
+          position: relative;
+        }
+        .carro-item-thumb-img {
+          position: absolute;
+          inset: 0;
+          width: 100%;
+          height: 100%;
+          object-fit: contain;
+          padding: 4px;
+        }
+        .carro-item-body { flex: 1; min-width: 0; }
+        .carro-item-top {
+          display: flex;
+          justify-content: space-between;
+          align-items: flex-start;
+          gap: 8px;
+        }
+        .carro-item-modelo {
+          margin: 0;
+          font-weight: 700;
+          font-size: 14.5px;
+          color: #0f172a;
+          font-family: 'Sora', sans-serif;
+        }
+        .carro-item-specs { margin: 2px 0 0; font-size: 12px; color: #64748b; }
+        .carro-color-wrap {
+          display: inline-flex;
+          align-items: center;
+          gap: 3px;
+        }
+        .carro-color-punto {
+          width: 7px;
+          height: 7px;
+          border-radius: 50%;
+          display: inline-block;
+          border: 1px solid #cbd5e1;
+        }
+        .btn-quitar-item {
+          background: none;
+          border: none;
+          padding: 3px;
+          line-height: 1;
+          color: #94a3b8;
+          transition: color .15s;
+        }
+        .btn-quitar-item:not(.deshabilitado) { cursor: pointer; }
+        .btn-quitar-item:not(.deshabilitado):hover { color: #ef4444; }
+        .btn-quitar-item.deshabilitado { cursor: not-allowed; }
+        .carro-item-badges {
+          display: flex;
+          align-items: center;
+          gap: 8px;
+          margin-top: 7px;
+        }
+        .carro-estado {
+          font-size: 10.5px;
+          font-weight: 700;
+          padding: 2px 7px;
+          border-radius: 20px;
+        }
+        .carro-item-acciones {
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          margin-top: 10px;
+        }
+        .carro-qty-wrap {
+          display: flex;
+          align-items: center;
+          background: #f8fafc;
+          border: 1px solid #e2e8f0;
+          border-radius: 8px;
+        }
+        .carro-qty-num {
+          width: 26px;
+          text-align: center;
+          font-size: 13px;
+          font-weight: 700;
+          color: #0f172a;
+        }
+        .carro-precio-col { text-align: right; }
+        .carro-subtotal {
+          margin: 0;
+          font-weight: 800;
+          font-size: 16px;
+          color: #0f172a;
+          font-family: 'Sora', sans-serif;
+        }
+        .carro-precio-ud { margin: 0; font-size: 10.5px; color: #94a3b8; }
+
+        /* Formulario de pago */
+        #error-pago {
+          margin-top: 12px;
+          padding: 10px 14px;
+          background: #fef2f2;
+          border: 1px solid #fecaca;
+          border-radius: 8px;
+          font-size: 12.5px;
+          color: #dc2626;
+        }
+        .pago-botones {
+          display: flex;
+          gap: 10px;
+          margin-top: 20px;
+        }
+        .btn-volver-pago {
+          flex: 1;
+          padding: 13px;
+          background: #f8fafc;
+          border: 1px solid #e2e8f0;
+          border-radius: 10px;
+          font-size: 13.5px;
+          font-weight: 600;
+          cursor: pointer;
+          color: #475569;
+        }
+        .btn-pagar {
+          flex: 2;
+          padding: 13px;
+          color: #fff;
+          border: none;
+          border-radius: 10px;
+          font-size: 14px;
+          font-weight: 700;
+          font-family: 'Sora', sans-serif;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          gap: 8px;
+        }
+        .btn-pagar.activo {
+          background: linear-gradient(135deg, #6366f1, #4f46e5);
+          cursor: pointer;
+          box-shadow: 0 4px 14px rgba(99, 102, 241, .4);
+        }
+        .btn-pagar.inactivo {
+          background: #94a3b8;
+          cursor: not-allowed;
+          box-shadow: none;
+        }
+
+        /* Fila de resumen */
+        .fila-resumen {
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+        }
+        .fila-etiq { font-size: 13px; color: #475569; font-weight: 400; }
+        .fila-etiq.grande  { font-size: 14.5px; }
+        .fila-etiq.opaco   { color: #94a3b8; }
+        .fila-etiq.negrita { color: #0f172a; font-weight: 800; font-family: 'Sora', sans-serif; }
+        .fila-valor { font-size: 13px; font-weight: 600; color: #0f172a; font-family: 'Sora', sans-serif; }
+        .fila-valor.grande  { font-size: 19px; font-weight: 800; }
+        .fila-valor.negrita { color: #4f46e5; font-weight: 800; }
+        .fila-valor.opaco   { color: #94a3b8; }
+
+        /* Resumen del pedido */
+        #resumen-pedido {
+          position: sticky;
+          top: 24px;
+          background: #fff;
+          border: 1px solid #e2e8f0;
+          border-radius: 20px;
+          padding: 26px;
+          box-shadow: 0 4px 24px rgba(15, 23, 42, .07);
+        }
+        #resumen-titulo {
+          margin: 0 0 16px;
+          font-size: 17px;
+          font-weight: 800;
+          color: #0f172a;
+          font-family: 'Sora', sans-serif;
+          letter-spacing: -.3px;
+        }
+        #resumen-items { display: flex; flex-direction: column; gap: 8px; margin-bottom: 16px; }
+        .resumen-item { display: flex; align-items: center; gap: 10px; }
+        .resumen-item-thumb {
+          width: 38px;
+          height: 38px;
+          border-radius: 9px;
+          flex-shrink: 0;
+          overflow: hidden;
+          position: relative;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+        }
+        .resumen-item-thumb-img {
+          position: absolute;
+          inset: 0;
+          width: 100%;
+          height: 100%;
+          object-fit: contain;
+          padding: 2px;
+        }
+        .resumen-item-info { flex: 1; min-width: 0; }
+        .resumen-item-modelo {
+          margin: 0;
+          font-size: 12px;
+          font-weight: 700;
+          color: #0f172a;
+          white-space: nowrap;
+          overflow: hidden;
+          text-overflow: ellipsis;
+        }
+        .resumen-item-specs { margin: 0; font-size: 11px; color: #64748b; }
+        .resumen-item-precio { font-size: 12px; font-weight: 700; color: #0f172a; flex-shrink: 0; }
+        #resumen-totales {
+          border-top: 1px solid #f1f5f9;
+          padding-top: 14px;
+          display: flex;
+          flex-direction: column;
+          gap: 11px;
+        }
+        #resumen-envio {
+          margin: 18px 0;
+          background: #f0fdf4;
+          border: 1px solid #bbf7d0;
+          border-radius: 10px;
+          padding: 9px 13px;
+          display: flex;
+          align-items: center;
+          gap: 7px;
+        }
+        #resumen-envio-texto { font-size: 12px; color: #15803d; font-weight: 600; }
+        #resumen-guest { margin-top: 4px; }
+        #resumen-guest-aviso {
+          padding: 12px 14px;
+          background: #fefce8;
+          border: 1px solid #fde68a;
+          border-radius: 10px;
+          margin-bottom: 12px;
+          font-size: 12.5px;
+          color: #92400e;
+          line-height: 1.5;
+        }
+
+        /* Botón de comprar / ir al pago */
+        .btn-comprar {
+          width: 100%;
+          padding: 15px;
+          color: #fff;
+          border: none;
+          border-radius: 12px;
+          font-size: 14.5px;
+          font-weight: 700;
+          font-family: 'Sora', sans-serif;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          gap: 9px;
+          transition: transform .15s;
+        }
+        .btn-comprar.activo {
+          background: linear-gradient(135deg, #6366f1, #4f46e5);
+          cursor: pointer;
+          box-shadow: 0 4px 14px rgba(99, 102, 241, .4);
+        }
+        .btn-comprar.activo.hover { transform: translateY(-1px); }
+        .btn-comprar.inactivo {
+          background: #94a3b8;
+          cursor: not-allowed;
+          box-shadow: none;
+        }
+        #resumen-stripe {
+          margin-top: 12px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          gap: 5px;
+        }
+        #resumen-stripe-texto { font-size: 10.5px; color: #94a3b8; }
+
+        /* Pantalla de éxito */
+        #exito-wrap {
+          min-height: 100vh;
+          background: #f8fafc;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          padding: 24px;
+        }
+        #exito-caja {
+          background: #fff;
+          border-radius: 24px;
+          padding: 40px;
+          text-align: center;
+          max-width: 480px;
+          width: 100%;
+          border: 1px solid #e2e8f0;
+          box-shadow: 0 8px 32px rgba(15, 23, 42, .08);
+        }
+        #exito-icono {
+          width: 72px;
+          height: 72px;
+          border-radius: 50%;
+          background: #0f172a;
+          margin: 0 auto 20px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          box-shadow: 0 8px 20px rgba(15, 23, 42, .2);
+        }
+        #exito-titulo {
+          margin: 0 0 8px;
+          font-size: 24px;
+          font-weight: 800;
+          color: #0f172a;
+          font-family: 'Sora', sans-serif;
+        }
+        #exito-procesado { margin: 0 0 4px; color: #64748b; font-size: 14px; }
+        #exito-num       { margin: 0 0 24px; color: #94a3b8; font-size: 12.5px; }
+        #exito-spinner   { margin-bottom: 24px; }
+        #exito-botones {
+          display: flex;
+          gap: 12px;
+          justify-content: center;
+          flex-wrap: wrap;
+        }
+        .btn-factura-exito {
+          padding: 12px 22px;
+          background: #f8fafc;
+          border: 1px solid #e2e8f0;
+          border-radius: 10px;
+          font-size: 13.5px;
+          font-weight: 700;
+          cursor: pointer;
+          color: #0f172a;
+          font-family: 'Sora', sans-serif;
+        }
+        .btn-factura-exito.inactivo { cursor: not-allowed; opacity: 0.5; }
+        .btn-seguir-comprando {
+          padding: 12px 22px;
+          background: linear-gradient(135deg, #6366f1, #4f46e5);
+          color: #fff;
+          border-radius: 10px;
+          text-decoration: none;
+          font-size: 13.5px;
+          font-weight: 700;
+          font-family: 'Sora', sans-serif;
+          box-shadow: 0 4px 12px rgba(99, 102, 241, .35);
+        }
+
+        /* Formulario de perfil en checkout */
+        #form-perfil {
+          background: #fff;
+          border: 1px solid #e2e8f0;
+          border-radius: 20px;
+          padding: 22px;
+          box-shadow: 0 4px 24px rgba(15, 23, 42, .07);
+        }
+        #form-perfil-titulo {
+          margin: 0 0 4px;
+          font-size: 14px;
+          font-weight: 800;
+          color: #0f172a;
+          font-family: 'Sora', sans-serif;
+        }
+        #form-perfil-desc { margin: 0 0 16px; font-size: 12px; color: #64748b; }
+        #form-perfil-campos { display: flex; flex-direction: column; gap: 11px; }
+
+        .form-campo-etiq {
+          display: block;
+          font-size: 11px;
+          font-weight: 700;
+          color: #94a3b8;
+          text-transform: uppercase;
+          letter-spacing: .05em;
+          margin-bottom: 4px;
+        }
+        .form-campo-rel { position: relative; }
+        .form-campo-input {
+          width: 100%;
+          box-sizing: border-box;
+          padding: 10px 36px 10px 13px;
+          border-radius: 10px;
+          font-size: 13.5px;
+          outline: none;
+          font-family: inherit;
+          color: #0f172a;
+          transition: border-color .15s, background .15s;
+        }
+        .form-campo-input.neutro { border: 1px solid #e2e8f0; background: #fff; }
+        .form-campo-input.valido { border: 1px solid #86efac; background: #f0fdf4; }
+        .form-campo-input.error  { border: 1px solid #fca5a5; background: #fef2f2; }
+        .form-campo-tick {
+          position: absolute;
+          right: 11px;
+          top: 50%;
+          transform: translateY(-50%);
+          color: #22c55e;
+          flex-shrink: 0;
+        }
+        .form-campo-error { margin: 3px 0 0 2px; font-size: 11px; color: #ef4444; }
+        .form-campo-estado { margin: 3px 0 0 2px; font-size: 11px; }
+        .form-campo-estado.validando { color: #6366f1; }
+        .form-campo-estado.cp-ok     { color: #22c55e; }
+        .form-campo-estado.cp-err    { color: #ef4444; }
+        .form-select {
+          width: 100%;
+          box-sizing: border-box;
+          padding: 10px 13px;
+          border-radius: 10px;
+          font-size: 13.5px;
+          outline: none;
+          font-family: inherit;
+          cursor: pointer;
+        }
+        .form-select.neutro { border: 1px solid #e2e8f0; background: #fff; color: #94a3b8; }
+        .form-select.valido { border: 1px solid #86efac; background: #f0fdf4; color: #0f172a; }
+        .form-select.error  { border: 1px solid #fca5a5; background: #fef2f2; color: #0f172a; }
+        .form-select.tiene-valor { color: #0f172a; }
+
+        /* Página del carrito */
+        #pag-carro {
+          min-height: 100vh;
+          background: #f8fafc;
+          padding: 32px 16px 64px;
+        }
+        #carro-contenedor { max-width: 1060px; margin: 0 auto; }
+        #carro-cab {
+          display: flex;
+          align-items: center;
+          gap: 12px;
+          margin-bottom: 28px;
+        }
+        #carro-cab-icono {
+          width: 38px;
+          height: 38px;
+          background: #0f172a;
+          border-radius: 11px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          box-shadow: 0 4px 10px rgba(99, 102, 241, .3);
+        }
+        #carro-titulo {
+          margin: 0;
+          font-size: 24px;
+          font-weight: 800;
+          color: #0f172a;
+          font-family: 'Sora', sans-serif;
+          letter-spacing: -.5px;
+        }
+        #carro-subtitulo { margin: 0; font-size: 12.5px; color: #64748b; }
+        #carro-error {
+          padding: 12px 16px;
+          background: #fef2f2;
+          border: 1px solid #fecaca;
+          border-radius: 10px;
+          margin-bottom: 20px;
+          font-size: 13px;
+          color: #dc2626;
+          font-weight: 500;
+        }
+        #carro-spinner { text-align: center; padding: 80px; }
+        #carro-vacio {
+          text-align: center;
+          padding: 72px 20px;
+          background: #fff;
+          border-radius: 20px;
+          border: 1px solid #e2e8f0;
+        }
+        #carro-vacio-icono { font-size: 56px; margin-bottom: 14px; }
+        #carro-vacio-titulo {
+          margin: 0 0 6px;
+          font-size: 19px;
+          font-weight: 700;
+          color: #0f172a;
+          font-family: 'Sora', sans-serif;
+        }
+        #carro-vacio-desc { margin: 0; color: #64748b; font-size: 13.5px; }
+        #carro-grid {
+          display: grid;
+          grid-template-columns: 1fr 340px;
+          gap: 24px;
+          align-items: flex-start;
+        }
+        #carro-panel {
+          background: #fff;
+          border-radius: 20px;
+          border: 1px solid #e2e8f0;
+          padding: 6px 24px 4px;
+          box-shadow: 0 2px 10px rgba(15, 23, 42, .04);
+        }
+        #pago-wrap { padding: 20px 0; }
+        #pago-separador { margin: 24px 0; border-top: 2px solid #f1f5f9; }
+        #pago-titulo {
+          margin: 0 0 18px;
+          font-size: 14px;
+          font-weight: 700;
+          color: #94a3b8;
+          text-transform: uppercase;
+          letter-spacing: .7px;
+        }
+        #carro-lista-cab {
+          padding: 14px 0 4px;
+          border-bottom: 2px solid #f1f5f9;
+        }
+        #carro-lista-etiq {
+          font-size: 11.5px;
+          font-weight: 700;
+          color: #94a3b8;
+          text-transform: uppercase;
+          letter-spacing: .7px;
+        }
+        #carro-pie { padding: 14px 0; }
+        .btn-vaciar {
+          background: none;
+          border: none;
+          cursor: pointer;
+          font-size: 12px;
+          color: #ef4444;
+          font-weight: 600;
+          display: flex;
+          align-items: center;
+          gap: 4px;
+          padding: 0;
+        }
       `}</style>
       <Navbar />
 
-      <div style={{ minHeight:"100vh",background:"#f8fafc",padding:"32px 16px 64px" }}>
-        <div style={{ maxWidth:1060,margin:"0 auto" }}>
+      <div id="pag-carro">
+        <div id="carro-contenedor">
 
-          <div style={{ display:"flex",alignItems:"center",gap:12,marginBottom:28 }}>
-            <div style={{ width:38,height:38,background:"#0f172a",borderRadius:11,display:"flex",alignItems:"center",justifyContent:"center",boxShadow:"0 4px 10px rgba(99,102,241,.3)" }}>
+          <div id="carro-cab">
+            <div id="carro-cab-icono">
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.2">
                 <path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4z"/>
                 <line x1="3" y1="6" x2="21" y2="6"/>
@@ -951,64 +1552,59 @@ export default function CartCheckoutPage() {
               </svg>
             </div>
             <div>
-              <h1 style={{ margin:0,fontSize:24,fontWeight:800,color:"#0f172a",fontFamily:"'Sora',sans-serif",letterSpacing:"-.5px" }}>
-                {clientSecret ? t('cart.payTitle') : t('cart.title')}
+              <h1 id="carro-titulo">
+                {secretoCliente ? t('cart.payTitle') : t('cart.title')}
               </h1>
-              {!clientSecret && (
-                <p style={{ margin:0,fontSize:12.5,color:"#64748b" }}>
-                  {fetchLoading ? t('cart.loading') : items.length === 0 ? t('cart.emptyStatus') : t('cart.itemsCount')(items.reduce((s,i) => s+i.cantidad, 0))}
+              {!secretoCliente && (
+                <p id="carro-subtitulo">
+                  {cargando ? t('cart.loading') : arts.length === 0 ? t('cart.emptyStatus') : t('cart.itemsCount')(arts.reduce((s, a) => s + a.cantidad, 0))}
                 </p>
               )}
             </div>
           </div>
 
-          {apiError && (
-            <div style={{ padding:"12px 16px",background:"#fef2f2",border:"1px solid #fecaca",borderRadius:10,marginBottom:20,fontSize:13,color:"#dc2626",fontWeight:500 }}>
-              {apiError}
-            </div>
+          {errorApi && (
+            <div id="carro-error">{errorApi}</div>
           )}
 
-          {fetchLoading ? (
-            <div style={{ textAlign:"center",padding:80 }}>
-              <Spinner size={32} color="#6366f1"/>
+          {cargando ? (
+            <div id="carro-spinner">
+              <Girador tamano={32} color="#6366f1"/>
             </div>
-          ) : items.length === 0 && !clientSecret ? (
-            <div style={{ textAlign:"center",padding:"72px 20px",background:"#fff",borderRadius:20,border:"1px solid #e2e8f0" }}>
-              <div style={{ fontSize:56,marginBottom:14 }}>🛒</div>
-              <h2 style={{ margin:"0 0 6px",fontSize:19,fontWeight:700,color:"#0f172a",fontFamily:"'Sora',sans-serif" }}>{t('cart.emptyTitle')}</h2>
-              <p style={{ margin:0,color:"#64748b",fontSize:13.5 }}>{t('cart.emptyDesc')}</p>
+          ) : arts.length === 0 && !secretoCliente ? (
+            <div id="carro-vacio">
+              <div id="carro-vacio-icono">🛒</div>
+              <h2 id="carro-vacio-titulo">{t('cart.emptyTitle')}</h2>
+              <p id="carro-vacio-desc">{t('cart.emptyDesc')}</p>
             </div>
           ) : (
-            <div style={{ display:"grid",gridTemplateColumns:"1fr 340px",gap:24,alignItems:"flex-start" }}>
-              <div style={{ background:"#fff",borderRadius:20,border:"1px solid #e2e8f0",padding:"6px 24px 4px",boxShadow:"0 2px 10px rgba(15,23,42,.04)" }}>
-                {clientSecret ? (
-                  <div style={{ padding:"20px 0" }}>
-                    <div style={{ marginBottom:24 }}>
-                      <ProfileForm
-                        user={user}
-                        onDataChange={(data) => setProfileFormData(data)}
+            <div id="carro-grid">
+              <div id="carro-panel">
+                {secretoCliente ? (
+                  <div id="pago-wrap">
+                    <div>
+                      <FormPerfil
+                        usuario={usuario}
+                        alCambiarDatos={(datos) => fijarDatosPerfil(datos)}
                         t={t}
                       />
-                      <div style={{ margin:"24px 0", borderTop:"2px solid #f1f5f9" }}/>
+                      <div id="pago-separador"/>
                     </div>
-                    <h3 style={{ margin:"0 0 18px",fontSize:14,fontWeight:700,color:"#94a3b8",textTransform:"uppercase",letterSpacing:".7px" }}>
-                      {t('cart.paymentData')}
-                    </h3>
-                    <Elements stripe={stripePromise} options={{ clientSecret, appearance:{ theme:"stripe", variables:{ colorPrimary:"#6366f1", borderRadius:"10px", fontFamily:"Inter, sans-serif" } } }}>
-                      <PaymentForm total={intentTotal} onSuccess={(id) => setSuccessId(id)} onCancel={() => setClientSecret(null)} t={t} profileFormData={profileFormData} onProfileSaved={setUser}/>
+                    <h3 id="pago-titulo">{t('cart.paymentData')}</h3>
+                    <Elements stripe={promesaStripe} options={{ clientSecret: secretoCliente, appearance:{ theme:"stripe", variables:{ colorPrimary:"#6366f1", borderRadius:"10px", fontFamily:"Inter, sans-serif" } } }}>
+                      <FormPago total={totalIntento} alExito={(id) => fijarIdExito(id)} alCancelar={() => fijarSecretoCliente(null)} t={t} datosPerfil={datosPerfil} alGuardarPerfil={fijarUsuario}/>
                     </Elements>
                   </div>
                 ) : (
                   <>
-                    <div style={{ padding:"14px 0 4px",borderBottom:"2px solid #f1f5f9" }}>
-                      <span style={{ fontSize:11.5,fontWeight:700,color:"#94a3b8",textTransform:"uppercase",letterSpacing:".7px" }}>{t('cart.products')}</span>
+                    <div id="carro-lista-cab">
+                      <span id="carro-lista-etiq">{t('cart.products')}</span>
                     </div>
-                    {items.map((item) => (
-                      <CartItem key={item.movil_id} item={item} onRemove={handleRemove} onQty={handleQty} disabled={intentLoading}/>
+                    {arts.map((art) => (
+                      <ItemCarro key={art.movil_id} art={art} alQuitar={quitarArt} alCant={cambiarCant} deshabilitado={cargandoIntento}/>
                     ))}
-                    <div style={{ padding:"14px 0" }}>
-                      <button onClick={handleClear}
-                        style={{ background:"none",border:"none",cursor:"pointer",fontSize:12,color:"#ef4444",fontWeight:600,display:"flex",alignItems:"center",gap:4,padding:0 }}>
+                    <div id="carro-pie">
+                      <button onClick={vaciarCarro} className="btn-vaciar">
                         <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
                           <polyline points="3 6 5 6 21 6"/>
                           <path d="M19 6l-1 14H6L5 6M10 11v6M14 11v6M9 6V4h6v2"/>
@@ -1016,11 +1612,10 @@ export default function CartCheckoutPage() {
                         {t('cart.clearCart')}
                       </button>
                     </div>
-
                   </>
                 )}
               </div>
-              <OrderSummary items={items} onCheckout={handleCheckout} loadingIntent={intentLoading} t={t} isGuest={!isAuthenticated}/>
+              <ResumenPedido arts={arts} alPagar={irAPagar} cargandoIntento={cargandoIntento} t={t} esInvitado={!estaAuth}/>
             </div>
           )}
         </div>

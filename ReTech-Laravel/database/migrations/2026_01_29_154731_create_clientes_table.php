@@ -24,6 +24,7 @@ return new class extends Migration
             $table->string('provincia', 80)->nullable();
             $table->string('municipio', 80)->nullable();
             $table->string('codigo_postal', 10)->nullable();
+            $table->string('calle', 100)->nullable();
             $table->string('telefono', 15);
 
             $table->foreign('user_id')

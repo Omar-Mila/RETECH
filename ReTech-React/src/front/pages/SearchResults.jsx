@@ -2,32 +2,24 @@ import { useEffect, useState, useMemo, useRef } from "react"
 import { useSearchParams, Link } from "react-router-dom"
 import Navbar from "../components/Navbar"
 import Footer from "../components/Footer"
-import { useLanguage } from "../context/LanguageContext"
+import { useIdioma } from "../context/LanguageContext"
 
 function PhoneImage({ src, alt }) {
     const [status, setStatus] = useState("loading")
     return (
-        <div style={{ position: "relative", width: "100%", height: "100%" }}>
+        <div className="img-wrap-rel">
             {status !== "loaded" && (
-                <div style={{
-                    position: "absolute", inset: 0,
-                    display: "flex", alignItems: "center", justifyContent: "center",
-                }}>
+                <div className="img-placeholder">
                     {status === "error"
-                        ? <span style={{ fontSize: 36, opacity: 0.25 }}>📱</span>
-                        : <div style={{ width: 52, height: 80, background: "#e2e8f0", borderRadius: 8, animation: "pulse 1.5s ease-in-out infinite" }} />
+                        ? <span className="img-error-icono">📱</span>
+                        : <div className="img-skeleton" />
                     }
                 </div>
             )}
             <img
                 src={src}
                 alt={alt}
-                style={{
-                    height: "100%", width: "100%", objectFit: "contain",
-                    opacity: status === "loaded" ? 1 : 0,
-                    transition: "opacity 0.25s",
-                    display: "block",
-                }}
+                className={`img-producto${status === "loaded" ? " cargada" : ""}`}
                 onLoad={() => setStatus("loaded")}
                 onError={() => setStatus("error")}
             />
@@ -55,21 +47,10 @@ function SortButton({ label, sort, onClick }) {
     return (
         <button
             onClick={onClick}
-            style={{
-                display: "inline-flex", alignItems: "center", gap: 4,
-                padding: "5px 10px",
-                border: "1px solid",
-                borderColor: sort ? "#0f172a" : "#e2e8f0",
-                borderRadius: 8,
-                background: sort ? "#0f172a" : "#fff",
-                color: sort ? "#fff" : "#475569",
-                fontSize: 12, fontWeight: 600,
-                cursor: "pointer",
-                whiteSpace: "nowrap",
-            }}
+            className={`btn-orden${sort ? " activo" : ""}`}
         >
             {label}
-            <span style={{ fontSize: 10, opacity: sort ? 1 : 0.4 }}>{icon}</span>
+            <span className={`btn-orden-icono${sort ? " visible" : ""}`}>{icon}</span>
         </button>
     )
 }
@@ -89,78 +70,34 @@ function FilterPanel({ products, filters, onChange, collapsed, onToggleCollapse,
     const activeCount = filters.modelos.length + filters.colores.length + filters.almacenamientos.length + (filters.precioMax < maxPrice ? 1 : 0)
 
     return (
-        <aside style={{
-            width: collapsed ? 44 : 236,
-            minWidth: collapsed ? 44 : 236,
-            flexShrink: 0,
-            transition: "width 0.2s, min-width 0.2s",
-            background: "#fff",
-            border: "1px solid #f1f5f9",
-            borderRadius: 12,
-            alignSelf: "flex-start",
-            position: "sticky",
-            top: 88,
-            overflow: "hidden",
-            maxHeight: "calc(100vh - 104px)",
-            display: "flex",
-            flexDirection: "column",
-            boxShadow: "0 1px 4px rgba(0,0,0,0.04)"
-        }}>
-            {/* Header */}
-            <div style={{
-                padding: collapsed ? "12px 0" : "12px 14px",
-                borderBottom: collapsed ? "none" : "1px solid #f1f5f9",
-                display: "flex",
-                justifyContent: collapsed ? "center" : "space-between",
-                alignItems: "center",
-                flexShrink: 0
-            }}>
+        <aside className={`panel-filtros${collapsed ? " colapsado" : ""}`}>
+            {/* Cabecera */}
+            <div className={`panel-filtros-cab${collapsed ? " centrado" : ""}`}>
                 <button
                     onClick={onToggleCollapse}
                     title={collapsed ? "Mostrar filtres" : "Ocultar filtres"}
-                    style={{
-                        background: activeCount > 0 ? "#0f172a" : "transparent",
-                        border: "1px solid",
-                        borderColor: activeCount > 0 ? "#0f172a" : "#e2e8f0",
-                        borderRadius: 8,
-                        padding: collapsed ? "7px" : "6px 10px",
-                        cursor: "pointer",
-                        display: "flex",
-                        alignItems: "center",
-                        gap: 6,
-                        color: activeCount > 0 ? "#fff" : "#334155",
-                        position: "relative",
-                        flexShrink: 0
-                    }}
+                    className={`btn-filtros${activeCount > 0 ? " con-activos" : ""}${collapsed ? " compacto" : ""}`}
                 >
                     <FunnelIcon size={15} color={activeCount > 0 ? "#fff" : "#334155"} />
-                    {!collapsed && <span style={{ fontSize: 12, fontWeight: 700, letterSpacing: "0.02em" }}>Filtres</span>}
+                    {!collapsed && <span className="btn-filtros-etiq">Filtres</span>}
                     {activeCount > 0 && (
-                        <span style={{
-                            background: "#6366f1", color: "#fff", fontSize: 9, fontWeight: 700,
-                            width: 15, height: 15, borderRadius: "50%",
-                            display: "flex", alignItems: "center", justifyContent: "center",
-                            border: "2px solid #fff",
-                            position: "absolute", top: -6, right: -6
-                        }}>
-                            {activeCount}
-                        </span>
+                        <span className="filtros-badge">{activeCount}</span>
                     )}
                 </button>
 
                 {!collapsed && activeCount > 0 && (
                     <button
                         onClick={() => onChange({ modelos: [], colores: [], almacenamientos: [], precioMax: maxPrice })}
-                        style={{ fontSize: 11, color: "#64748b", background: "none", border: "none", cursor: "pointer", textDecoration: "underline" }}
+                        className="btn-limpiar-filtros"
                     >
                         {t('search.clear')}
                     </button>
                 )}
             </div>
 
-            {/* Content */}
+            {/* Contenido */}
             {!collapsed && (
-                <div style={{ flex: 1, overflowY: "auto" }}>
+                <div className="panel-filtros-body">
                     <Section title={t('search.filterModel')}>
                         {modelos.map(m => (
                             <CheckRow key={m} label={m} checked={filters.modelos.includes(m)} onChange={() => toggle("modelos", m)} />
@@ -177,15 +114,15 @@ function FilterPanel({ products, filters, onChange, collapsed, onToggleCollapse,
                         ))}
                     </Section>
                     <Section title={t('search.filterMaxPrice')}>
-                        <div style={{ padding: "4px 14px 14px" }}>
-                            <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 8 }}>
-                                <span style={{ fontSize: 11, color: "#64748b" }}>0 €</span>
-                                <span style={{ fontSize: 12, fontWeight: 700, color: "#0f172a" }}>{filters.precioMax} €</span>
+                        <div className="filtro-precio-wrap">
+                            <div className="filtro-precio-row">
+                                <span className="filtro-precio-min">0 €</span>
+                                <span className="filtro-precio-max">{filters.precioMax} €</span>
                             </div>
                             <input
                                 type="range" min={0} max={maxPrice} value={filters.precioMax}
                                 onChange={e => onChange({ ...filters, precioMax: Number(e.target.value) })}
-                                style={{ width: "100%", accentColor: "#0f172a" }}
+                                className="filtro-rango"
                             />
                         </div>
                     </Section>
@@ -197,8 +134,8 @@ function FilterPanel({ products, filters, onChange, collapsed, onToggleCollapse,
 
 function Section({ title, children }) {
     return (
-        <div style={{ borderBottom: "1px solid #f1f5f9" }}>
-            <p style={{ margin: 0, padding: "10px 14px 5px", fontSize: 10, fontWeight: 700, color: "#94a3b8", textTransform: "uppercase", letterSpacing: "0.07em" }}>{title}</p>
+        <div className="filtro-seccion">
+            <p className="filtro-seccion-titulo">{title}</p>
             {children}
         </div>
     )
@@ -206,9 +143,9 @@ function Section({ title, children }) {
 
 function CheckRow({ label, checked, onChange }) {
     return (
-        <label style={{ display: "flex", alignItems: "center", gap: 8, padding: "5px 14px", cursor: "pointer" }}>
-            <input type="checkbox" checked={checked} onChange={onChange} style={{ accentColor: "#0f172a", width: 13, height: 13 }} />
-            <span style={{ fontSize: 12, color: "#334155" }}>{label}</span>
+        <label className="filtro-check-fila">
+            <input type="checkbox" checked={checked} onChange={onChange} className="filtro-check" />
+            <span className="filtro-check-etiq">{label}</span>
         </label>
     )
 }
@@ -216,7 +153,7 @@ function CheckRow({ label, checked, onChange }) {
 const LIMITE = 8
 
 export default function SearchResults() {
-    const { t } = useLanguage()
+    const { t } = useIdioma()
     const [searchParams]   = useSearchParams()
     const query             = searchParams.get("q")
     const [productos, setProductos]             = useState([])
@@ -279,12 +216,10 @@ export default function SearchResults() {
         return resultado
     }, [productos, filtros, ordenPrecio, ordenNombre])
 
-    // Resetear paginacion cuando cambian filtros u ordenacion
     useEffect(() => {
         setCantidad(LIMITE)
     }, [filtrados])
 
-    // Scroll infinito: cuando el centinela entra en pantalla, cargamos mas
     const hayMas = cantidad < filtrados.length
     useEffect(() => {
         const el = centinelaRef.current
@@ -321,6 +256,280 @@ export default function SearchResults() {
 
     return (
         <div className="min-h-screen flex flex-col">
+            <style>{`
+                /* Imagen de producto */
+                .img-wrap-rel {
+                    position: relative;
+                    width: 100%;
+                    height: 100%;
+                }
+                .img-placeholder {
+                    position: absolute;
+                    inset: 0;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                }
+                .img-error-icono {
+                    font-size: 36px;
+                    opacity: 0.25;
+                }
+                .img-skeleton {
+                    width: 52px;
+                    height: 80px;
+                    background: #e2e8f0;
+                    border-radius: 8px;
+                    animation: pulse 1.5s ease-in-out infinite;
+                }
+                .img-producto {
+                    height: 100%;
+                    width: 100%;
+                    object-fit: contain;
+                    opacity: 0;
+                    transition: opacity 0.25s;
+                    display: block;
+                }
+                .img-producto.cargada { opacity: 1; }
+
+                /* Botón ordenar */
+                .btn-orden {
+                    display: inline-flex;
+                    align-items: center;
+                    gap: 4px;
+                    padding: 5px 10px;
+                    border: 1px solid #e2e8f0;
+                    border-radius: 8px;
+                    background: #fff;
+                    color: #475569;
+                    font-size: 12px;
+                    font-weight: 600;
+                    cursor: pointer;
+                    white-space: nowrap;
+                }
+                .btn-orden.activo {
+                    border-color: #0f172a;
+                    background: #0f172a;
+                    color: #fff;
+                }
+                .btn-orden-icono {
+                    font-size: 10px;
+                    opacity: 0.4;
+                }
+                .btn-orden-icono.visible { opacity: 1; }
+                .thumb-img-wrap { overflow: hidden; }
+
+                /* Panel de filtros */
+                .panel-filtros {
+                    width: 236px;
+                    min-width: 236px;
+                    flex-shrink: 0;
+                    transition: width 0.2s, min-width 0.2s;
+                    background: #fff;
+                    border: 1px solid #f1f5f9;
+                    border-radius: 12px;
+                    align-self: flex-start;
+                    position: sticky;
+                    top: 88px;
+                    overflow: hidden;
+                    max-height: calc(100vh - 104px);
+                    display: flex;
+                    flex-direction: column;
+                    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.04);
+                }
+                .panel-filtros.colapsado {
+                    width: 44px;
+                    min-width: 44px;
+                }
+                .panel-filtros-cab {
+                    padding: 12px 14px;
+                    border-bottom: 1px solid #f1f5f9;
+                    display: flex;
+                    justify-content: space-between;
+                    align-items: center;
+                    flex-shrink: 0;
+                }
+                .panel-filtros-cab.centrado {
+                    padding: 12px 0;
+                    border-bottom: none;
+                    justify-content: center;
+                }
+                .btn-filtros {
+                    background: transparent;
+                    border: 1px solid #e2e8f0;
+                    border-radius: 8px;
+                    padding: 6px 10px;
+                    cursor: pointer;
+                    display: flex;
+                    align-items: center;
+                    gap: 6px;
+                    color: #334155;
+                    position: relative;
+                    flex-shrink: 0;
+                }
+                .btn-filtros.compacto { padding: 7px; }
+                .btn-filtros.con-activos {
+                    background: #0f172a;
+                    border-color: #0f172a;
+                    color: #fff;
+                }
+                .btn-filtros-etiq {
+                    font-size: 12px;
+                    font-weight: 700;
+                    letter-spacing: 0.02em;
+                }
+                .filtros-badge {
+                    background: #6366f1;
+                    color: #fff;
+                    font-size: 9px;
+                    font-weight: 700;
+                    width: 15px;
+                    height: 15px;
+                    border-radius: 50%;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    border: 2px solid #fff;
+                    position: absolute;
+                    top: -6px;
+                    right: -6px;
+                }
+                .btn-limpiar-filtros {
+                    font-size: 11px;
+                    color: #64748b;
+                    background: none;
+                    border: none;
+                    cursor: pointer;
+                    text-decoration: underline;
+                }
+                .panel-filtros-body {
+                    flex: 1;
+                    overflow-y: auto;
+                }
+                .filtro-seccion {
+                    border-bottom: 1px solid #f1f5f9;
+                }
+                .filtro-seccion-titulo {
+                    margin: 0;
+                    padding: 10px 14px 5px;
+                    font-size: 10px;
+                    font-weight: 700;
+                    color: #94a3b8;
+                    text-transform: uppercase;
+                    letter-spacing: 0.07em;
+                }
+                .filtro-check-fila {
+                    display: flex;
+                    align-items: center;
+                    gap: 8px;
+                    padding: 5px 14px;
+                    cursor: pointer;
+                }
+                .filtro-check {
+                    accent-color: #0f172a;
+                    width: 13px;
+                    height: 13px;
+                }
+                .filtro-check-etiq {
+                    font-size: 12px;
+                    color: #334155;
+                }
+                .filtro-precio-wrap {
+                    padding: 4px 14px 14px;
+                }
+                .filtro-precio-row {
+                    display: flex;
+                    justify-content: space-between;
+                    margin-bottom: 8px;
+                }
+                .filtro-precio-min {
+                    font-size: 11px;
+                    color: #64748b;
+                }
+                .filtro-precio-max {
+                    font-size: 12px;
+                    font-weight: 700;
+                    color: #0f172a;
+                }
+                .filtro-rango {
+                    width: 100%;
+                    accent-color: #0f172a;
+                }
+
+                /* Lista de resultados */
+                .resultados-wrap {
+                    flex: 1;
+                    min-width: 0;
+                    transition: opacity 0.2s;
+                }
+                .resultados-wrap.cargando { opacity: 0.5; }
+                .resultados-cab {
+                    display: flex;
+                    flex-wrap: wrap;
+                    align-items: center;
+                    gap: 8px;
+                    margin-bottom: 4px;
+                }
+                .resultados-titulo {
+                    font-size: 17px;
+                    font-weight: 700;
+                    margin: 0;
+                    white-space: nowrap;
+                }
+                .resultados-orden {
+                    display: flex;
+                    gap: 6px;
+                    align-items: center;
+                }
+                .chips-activos {
+                    display: flex;
+                    flex-wrap: wrap;
+                    gap: 4px;
+                    align-items: center;
+                }
+                .chip-filtro {
+                    display: inline-flex;
+                    align-items: center;
+                    gap: 3px;
+                    background: #f8fafc;
+                    color: #475569;
+                    font-size: 11px;
+                    font-weight: 500;
+                    padding: 3px 6px 3px 9px;
+                    border-radius: 999px;
+                    border: 1px solid #e2e8f0;
+                }
+                .btn-chip-quitar {
+                    background: none;
+                    border: none;
+                    cursor: pointer;
+                    color: #94a3b8;
+                    font-size: 14px;
+                    line-height: 1;
+                    padding: 0 2px;
+                    display: flex;
+                    align-items: center;
+                }
+                .resultados-conteo {
+                    font-size: 12px;
+                    color: #94a3b8;
+                    margin-bottom: 20px;
+                    margin-top: 2px;
+                }
+                .centinela { height: 1px; }
+                .cargando-mas {
+                    text-align: center;
+                    padding: 24px 0 8px;
+                    color: #94a3b8;
+                    font-size: 13px;
+                }
+                .todo-cargado {
+                    text-align: center;
+                    padding: 24px 0 8px;
+                    color: #cbd5e1;
+                    font-size: 12px;
+                }
+            `}</style>
+
             <Navbar />
 
             <main className="flex-1 flex flex-col md:flex-row gap-6 max-w-7xl mx-auto w-full px-6 py-6 items-start">
@@ -346,43 +555,31 @@ export default function SearchResults() {
                             t={t}
                         />
 
-                        <div style={{ flex: 1, minWidth: 0, opacity: cargandoNueva ? 0.5 : 1, transition: "opacity 0.2s" }}>
+                        <div className={`resultados-wrap${cargandoNueva ? " cargando" : ""}`}>
                             {/* Cabecera */}
-                            <div style={{ display: "flex", flexWrap: "wrap", alignItems: "center", gap: 8, marginBottom: 4 }}>
-                                <h1 style={{ fontSize: 17, fontWeight: 700, margin: 0, whiteSpace: "nowrap" }}>
+                            <div className="resultados-cab">
+                                <h1 className="resultados-titulo">
                                     {t('search.results')(query)}
                                 </h1>
 
-                                <div style={{ display: "flex", gap: 6, alignItems: "center" }}>
+                                <div className="resultados-orden">
                                     <SortButton label={t('search.price')} sort={ordenPrecio} onClick={alternarOrdenPrecio} />
                                     <SortButton label={t('search.name')} sort={ordenNombre} onClick={alternarOrdenNombre} />
                                 </div>
 
-                                {/* Burbujas de filtros activos */}
                                 {etiquetasFiltrosActivos.length > 0 && (
-                                    <div style={{ display: "flex", flexWrap: "wrap", gap: 4, alignItems: "center" }}>
+                                    <div className="chips-activos">
                                         {etiquetasFiltrosActivos.map((chip, i) => (
-                                            <span key={i} style={{
-                                                display: "inline-flex", alignItems: "center", gap: 3,
-                                                background: "#f8fafc", color: "#475569",
-                                                fontSize: 11, fontWeight: 500,
-                                                padding: "3px 6px 3px 9px", borderRadius: 999,
-                                                border: "1px solid #e2e8f0"
-                                            }}>
+                                            <span key={i} className="chip-filtro">
                                                 {chip.label}
-                                                <button
-                                                    onClick={chip.quitar}
-                                                    style={{ background: "none", border: "none", cursor: "pointer", color: "#94a3b8", fontSize: 14, lineHeight: 1, padding: "0 2px", display: "flex", alignItems: "center" }}
-                                                >
-                                                    ×
-                                                </button>
+                                                <button onClick={chip.quitar} className="btn-chip-quitar">×</button>
                                             </span>
                                         ))}
                                     </div>
                                 )}
                             </div>
 
-                            <p style={{ fontSize: 12, color: "#94a3b8", marginBottom: 20, marginTop: 2 }}>{t('search.found')(filtrados.length)}</p>
+                            <p className="resultados-conteo">{t('search.found')(filtrados.length)}</p>
 
                             {filtrados.length === 0 ? (
                                 <div className="text-center py-16 text-gray-400">
@@ -401,7 +598,7 @@ export default function SearchResults() {
                                                     key={producto.id}
                                                     className="border rounded-xl p-3 hover:shadow-lg transition flex flex-col"
                                                 >
-                                                    <div className="bg-gray-50 rounded-lg h-44 mb-3" style={{ overflow: "hidden" }}>
+                                                    <div className="bg-gray-50 rounded-lg h-44 mb-3 thumb-img-wrap">
                                                         <PhoneImage
                                                             src={producto.image_url}
                                                             alt={`${producto.marca} ${producto.modelo}`}
@@ -422,19 +619,14 @@ export default function SearchResults() {
                                         })}
                                     </div>
 
-                                    {/* Centinela para el scroll infinito */}
-                                    <div ref={centinelaRef} style={{ height: 1 }} />
+                                    <div ref={centinelaRef} className="centinela" />
 
                                     {hayMas && (
-                                        <div style={{ textAlign: "center", padding: "24px 0 8px", color: "#94a3b8", fontSize: 13 }}>
-                                            {t('search.loadingMore')}
-                                        </div>
+                                        <div className="cargando-mas">{t('search.loadingMore')}</div>
                                     )}
 
                                     {!hayMas && filtrados.length > LIMITE && (
-                                        <div style={{ textAlign: "center", padding: "24px 0 8px", color: "#cbd5e1", fontSize: 12 }}>
-                                            {t('search.allLoaded')(filtrados.length)}
-                                        </div>
+                                        <div className="todo-cargado">{t('search.allLoaded')(filtrados.length)}</div>
                                     )}
                                 </>
                             )}

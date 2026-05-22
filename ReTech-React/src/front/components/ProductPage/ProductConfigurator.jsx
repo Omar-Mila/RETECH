@@ -1,22 +1,22 @@
 import { useMemo, useState, useEffect } from "react"
-import { getGuestCart, setGuestCart } from "../../../services/guestCart"
-import { useLanguage } from "../../context/LanguageContext"
-import { useAuth } from "../../../auth/AuthContext"
+import { obtenerCarritoInvitado, guardarCarritoInvitado } from "../../../services/guestCart"
+import { useIdioma } from "../../context/LanguageContext"
+import { useAutenticacion } from "../../../auth/AuthContext"
 
-const STATE_IMG = {
+const IMG_ESTADO = {
   "Como nuevo": "/img/estado/new.avif",
   "Buen estado": "/img/estado/mid.avif",
   "Funcional": "/img/estado/low.avif",
 }
 
-const BATTERY_LABEL = (b) => {
+const ETIQ_BATERIA = (b) => {
   if (b >= 100) return "Nueva (100%)"
   if (b >= 90)  return "Excelente Estado (90-95%)"
   if (b >= 80)  return "Buen Estado (80-90%)"
   return `${b}%`
 }
 
-function WarningIcon() {
+function IconoAviso() {
   return (
     <svg className="w-3.5 h-3.5 text-amber-500 flex-shrink-0" viewBox="0 0 20 20" fill="currentColor">
       <path fillRule="evenodd" d="M8.485 2.495c.673-1.167 2.357-1.167 3.03 0l6.28 10.875c.673 1.167-.17 2.625-1.516 2.625H3.72c-1.347 0-2.189-1.458-1.515-2.625L8.485 2.495zM10 5a.75.75 0 01.75.75v3.5a.75.75 0 01-1.5 0v-3.5A.75.75 0 0110 5zm0 9a1 1 0 100-2 1 1 0 000 2z" clipRule="evenodd" />
@@ -24,7 +24,7 @@ function WarningIcon() {
   )
 }
 
-function CheckIcon() {
+function IconoChequeo() {
   return (
     <svg className="w-3.5 h-3.5 text-black flex-shrink-0" viewBox="0 0 20 20" fill="currentColor">
       <path fillRule="evenodd" d="M16.704 4.153a.75.75 0 01.143 1.052l-8 10.5a.75.75 0 01-1.127.075l-4.5-4.5a.75.75 0 011.06-1.06l3.894 3.893 7.48-9.817a.75.75 0 011.05-.143z" clipRule="evenodd" />
@@ -42,18 +42,17 @@ export default function ProductConfigurator({
   productName,
   coverImage = null,
 }) {
-  const { isAuthenticated } = useAuth()
-  const { t } = useLanguage()
+  const { isAuthenticated } = useAutenticacion()
+  const { t } = useIdioma()
 
-  const [adding, setAdding] = useState(false)
-  const [stateModalOpen, setStateModalOpen] = useState(false)
+  const [agregando, fijarAgregando] = useState(false)
+  const [modalEstadoAbierto, fijarModalEstadoAbierto] = useState(false)
   const [estado, setEstado] = useState("")
   const [almacenamiento, setAlmacenamiento] = useState("")
   const [bateria, setBateria] = useState("")
-  const [clearedFields, setClearedFields] = useState({})
+  const [limpiados, fijarLimpiados] = useState({})
 
-  // Opciones disponibles calculadas en cliente (sin llamadas a la BD)
-  const availEstados = useMemo(() => [...new Set(
+  const estadosDisp = useMemo(() => [...new Set(
     units
       .filter(u =>
         (!almacenamiento || u.almacenamiento === Number(almacenamiento)) &&
@@ -63,7 +62,7 @@ export default function ProductConfigurator({
       .map(u => u.estado)
   )], [units, almacenamiento, selectedColor, bateria])
 
-  const availAlmacenamientos = useMemo(() => [...new Set(
+  const almacDisp = useMemo(() => [...new Set(
     units
       .filter(u =>
         (!estado       || u.estado === estado) &&
@@ -73,7 +72,7 @@ export default function ProductConfigurator({
       .map(u => u.almacenamiento)
   )].sort((a, b) => a - b), [units, estado, selectedColor, bateria])
 
-  const availColores = useMemo(() => {
+  const coloresDisp = useMemo(() => {
     const seen = new Set()
     return units
       .filter(u =>
@@ -85,8 +84,8 @@ export default function ProductConfigurator({
       .map(u => ({ id: u.color_id, nombre: u.color }))
   }, [units, estado, almacenamiento, bateria])
 
-  const availBaterias = useMemo(() => {
-    const values = [...new Set(
+  const bateriasDisp = useMemo(() => {
+    const valores = [...new Set(
       units
         .filter(u =>
           (!estado         || u.estado === estado) &&
@@ -97,8 +96,8 @@ export default function ProductConfigurator({
     )].sort((a, b) => a - b)
 
     const seen = new Set()
-    return values
-      .map(b => ({ valor: b, label: BATTERY_LABEL(b) }))
+    return valores
+      .map(b => ({ valor: b, label: ETIQ_BATERIA(b) }))
       .filter(({ label }) => {
         if (seen.has(label)) return false
         seen.add(label)
@@ -106,8 +105,7 @@ export default function ProductConfigurator({
       })
   }, [units, estado, almacenamiento, selectedColor])
 
-  // Unidad más barata que coincide con la selección actual
-  const matchingUnit = useMemo(() => units
+  const unidadCoincide = useMemo(() => units
     .filter(u =>
       (!estado         || u.estado === estado) &&
       (!almacenamiento || u.almacenamiento === Number(almacenamiento)) &&
@@ -117,147 +115,143 @@ export default function ProductConfigurator({
     .sort((a, b) => a.precio - b.precio)[0] ?? null
   , [units, estado, almacenamiento, selectedColor, bateria])
 
-  // Al cargar las unidades, pre-seleccionar la unidad indicada o la primera disponible
   useEffect(() => {
     if (units.length === 0) return
-    const target = initialMovilId
+    const objetivo = initialMovilId
       ? units.find(u => String(u.id) === String(initialMovilId))
       : null
-    selectUnit(target ?? units[0])
+    seleccionarUnidad(objetivo ?? units[0])
   }, [units])
 
-  function selectUnit(unit) {
-    setEstado(unit.estado)
-    setSelectedState(unit.estado)
-    setAlmacenamiento(String(unit.almacenamiento))
-    setSelectedColor(String(unit.color_id))
-    setBateria(String(unit.salud_bateria))
+  function seleccionarUnidad(unidad) {
+    setEstado(unidad.estado)
+    setSelectedState(unidad.estado)
+    setAlmacenamiento(String(unidad.almacenamiento))
+    setSelectedColor(String(unidad.color_id))
+    setBateria(String(unidad.salud_bateria))
   }
 
-  // Cambiar cualquier campo en cualquier orden; limpia los que dejan de ser válidos
-  function handleChange(field, value) {
-    const next = {
-      estado:         field === "estado"         ? value : estado,
-      almacenamiento: field === "almacenamiento" ? value : almacenamiento,
-      color:          field === "color"          ? value : selectedColor,
-      bateria:        field === "bateria"        ? value : bateria,
+  function alCambiar(campo, valor) {
+    const siguiente = {
+      estado:         campo === "estado"         ? valor : estado,
+      almacenamiento: campo === "almacenamiento" ? valor : almacenamiento,
+      color:          campo === "color"          ? valor : selectedColor,
+      bateria:        campo === "bateria"        ? valor : bateria,
     }
 
-    // Filtra unidades excluyendo el campo indicado (para validar ese campo)
-    const filterUnits = (excluding) => units.filter(u => {
-      if (excluding !== "estado"         && next.estado         && u.estado !== next.estado)                          return false
-      if (excluding !== "almacenamiento" && next.almacenamiento && u.almacenamiento !== Number(next.almacenamiento)) return false
-      if (excluding !== "color"          && next.color          && String(u.color_id) !== String(next.color))        return false
-      if (excluding !== "bateria"        && next.bateria        && u.salud_bateria < Number(next.bateria))           return false
+    const filtrarUnidades = (excluir) => units.filter(u => {
+      if (excluir !== "estado"         && siguiente.estado         && u.estado !== siguiente.estado)                                return false
+      if (excluir !== "almacenamiento" && siguiente.almacenamiento && u.almacenamiento !== Number(siguiente.almacenamiento))       return false
+      if (excluir !== "color"          && siguiente.color          && String(u.color_id) !== String(siguiente.color))              return false
+      if (excluir !== "bateria"        && siguiente.bateria        && u.salud_bateria < Number(siguiente.bateria))                 return false
       return true
     })
 
-    // Limpia campos que ya no son válidos; registra cuáles se vaciaron
-    const cleared = {}
-    if (field !== "estado" && next.estado) {
-      if (!new Set(filterUnits("estado").map(u => u.estado)).has(next.estado))
-        { next.estado = ""; cleared.estado = true }
+    const limpiados2 = {}
+    if (campo !== "estado" && siguiente.estado) {
+      if (!new Set(filtrarUnidades("estado").map(u => u.estado)).has(siguiente.estado))
+        { siguiente.estado = ""; limpiados2.estado = true }
     }
-    if (field !== "almacenamiento" && next.almacenamiento) {
-      if (!new Set(filterUnits("almacenamiento").map(u => String(u.almacenamiento))).has(next.almacenamiento))
-        { next.almacenamiento = ""; cleared.almacenamiento = true }
+    if (campo !== "almacenamiento" && siguiente.almacenamiento) {
+      if (!new Set(filtrarUnidades("almacenamiento").map(u => String(u.almacenamiento))).has(siguiente.almacenamiento))
+        { siguiente.almacenamiento = ""; limpiados2.almacenamiento = true }
     }
-    if (field !== "color" && next.color) {
-      if (!new Set(filterUnits("color").map(u => String(u.color_id))).has(next.color))
-        { next.color = ""; cleared.color = true }
+    if (campo !== "color" && siguiente.color) {
+      if (!new Set(filtrarUnidades("color").map(u => String(u.color_id))).has(siguiente.color))
+        { siguiente.color = ""; limpiados2.color = true }
     }
-    if (field !== "bateria" && next.bateria) {
-      if (!new Set(filterUnits("bateria").map(u => String(u.salud_bateria))).has(next.bateria))
-        { next.bateria = ""; cleared.bateria = true }
+    if (campo !== "bateria" && siguiente.bateria) {
+      if (!new Set(filtrarUnidades("bateria").map(u => String(u.salud_bateria))).has(siguiente.bateria))
+        { siguiente.bateria = ""; limpiados2.bateria = true }
     }
 
-    // Si el campo que el usuario acaba de cambiar tenía un aviso, quitarlo
-    delete cleared[field]
-    setClearedFields(cleared)
+    delete limpiados2[campo]
+    fijarLimpiados(limpiados2)
 
-    setEstado(next.estado)
-    setAlmacenamiento(next.almacenamiento)
-    setSelectedColor(next.color)
-    setSelectedState(next.estado)
-    setBateria(next.bateria)
+    setEstado(siguiente.estado)
+    setAlmacenamiento(siguiente.almacenamiento)
+    setSelectedColor(siguiente.color)
+    setSelectedState(siguiente.estado)
+    setBateria(siguiente.bateria)
   }
 
-  const handleAddToCart = async () => {
-    if (!canAddToCart) {
+  const agregarAlCarro = async () => {
+    if (!puedoAgregar) {
       alert(t("product.selectValidCombo"))
       return
     }
 
     if (!isAuthenticated) {
-      const cart = getGuestCart()
-      const existing = cart.find(i => i.movil_id === matchingUnit.id)
-      if (existing) {
-        existing.cantidad += 1
-        existing.subtotal = existing.precio * existing.cantidad
+      const carro = obtenerCarritoInvitado()
+      const existente = carro.find(i => i.movil_id === unidadCoincide.id)
+      if (existente) {
+        existente.cantidad += 1
+        existente.subtotal = existente.precio * existente.cantidad
       } else {
-        const colorObj = availColores.find(c => String(c.id) === String(selectedColor))
-        cart.push({
-          movil_id:       matchingUnit.id,
+        const objColor = coloresDisp.find(c => String(c.id) === String(selectedColor))
+        carro.push({
+          movil_id:       unidadCoincide.id,
           cantidad:       1,
-          precio:         matchingUnit.precio,
-          subtotal:       matchingUnit.precio,
+          precio:         unidadCoincide.precio,
+          subtotal:       unidadCoincide.precio,
           modelo:         productName,
-          estado:         matchingUnit.estado,
-          almacenamiento: matchingUnit.almacenamiento,
-          ram:            matchingUnit.ram,
-          salud_bateria:  matchingUnit.salud_bateria,
-          color:          colorObj?.nombre ?? "",
+          estado:         unidadCoincide.estado,
+          almacenamiento: unidadCoincide.almacenamiento,
+          ram:            unidadCoincide.ram,
+          salud_bateria:  unidadCoincide.salud_bateria,
+          color:          objColor?.nombre ?? "",
           color_hex:      "#94a3b8",
-          stock:          matchingUnit.stock,
+          stock:          unidadCoincide.stock,
           imagen_url:     coverImage,
         })
       }
-      setGuestCart(cart)
+      guardarCarritoInvitado(carro)
       window.dispatchEvent(new Event("cart-updated"))
       window.scrollTo({ top: 0, behavior: "smooth" })
       return
     }
 
-    setAdding(true)
+    fijarAgregando(true)
     try {
       await fetch("http://localhost:8000/sanctum/csrf-cookie", { credentials: "include" })
-      const xsrfToken = document.cookie
+      const tokenXsrf = document.cookie
         .split("; ")
         .find(r => r.startsWith("XSRF-TOKEN="))
         ?.split("=")[1]
 
-      const response = await fetch("http://localhost:8000/api/carrito", {
+      const respuesta = await fetch("http://localhost:8000/api/carrito", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
           "Accept": "application/json",
           "X-Requested-With": "XMLHttpRequest",
-          "X-XSRF-TOKEN": decodeURIComponent(xsrfToken || ""),
+          "X-XSRF-TOKEN": decodeURIComponent(tokenXsrf || ""),
         },
         credentials: "include",
-        body: JSON.stringify({ movil_id: matchingUnit.id, cantidad: 1 }),
+        body: JSON.stringify({ movil_id: unidadCoincide.id, cantidad: 1 }),
       })
 
-      if (response.ok) {
+      if (respuesta.ok) {
         window.dispatchEvent(new Event("cart-updated"))
         window.scrollTo({ top: 0, behavior: "smooth" })
       } else {
-        const error = await response.json()
+        const error = await respuesta.json()
         alert(error.message || t("product.addError"))
       }
     } catch (err) {
       console.error(err)
       alert(t("product.connectionError"))
     } finally {
-      setAdding(false)
+      fijarAgregando(false)
     }
   }
 
-  const anySelected = !!(estado || almacenamiento || selectedColor || bateria)
-  const allSelected = !!(estado && almacenamiento && selectedColor && bateria)
-  const hasResult = anySelected && !!matchingUnit
-  const canAddToCart = allSelected && !!matchingUnit
-  const stateInfo = t("product.stateInfo")
+  const haySeleccion = !!(estado || almacenamiento || selectedColor || bateria)
+  const todoSeleccionado = !!(estado && almacenamiento && selectedColor && bateria)
+  const hayResultado = haySeleccion && !!unidadCoincide
+  const puedoAgregar = todoSeleccionado && !!unidadCoincide
+
+  const infoEstado = t("product.stateInfo")
 
   return (
     <>
@@ -266,7 +260,7 @@ export default function ProductConfigurator({
       {productName && (
         <div className="flex items-center justify-between gap-3">
           <h1 className="text-2xl font-bold">{productName}</h1>
-          {anySelected && (
+          {haySeleccion && (
             <button
               onClick={() => {
                 setEstado("")
@@ -274,7 +268,7 @@ export default function ProductConfigurator({
                 setSelectedColor("")
                 setSelectedState("")
                 setBateria("")
-                setClearedFields({})
+                fijarLimpiados({})
               }}
               className="text-xs text-black hover:text-gray-600 underline underline-offset-2 flex-shrink-0 transition-colors"
             >
@@ -290,35 +284,35 @@ export default function ProductConfigurator({
         <div>
           <label className="flex items-center gap-1.5 text-sm font-medium text-gray-700 mb-1">
             {t("product.stateLabel")}
-            {estado && !clearedFields.estado && <CheckIcon />}
-            {clearedFields.estado && <WarningIcon />}
+            {estado && !limpiados.estado && <IconoChequeo />}
+            {limpiados.estado && <IconoAviso />}
           </label>
           <select
             value={estado}
-            onChange={e => handleChange("estado", e.target.value)}
-            className={`w-full border rounded-lg p-2.5 bg-white focus:ring-2 focus:ring-black focus:border-black ${clearedFields.estado ? "border-amber-400" : ""}`}
+            onChange={e => alCambiar("estado", e.target.value)}
+            className={`w-full border rounded-lg p-2.5 bg-white focus:ring-2 focus:ring-black focus:border-black ${limpiados.estado ? "border-amber-400" : ""}`}
           >
             <option value="">{t("product.selectState")}</option>
-            {availEstados.map(e => (
+            {estadosDisp.map(e => (
               <option key={e} value={e}>{e}</option>
             ))}
           </select>
         </div>
 
         {/* Previsualización estado */}
-        {estado && stateInfo[estado] && (
+        {estado && infoEstado[estado] && (
           <div className="rounded-xl border overflow-hidden flex gap-3 bg-gray-50 p-3 items-center">
             <img
-              src={STATE_IMG[estado]}
-              alt={stateInfo[estado].badge}
-              onClick={() => setStateModalOpen(true)}
+              src={IMG_ESTADO[estado]}
+              alt={infoEstado[estado].badge}
+              onClick={() => fijarModalEstadoAbierto(true)}
               className="w-20 h-20 object-contain flex-shrink-0 cursor-zoom-in hover:scale-105 transition-transform"
             />
             <div>
               <span className="inline-block text-xs font-semibold bg-black text-white px-2 py-0.5 rounded-full mb-1">
-                {stateInfo[estado].badge}
+                {infoEstado[estado].badge}
               </span>
-              <p className="text-xs text-gray-600 leading-snug">{stateInfo[estado].desc}</p>
+              <p className="text-xs text-gray-600 leading-snug">{infoEstado[estado].desc}</p>
             </div>
           </div>
         )}
@@ -327,16 +321,16 @@ export default function ProductConfigurator({
         <div>
           <label className="flex items-center gap-1.5 text-sm font-medium text-gray-700 mb-1">
             {t("product.storageLabel")}
-            {almacenamiento && !clearedFields.almacenamiento && <CheckIcon />}
-            {clearedFields.almacenamiento && <WarningIcon />}
+            {almacenamiento && !limpiados.almacenamiento && <IconoChequeo />}
+            {limpiados.almacenamiento && <IconoAviso />}
           </label>
           <select
             value={almacenamiento}
-            onChange={e => handleChange("almacenamiento", e.target.value)}
-            className={`w-full border rounded-lg p-2.5 bg-white focus:ring-2 focus:ring-black focus:border-black ${clearedFields.almacenamiento ? "border-amber-400" : ""}`}
+            onChange={e => alCambiar("almacenamiento", e.target.value)}
+            className={`w-full border rounded-lg p-2.5 bg-white focus:ring-2 focus:ring-black focus:border-black ${limpiados.almacenamiento ? "border-amber-400" : ""}`}
           >
             <option value="">{t("product.selectStorage")}</option>
-            {availAlmacenamientos.map(a => (
+            {almacDisp.map(a => (
               <option key={a} value={a}>{a} GB</option>
             ))}
           </select>
@@ -346,16 +340,16 @@ export default function ProductConfigurator({
         <div>
           <label className="flex items-center gap-1.5 text-sm font-medium text-gray-700 mb-1">
             {t("product.colorLabel")}
-            {selectedColor && !clearedFields.color && <CheckIcon />}
-            {clearedFields.color && <WarningIcon />}
+            {selectedColor && !limpiados.color && <IconoChequeo />}
+            {limpiados.color && <IconoAviso />}
           </label>
           <select
             value={selectedColor}
-            onChange={e => handleChange("color", e.target.value)}
-            className={`w-full border rounded-lg p-2.5 bg-white focus:ring-2 focus:ring-black focus:border-black ${clearedFields.color ? "border-amber-400" : ""}`}
+            onChange={e => alCambiar("color", e.target.value)}
+            className={`w-full border rounded-lg p-2.5 bg-white focus:ring-2 focus:ring-black focus:border-black ${limpiados.color ? "border-amber-400" : ""}`}
           >
             <option value="">{t("product.selectColor")}</option>
-            {availColores.map(c => (
+            {coloresDisp.map(c => (
               <option key={c.id} value={c.id}>{c.nombre}</option>
             ))}
           </select>
@@ -365,16 +359,16 @@ export default function ProductConfigurator({
         <div>
           <label className="flex items-center gap-1.5 text-sm font-medium text-gray-700 mb-1">
             {t("product.batteryLabel")}
-            {bateria && !clearedFields.bateria && <CheckIcon />}
-            {clearedFields.bateria && <WarningIcon />}
+            {bateria && !limpiados.bateria && <IconoChequeo />}
+            {limpiados.bateria && <IconoAviso />}
           </label>
           <select
             value={bateria}
-            onChange={e => handleChange("bateria", e.target.value)}
-            className={`w-full border rounded-lg p-2.5 bg-white focus:ring-2 focus:ring-black focus:border-black ${clearedFields.bateria ? "border-amber-400" : ""}`}
+            onChange={e => alCambiar("bateria", e.target.value)}
+            className={`w-full border rounded-lg p-2.5 bg-white focus:ring-2 focus:ring-black focus:border-black ${limpiados.bateria ? "border-amber-400" : ""}`}
           >
             <option value="">{t("product.selectBattery")}</option>
-            {availBaterias.map(b => (
+            {bateriasDisp.map(b => (
               <option key={b.valor} value={b.valor}>{b.label}</option>
             ))}
           </select>
@@ -389,27 +383,27 @@ export default function ProductConfigurator({
             {estado ? t("product.configPrice") : t("product.recommendedPrice")}
           </span>
           <span className="text-2xl font-bold">
-            {hasResult ? `${matchingUnit.precio}€` : "—"}
+            {hayResultado ? `${unidadCoincide.precio}€` : "—"}
           </span>
         </div>
         <div className="text-xs text-gray-500 mt-1">
-          {hasResult
-            ? t("product.unitsAvailable")(matchingUnit.stock)
+          {hayResultado
+            ? t("product.unitsAvailable")(unidadCoincide.stock)
             : t("product.noCombo")}
         </div>
       </div>
 
       {/* Botón compra */}
       <button
-        onClick={handleAddToCart}
-        disabled={!canAddToCart || adding}
+        onClick={agregarAlCarro}
+        disabled={!puedoAgregar || agregando}
         className={`w-full py-3 rounded-lg text-white font-medium transition
-          ${(!canAddToCart || adding)
+          ${(!puedoAgregar || agregando)
             ? "bg-gray-400 cursor-not-allowed"
             : "bg-black hover:bg-gray-800"
           }`}
       >
-        {adding ? t("product.adding") : t("product.addToCart")}
+        {agregando ? t("product.adding") : t("product.addToCart")}
       </button>
 
       {/* Información de confianza */}
@@ -470,14 +464,13 @@ export default function ProductConfigurator({
     </div>
 
     {/* Modal lightbox estado */}
-
-    {stateModalOpen && estado && (
+    {modalEstadoAbierto && estado && (
       <div
         className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm cursor-zoom-out"
-        onClick={() => setStateModalOpen(false)}
+        onClick={() => fijarModalEstadoAbierto(false)}
       >
         <img
-          src={STATE_IMG[estado]}
+          src={IMG_ESTADO[estado]}
           alt={estado}
           className="max-w-[90vw] max-h-[90vh] w-96 h-96 object-contain drop-shadow-2xl bg-white rounded-2xl p-4"
           onClick={e => e.stopPropagation()}

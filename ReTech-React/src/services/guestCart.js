@@ -1,29 +1,29 @@
-const KEY = "retech-guest-cart";
+const CLAVE = "retech-guest-cart";
 
-export function getGuestCart() {
-  try { return JSON.parse(localStorage.getItem(KEY) || "[]"); }
+export function obtenerCarritoInvitado() {
+  try { return JSON.parse(localStorage.getItem(CLAVE) || "[]"); }
   catch { return []; }
 }
 
-export function setGuestCart(items) {
-  localStorage.setItem(KEY, JSON.stringify(items));
+export function guardarCarritoInvitado(arts) {
+  localStorage.setItem(CLAVE, JSON.stringify(arts));
 }
 
-export function clearGuestCart() {
-  localStorage.removeItem(KEY);
+export function limpiarCarritoInvitado() {
+  localStorage.removeItem(CLAVE);
 }
 
-export async function syncGuestCartToServer() {
-  const items = getGuestCart();
-  if (!items.length) return;
+export async function sincronizarCarritoServidor() {
+  const arts = obtenerCarritoInvitado();
+  if (!arts.length) return;
 
   await fetch("/sanctum/csrf-cookie", { credentials: "include" });
-  const xsrfToken = document.cookie
+  const tokenXsrf = document.cookie
     .split("; ")
     .find(r => r.startsWith("XSRF-TOKEN="))
     ?.split("=")[1];
 
-  for (const { movil_id, cantidad } of items) {
+  for (const { movil_id, cantidad } of arts) {
     try {
       await fetch("/api/carrito", {
         method: "POST",
@@ -32,13 +32,13 @@ export async function syncGuestCartToServer() {
           "Content-Type": "application/json",
           "Accept": "application/json",
           "X-Requested-With": "XMLHttpRequest",
-          "X-XSRF-TOKEN": decodeURIComponent(xsrfToken || ""),
+          "X-XSRF-TOKEN": decodeURIComponent(tokenXsrf || ""),
         },
         body: JSON.stringify({ movil_id, cantidad }),
       });
-    } catch { /* item individual falla silenciosamente */ }
+    } catch { /* artículo individual falla silenciosamente */ }
   }
 
-  clearGuestCart();
+  limpiarCarritoInvitado();
   window.dispatchEvent(new Event("cart-updated"));
 }

@@ -1,115 +1,124 @@
 import { createContext, useContext, useState, useEffect } from "react"
 import { useNavigate } from "react-router-dom"
-import { loginRequest, logoutRequest, getCurrentUser, googleLoginRequest } from "./authService"
-import { syncGuestCartToServer } from "../services/guestCart"
+import { solicitarLogin, solicitarLogout, obtenerUsuarioActual, solicitarLoginGoogle } from "./authService"
+import { sincronizarCarritoServidor } from "../services/guestCart"
 
-let AuthContext = createContext()
+let ContextoAuth = createContext()
 
-export function AuthProvider({ children }) {
-  let navigate = useNavigate()
+export function ProveedorAuth({ children }) {
+  let navegar = useNavigate()
 
-  let [user, setUser] = useState(null)
-  let [loading, setLoading] = useState(true)
+  let [usuario, fijarUsuario] = useState(null)
+  let [cargando, fijarCargando] = useState(true)
 
   useEffect(() => {
-    let loadUser = async () => {
+    let cargarUsuario = async () => {
       try {
-        let userData = await getCurrentUser()
-        if (userData && (userData.id || userData.name)) {
-          setUser(userData)
+        let datosUsuario = await obtenerUsuarioActual()
+        if (datosUsuario && (datosUsuario.id || datosUsuario.name)) {
+          fijarUsuario(datosUsuario)
         } else {
-          setUser(null)
+          fijarUsuario(null)
         }
       } catch (error) {
         console.error("Error cargando usuario:", error)
-        setUser(null)
+        fijarUsuario(null)
       } finally {
-        setLoading(false)
+        fijarCargando(false)
       }
     }
 
-    loadUser()
+    cargarUsuario()
   }, [])
 
-  const redirectByRole = (userData, from) => {
-    if (userData.role === 'admin') {
-      navigate("/admin");
+  const redirigirPorRol = (datosUsuario, from) => {
+    if (datosUsuario.role === 'admin') {
+      navegar("/admin");
     } else {
-      navigate(from || "/");
+      navegar(from || "/");
     }
   };
 
-  let login = async (email, password, from) => {
+  let iniciarSesion = async (email, password, from) => {
     try {
-      const userData = await loginRequest(email, password);
-      if (userData) {
-        setUser(userData);
-        await syncGuestCartToServer();
-        redirectByRole(userData, from);
+      const datosUsuario = await solicitarLogin(email, password);
+      if (datosUsuario) {
+        fijarUsuario(datosUsuario);
+        await sincronizarCarritoServidor();
+        redirigirPorRol(datosUsuario, from);
       }
     } catch (error) {
       throw error;
     }
   };
 
-  let loginWithGoogle = async (credential, from) => {
+  let iniciarConGoogle = async (credencial, from) => {
     try {
-      const userData = await googleLoginRequest(credential);
-      if (userData) {
-        setUser(userData);
-        await syncGuestCartToServer();
-        redirectByRole(userData, from);
+      const datosUsuario = await solicitarLoginGoogle(credencial);
+      if (datosUsuario) {
+        fijarUsuario(datosUsuario);
+        await sincronizarCarritoServidor();
+        redirigirPorRol(datosUsuario, from);
       }
     } catch (error) {
       throw error;
     }
   };
 
-  let logout = async () => {
+  let cerrarSesion = async () => {
     try {
-      await logoutRequest();
+      await solicitarLogout();
     } catch (error) {
       console.error("Error en servidor", error);
     } finally {
-      setUser(null);
+      fijarUsuario(null);
 
-      const cookies = document.cookie.split(";");
-      for (let i = 0; i < cookies.length; i++) {
-        const cookie = cookies[i];
-        const eqPos = cookie.indexOf("=");
-        const name = eqPos > -1 ? cookie.substr(0, eqPos) : cookie;
-        document.cookie = name + "=;expires=Thu, 01 Jan 1970 00:00:00 GMT;path=/";
+      const listaCookies = document.cookie.split(";");
+      for (let i = 0; i < listaCookies.length; i++) {
+        const ck = listaCookies[i];
+        const posIgual = ck.indexOf("=");
+        const nombreCookie = posIgual > -1 ? ck.substr(0, posIgual) : ck;
+        document.cookie = nombreCookie + "=;expires=Thu, 01 Jan 1970 00:00:00 GMT;path=/";
       }
 
       window.location.replace("/");
     }
   }
 
-  if (loading) {
+  if (cargando) {
     return (
-      <div style={{ display: 'flex', justifyContent: 'center', marginTop: '50px' }}>
-        <p>Verificando sesión...</p>
-      </div>
+      <>
+        <style>{`
+          #verificando {
+            display: flex;
+            justify-content: center;
+            margin-top: 50px;
+          }
+        `}</style>
+        <div id="verificando">
+          <p>Verificando sesión...</p>
+        </div>
+      </>
     );
   }
 
   return (
-    <AuthContext.Provider
+    <ContextoAuth.Provider
       value={{
-        user,
-        setUser,
-        loading,
-        isAuthenticated: !!user,
-        login,
-        loginWithGoogle,
-        logout,
+        user: usuario,
+        setUser: fijarUsuario,
+        loading: cargando,
+        isAuthenticated: !!usuario,
+        login: iniciarSesion,
+        loginWithGoogle: iniciarConGoogle,
+        logout: cerrarSesion,
       }}
     >
       {children}
-    </AuthContext.Provider>
+    </ContextoAuth.Provider>
   )
 }
 
-export function useAuth() {
-  return useContext(AuthContext)
+export function useAutenticacion() {
+  return useContext(ContextoAuth)
 }

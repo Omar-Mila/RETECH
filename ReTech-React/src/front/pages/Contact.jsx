@@ -5,7 +5,7 @@ import { useEffect } from "react";
 import { MapContainer, TileLayer, Marker, Popup } from "react-leaflet";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
-import { useLanguage } from "../context/LanguageContext";
+import { useIdioma } from "../context/LanguageContext";
 
 delete L.Icon.Default.prototype._getIconUrl;
 L.Icon.Default.mergeOptions({
@@ -17,7 +17,7 @@ L.Icon.Default.mergeOptions({
 const OFFICE_COORDS = [41.5836374, 1.6018583];
 
 export default function AboutPage() {
-  const { t } = useLanguage();
+  const { t } = useIdioma();
   const c = t("contact");
 
   useEffect(() => {
@@ -73,6 +73,21 @@ export default function AboutPage() {
         .map-section { padding: 0 2rem 3rem; max-width: 1000px; margin: 0 auto; }
         .map-wrapper { border-radius: var(--border-radius-lg); overflow: hidden; border: 0.5px solid var(--color-border-tertiary); height: 380px; }
 
+        .historia-titulo { font-size: 26px; font-weight: 800; font-family: 'Sora', sans-serif; margin-bottom: 1rem; }
+        .instalaciones-titulo { font-size: 26px; font-weight: 800; font-family: 'Sora', sans-serif; margin-bottom: 2rem; }
+        .mapa-titulo { font-size: 26px; font-weight: 800; font-family: 'Sora', sans-serif; margin-bottom: 1.25rem; }
+        .cert-caja { margin-top: 1.5rem; padding: 1.5rem; background: white; border: 1px solid #e2e8f0; border-radius: 20px; }
+        .cert-titulo { font-size: 13px; color: #0f172a; font-weight: 700; margin-bottom: 5px; }
+        .cert-desc { font-size: 14px; font-weight: 600; color: #0f172a; }
+        .foto-etiq { font-size: 12px; font-weight: 700; margin-top: 12px; color: #0f172a; }
+        .foto-desc { font-size: 14px; color: #64748b; }
+        .reviews-titulo { font-size: 28px; font-weight: 500; letter-spacing: -0.5px; }
+        .review-stars { display: flex; gap: 3px; margin-bottom: 0.75rem; }
+        .award-desc-texto { opacity: 0.8; font-size: 15px; }
+        .review-autor-wrap { display: flex; align-items: center; gap: 10px; }
+        .review-nombre { font-size: 13px; font-weight: 500; margin: 0; }
+        .review-fecha { font-size: 11px; color: var(--color-text-secondary); margin: 0; }
+
         @media (max-width: 768px) {
           .about-grid, .photos-grid, .reviews-grid { grid-template-columns: 1fr; }
           .hero h1 { font-size: 32px; }
@@ -96,9 +111,7 @@ export default function AboutPage() {
           <div className="about-grid">
             <div className="about-text">
               <p className="section-label">{c.historyLabel}</p>
-              <h2 style={{ fontSize: '26px', fontWeight: 800, fontFamily: 'Sora, sans-serif', marginBottom: '1rem' }}>
-                {c.historyTitle}
-              </h2>
+              <h2 className="historia-titulo">{c.historyTitle}</h2>
               <p>{c.historyP1}</p>
               <p>{c.historyP2}</p>
               <p>{c.historyP3}</p>
@@ -118,9 +131,9 @@ export default function AboutPage() {
                   <div className="stat-lbl">{c.statSatisfied}</div>
                 </div>
               </div>
-              <div style={{ marginTop: '1.5rem', padding: '1.5rem', background: 'white', border: '1px solid #e2e8f0', borderRadius: '20px' }}>
-                <p style={{ fontSize: '13px', color: '#0f172a', fontWeight: 700, marginBottom: '5px' }}>{c.certTitle}</p>
-                <p style={{ fontSize: '14px', fontWeight: 600, color: '#0f172a' }}>{c.certDesc}</p>
+              <div className="cert-caja">
+                <p className="cert-titulo">{c.certTitle}</p>
+                <p className="cert-desc">{c.certDesc}</p>
               </div>
             </div>
           </div>
@@ -129,21 +142,21 @@ export default function AboutPage() {
         {/* INSTALACIONES */}
         <div className="section">
           <p className="section-label">{c.facilitiesLabel}</p>
-          <h2 style={{ fontSize: '26px', fontWeight: 800, fontFamily: 'Sora, sans-serif', marginBottom: '2rem' }}>{c.facilitiesTitle}</h2>
+          <h2 className="instalaciones-titulo">{c.facilitiesTitle}</h2>
           <div className="photos-grid">
             <div className="photo-card">
               <div className="photo-frame">
                 <img src="/img/retechfuera.png" alt="Exterior" />
               </div>
-              <p style={{ fontSize: '12px', fontWeight: 700, marginTop: '12px', color: '#0f172a' }}>{c.workshopLabel}</p>
-              <p style={{ fontSize: '14px', color: '#64748b' }}>{c.workshopDesc}</p>
+              <p className="foto-etiq">{c.workshopLabel}</p>
+              <p className="foto-desc">{c.workshopDesc}</p>
             </div>
             <div className="photo-card">
               <div className="photo-frame">
                 <img src="/img/retechdentro.png" alt="Interior" />
               </div>
-              <p style={{ fontSize: '12px', fontWeight: 700, marginTop: '12px', color: '#0f172a' }}>{c.labLabel}</p>
-              <p style={{ fontSize: '14px', color: '#64748b' }}>{c.labDesc}</p>
+              <p className="foto-etiq">{c.labLabel}</p>
+              <p className="foto-desc">{c.labDesc}</p>
             </div>
           </div>
         </div>
@@ -151,11 +164,9 @@ export default function AboutPage() {
         {/* MAPA */}
         <div className="map-section">
           <p className="section-label">{c.mapLabel}</p>
-          <h2 style={{ fontSize: '26px', fontWeight: 800, fontFamily: 'Sora, sans-serif', marginBottom: '1.25rem' }}>
-            Milà i Fontanals, Igualada
-          </h2>
+          <h2 className="mapa-titulo">Milà i Fontanals, Igualada</h2>
           <div className="map-wrapper">
-            <MapContainer center={OFFICE_COORDS} zoom={16} style={{ height: '100%', width: '100%' }} scrollWheelZoom={false}>
+            <MapContainer center={OFFICE_COORDS} zoom={16} className="w-full h-full" scrollWheelZoom={false}>
               <TileLayer
                 attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
                 url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
@@ -179,34 +190,32 @@ export default function AboutPage() {
             </svg>
           </div>
           <h2 className="award-title">{c.awardTitle}</h2>
-          <p style={{ opacity: 0.8, fontSize: '15px' }}>{c.awardDesc}</p>
+          <p className="award-desc-texto">{c.awardDesc}</p>
         </div>
 
         {/* REVIEWS */}
         <div className="section">
           <div className="reviews-header">
-            <h2 style={{ fontSize: '28px', fontWeight: 500, letterSpacing: '-0.5px' }}>{c.reviewsTitle}</h2>
+            <h2 className="reviews-titulo">{c.reviewsTitle}</h2>
             <span className="reviews-meta">{c.reviewsMeta}</span>
           </div>
 
           <div className="reviews-grid">
             {c.reviews.map((rev, i) => (
               <div key={i} className="review-card">
-                <div className="review-stars" style={{ display: 'flex', gap: '3px', marginBottom: '0.75rem' }}>
+                <div className="review-stars">
                   {[...Array(5)].map((_, starIdx) => (
                     <svg key={starIdx} width="13" height="13" viewBox="0 0 24 24" fill="var(--color-text-primary)">
                       <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
                     </svg>
                   ))}
                 </div>
-                <p className="review-text" style={{ fontSize: '14px', color: 'var(--color-text-secondary)', lineHeight: '1.7', marginBottom: '1rem' }}>
-                  "{rev.text}"
-                </p>
-                <div className="review-author" style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                <p className="review-text">"{rev.text}"</p>
+                <div className="review-autor-wrap">
                   <div className="review-avatar">{rev.initial}</div>
                   <div>
-                    <p className="review-name" style={{ fontSize: '13px', fontWeight: 500, margin: 0 }}>{rev.name}</p>
-                    <p className="review-date" style={{ fontSize: '11px', color: 'var(--color-text-secondary)', margin: 0 }}>{rev.date}</p>
+                    <p className="review-nombre">{rev.name}</p>
+                    <p className="review-fecha">{rev.date}</p>
                   </div>
                 </div>
               </div>

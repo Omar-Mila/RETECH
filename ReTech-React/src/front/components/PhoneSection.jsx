@@ -1,22 +1,22 @@
 import PhoneCardS from "./PhoneCardS"
 import { useEffect, useState } from "react"
-import { getBestSellers } from "../../services/productService"
-import { useLanguage } from "../context/LanguageContext"
+import { obtenerMasVendidos } from "../../services/productService"
+import { useIdioma } from "../context/LanguageContext"
 
-export default function PhonesSection() {
-    const { t } = useLanguage()
-    const [phones, setPhones] = useState([])
-    const [loading, setLoading] = useState(true)
+export default function SeccionMoviles() {
+    const { t } = useIdioma()
+    const [moviles, fijarMoviles] = useState([])
+    const [cargando, fijarCargando] = useState(true)
 
     useEffect(() => {
-        getBestSellers()
-        .then(data => setPhones(data))
+        obtenerMasVendidos()
+        .then(datos => fijarMoviles(datos))
         .catch(err => console.error(err))
-        .finally(() => setLoading(false))
+        .finally(() => fijarCargando(false))
     }, [])
-    
 
-    if (loading) {
+
+    if (cargando) {
         return <div className="p-10">{t('phoneSection.loading')}</div>
     }
     return (
@@ -40,15 +40,15 @@ export default function PhonesSection() {
             </h3>
 
             <div className="flex gap-6 overflow-x-auto">
-                {phones.slice(0, 4).map(phone => (
+                {moviles.slice(0, 4).map(movil => (
                 <PhoneCardS
-                    key={phone.id}
-                    modeloId={phone.modelo_id}
-                    movilId={phone.id}
-                    name={phone.modelo?.nombre ?? phone.modelo}
-                    condition={phone.estado}
-                    price={phone.precio}
-                    image={phone.image_url ?? "https://via.placeholder.com/300"}
+                    key={movil.id}
+                    modeloId={movil.modelo_id}
+                    movilId={movil.id}
+                    nombre={movil.modelo?.nombre ?? movil.modelo}
+                    condicion={movil.estado}
+                    precio={movil.precio}
+                    imagen={movil.image_url ?? "https://via.placeholder.com/300"}
                     />
                 ))}
             </div>

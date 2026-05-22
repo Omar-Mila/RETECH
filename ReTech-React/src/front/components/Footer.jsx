@@ -1,8 +1,8 @@
 import { Link } from "react-router-dom";
-import { useLanguage } from "../context/LanguageContext";
+import { useIdioma } from "../context/LanguageContext";
 
 export default function Footer() {
-  const { t } = useLanguage();
+  const { t } = useIdioma();
 
   return (
     <footer className="bg-black text-white py-16">

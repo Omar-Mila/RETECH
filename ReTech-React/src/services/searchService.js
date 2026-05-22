@@ -1,10 +1,9 @@
-export async function searchProducts(query) {
-    const res = await fetch(`http://localhost:8000/api/models/search?q=${query}`, {
+export async function buscarProductos(consulta) {
+    const res = await fetch(`http://localhost:8000/api/models/search?q=${consulta}`, {
         credentials: "include"
     });
 
-    if (!res.ok) throw new Error("Search error");
+    if (!res.ok) throw new Error("Error en la búsqueda");
 
     return res.json();
 }
-

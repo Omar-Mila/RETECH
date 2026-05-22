@@ -48,6 +48,7 @@ const es = {
     provincia: "Provincia",
     municipio: "Municipio",
     codigoPostal: "Código Postal",
+    calle: "Calle / Dirección",
     phone: "Teléfono",
     saveError: "Error al guardar los cambios. Inténtalo de nuevo.",
     nifDuplicate: "Este NIF ya está registrado con otra cuenta.",

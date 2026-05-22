@@ -48,6 +48,7 @@ const en = {
     provincia: "Region / Province",
     municipio: "City / Municipality",
     codigoPostal: "Postal Code",
+    calle: "Street / Address",
     phone: "Phone",
     saveError: "Error saving changes. Please try again.",
     nifDuplicate: "This NIF is already registered with another account.",

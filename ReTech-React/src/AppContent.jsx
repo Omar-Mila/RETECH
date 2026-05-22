@@ -1,10 +1,10 @@
 
 import { useEffect } from "react";
 import { Routes, Route, useNavigate } from "react-router-dom";
-import { useAuth } from "./auth/AuthContext";
-import { useLanguage } from "./front/context/LanguageContext";
-import { getCurrentUser } from "./auth/authService";
-import { syncGuestCartToServer } from "./services/guestCart";
+import { useAutenticacion } from "./auth/AuthContext";
+import { useIdioma } from "./front/context/LanguageContext";
+import { obtenerUsuarioActual } from "./auth/authService";
+import { sincronizarCarritoServidor } from "./services/guestCart";
 
 import Home from "./front/pages/Home";
 import Login from "./auth/Login";
@@ -12,7 +12,7 @@ import Register from "./auth/Register";
 import Admin from "./admin/pages/Admin";
 import RequireAdmin from "./auth/RequireAdmin";
 import SearchResults from "./front/pages/SearchResults";
-import CartCheckoutPage from "./front/pages/Carrito";
+import PaginaCarrito from "./front/pages/Carrito";
 import UserProfile from "./front/pages/User/UserProfile";
 import OrdersPage from "./front/pages/User/OrdersPage";
 import ModelPage from "./front/pages/ModelPage";
@@ -20,33 +20,44 @@ import Contact from "./front/pages/Contact";
 import VerificadoPage from "./front/pages/VerificadoPage";
 
 export default function AppContent() {
-  const { loading, user, setUser } = useAuth();
-  const { t } = useLanguage();
-  const navigate = useNavigate();
+  const { loading, user, setUser } = useAutenticacion();
+  const { t } = useIdioma();
+  const navegar = useNavigate();
 
   useEffect(() => {
-    const handleStorage = async (e) => {
+    const manejarAlmacenamiento = async (e) => {
       if (e.key === 'retech-email-verified' && e.newValue !== null) {
         localStorage.removeItem('retech-email-verified');
-        const fresh = await getCurrentUser();
-        if (fresh) {
-          setUser(fresh);
-          await syncGuestCartToServer();
+        const usuarioActual = await obtenerUsuarioActual();
+        if (usuarioActual) {
+          setUser(usuarioActual);
+          await sincronizarCarritoServidor();
         }
-        const returnUrl = sessionStorage.getItem('retech-return-url') || '/';
+        const urlRetorno = sessionStorage.getItem('retech-return-url') || '/';
         sessionStorage.removeItem('retech-return-url');
-        navigate(returnUrl);
+        navegar(urlRetorno);
       }
     };
-    window.addEventListener('storage', handleStorage);
-    return () => window.removeEventListener('storage', handleStorage);
+    window.addEventListener('storage', manejarAlmacenamiento);
+    return () => window.removeEventListener('storage', manejarAlmacenamiento);
   }, []);
 
   if (loading) {
     return (
-      <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh', fontFamily: 'sans-serif' }}>
-        <p>{t('appLoading')}</p>
-      </div>
+      <>
+        <style>{`
+          #cargando {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            font-family: sans-serif;
+          }
+        `}</style>
+        <div id="cargando">
+          <p>{t('appLoading')}</p>
+        </div>
+      </>
     );
   }
 
@@ -55,12 +66,12 @@ export default function AppContent() {
       <Route path="/" element={<Home />} />
       <Route path="/login" element={<Login />} />
       <Route path="/register" element={<Register />} />
-      
+
       <Route path="/perfil" element={user ? <UserProfile /> : <Login />} />
       <Route path="/mis-pedidos" element={user ? <OrdersPage /> : <Login />} />
-      
+
       <Route path="/search" element={<SearchResults />} />
-      <Route path="/carrito" element={<CartCheckoutPage />} />
+      <Route path="/carrito" element={<PaginaCarrito />} />
       <Route path="/models/:id" element={<ModelPage />} />
 
       <Route path="/contact" element={<Contact />} />

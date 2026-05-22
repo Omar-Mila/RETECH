@@ -3,36 +3,36 @@ import ca from "../../locales/ca";
 import es from "../../locales/es";
 import en from "../../locales/en";
 
-const translations = { ca, es, en };
+const traducciones = { ca, es, en };
 
-const LanguageContext = createContext(null);
+const ContextoIdioma = createContext(null);
 
-export function LanguageProvider({ children }) {
-  const [lang, setLangState] = useState(() => localStorage.getItem("retech-lang") || "ca");
+export function ProveedorIdioma({ children }) {
+  const [idioma, fijarIdiomaEstado] = useState(() => localStorage.getItem("retech-lang") || "ca");
 
-  const setLang = (code) => {
-    localStorage.setItem("retech-lang", code);
-    setLangState(code);
+  const fijarIdioma = (codigo) => {
+    localStorage.setItem("retech-lang", codigo);
+    fijarIdiomaEstado(codigo);
   };
 
-  const t = useCallback((key) => {
-    const dict = translations[lang] || translations.ca;
-    const parts = key.split(".");
-    let value = dict;
-    for (const part of parts) {
-      value = value?.[part];
-      if (value === undefined) return key;
+  const t = useCallback((clave) => {
+    const dicc = traducciones[idioma] || traducciones.ca;
+    const partes = clave.split(".");
+    let valor = dicc;
+    for (const parte of partes) {
+      valor = valor?.[parte];
+      if (valor === undefined) return clave;
     }
-    return value ?? key;
-  }, [lang]);
+    return valor ?? clave;
+  }, [idioma]);
 
   return (
-    <LanguageContext.Provider value={{ lang, setLang, t }}>
+    <ContextoIdioma.Provider value={{ idioma, fijarIdioma, t }}>
       {children}
-    </LanguageContext.Provider>
+    </ContextoIdioma.Provider>
   );
 }
 
-export function useLanguage() {
-  return useContext(LanguageContext);
+export function useIdioma() {
+  return useContext(ContextoIdioma);
 }

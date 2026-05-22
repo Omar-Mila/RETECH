@@ -1,6 +1,6 @@
-export default function ColorSelector({ colors, selectedColor, setColor }) {
+export default function ColorSelector({ colores, colorSeleccionado, fijarColor }) {
 
-  if (!colors) return null
+  if (!colores) return null
 
   return (
     <div className="space-y-6">
@@ -9,22 +9,22 @@ export default function ColorSelector({ colors, selectedColor, setColor }) {
         <h3 className="font-semibold mb-2">Color</h3>
 
         <div className="grid grid-cols-2 gap-4 w-full">
-            {colors.map(color => (
+            {colores.map(color => (
                 <label key={color.id} className="cursor-pointer w-full">
 
                 <input
                     type="radio"
                     name="color"
                     value={color.id}
-                    checked={selectedColor === color.id}
-                    onChange={() => setColor(color.id)}
+                    checked={colorSeleccionado === color.id}
+                    onChange={() => fijarColor(color.id)}
                     className="hidden"
                 />
 
                 <div
                     className={`w-full py-4 border rounded text-center transition
                     ${
-                        selectedColor === color.id
+                        colorSeleccionado === color.id
                         ? "border-black bg-gray-100"
                         : "border-gray-300 hover:border-black"
                     }
