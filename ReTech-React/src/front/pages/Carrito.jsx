@@ -88,10 +88,39 @@ function QtyBtn({ label, onClick, disabled }) {
 }
 
 function CartItem({ item, onRemove, onQty, disabled }) {
+  console.info("hola");
+  console.info("ITEM CARRITO:", item)
   const badge = ESTADO_BADGE[item.estado] ?? ESTADO_BADGE["Bueno"];
   return (
     <div style={{ display:"flex",gap:14,padding:"18px 0",borderBottom:"1px solid #f1f5f9" }}>
-      <PhoneIcon hex={item.color_hex}/>
+
+    <div
+      style={{
+        width: 70,
+        height: 70,
+        borderRadius: 12,
+        overflow: "hidden",
+        background: "#f8fafc",
+        border: "1px solid #e2e8f0",
+        flexShrink: 0,
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+      }}
+    >
+      <img
+        src={item.image_url}
+        alt={item.modelo}
+        style={{
+          width: "100%",
+          height: "100%",
+          objectFit: "contain",
+        }}
+        onError={(e) => {
+          e.target.src = "/images/no-image.png"
+        }}
+      />
+    </div>
       <div style={{ flex:1,minWidth:0 }}>
         <div style={{ display:"flex",justifyContent:"space-between",alignItems:"flex-start",gap:8 }}>
           <div>
