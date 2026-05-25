@@ -1,110 +1,113 @@
 import { useState, useEffect, useMemo } from "react"
 import { useParams, useSearchParams } from "react-router-dom"
-import { getProduct, getModelImages, getModelUnits } from "../../services/productService"
+import { obtenerProducto, obtenerImagenesModelo, obtenerUnidadesModelo } from "../../services/productService"
 
 import Navbar from "../components/Navbar"
 import Footer from "../components/Footer"
 import ProductGallery from "../components/ProductPage/ProductGallery"
 import ProductInfo from "../components/ProductPage/ProductInfo"
 import ProductConfigurator from "../components/ProductPage/ProductConfigurator"
-import { useLanguage } from "../context/LanguageContext"
+import { useIdioma } from "../context/LanguageContext"
 
 export default function ModelPage() {
-  const { t } = useLanguage()
+  const { t } = useIdioma()
   const { id } = useParams()
   const [searchParams] = useSearchParams()
   const initialMovilId = searchParams.get("movil")
 
-  const [model, setModel]   = useState(null)
-  const [units, setUnits]   = useState([])
-  const [loading, setLoading] = useState(true)
-  const [images, setImages] = useState([])
-  const [selectedColor, setSelectedColor] = useState("")
-  const [selectedState, setSelectedState] = useState("")
+  const [modelo,             fijarModelo]             = useState(null)
+  const [unidades,           fijarUnidades]           = useState([])
+  const [cargando,           fijarCargando]           = useState(true)
+  const [imagenes,           fijarImagenes]           = useState([])
+  const [colorSeleccionado,  fijarColorSeleccionado]  = useState("")
+  const [estadoSeleccionado, fijarEstadoSeleccionado] = useState("")
 
-  // Color para la galería: si hay selección úsala, si no busca negro, si no el primero disponible
-  const galleryColor = useMemo(() => {
-    if (selectedColor) return selectedColor
-    const negro = units.find(u => u.color?.toLowerCase() === "negro" || u.color?.toLowerCase() === "black")
+  const colorGaleria = useMemo(() => {
+    if (colorSeleccionado) return colorSeleccionado
+    const negro = unidades.find(u => u.color?.toLowerCase() === "negro" || u.color?.toLowerCase() === "black")
     if (negro) return String(negro.color_id)
-    return units[0] ? String(units[0].color_id) : ""
-  }, [selectedColor, units])
+    return unidades[0] ? String(unidades[0].color_id) : ""
+  }, [colorSeleccionado, unidades])
 
-  // URL de portada para el color activo (usada al añadir al carrito guest)
-  const coverImageUrl = useMemo(() => {
-    if (images.length === 0) return null
-    const img = images.find(i => String(i.color_id) === String(galleryColor))
-    return img?.url ?? images[0]?.url ?? null
-  }, [images, galleryColor])
+  const urlPortada = useMemo(() => {
+    if (imagenes.length === 0) return null
+    const img = imagenes.find(i => String(i.color_id) === String(colorGaleria))
+    return img?.url ?? imagenes[0]?.url ?? null
+  }, [imagenes, colorGaleria])
 
   useEffect(() => {
-    let mounted = true
-    async function loadData() {
+    let montado = true
+    async function cargarDatos() {
       try {
-        const [modelData, imagesData, unitsData] = await Promise.all([
-          getProduct(id),
-          getModelImages(id),
-          getModelUnits(id),
+        const [datosModelo, datosImagenes, datosUnidades] = await Promise.all([
+          obtenerProducto(id),
+          obtenerImagenesModelo(id),
+          obtenerUnidadesModelo(id),
         ])
-        if (!mounted) return
-        setModel(modelData)
-        setImages(imagesData)
-        setUnits(unitsData)
+        if (!montado) return
+        fijarModelo(datosModelo)
+        fijarImagenes(datosImagenes)
+        fijarUnidades(datosUnidades)
 
-        // Pre-select color so the gallery filters correctly on first render
-        if (unitsData.length > 0) {
-          const firstUnit = initialMovilId
-            ? (unitsData.find(u => String(u.id) === String(initialMovilId)) ?? unitsData[0])
-            : unitsData[0]
-          setSelectedColor(String(firstUnit.color_id))
+        if (datosUnidades.length > 0) {
+          const primeraUnidad = initialMovilId
+            ? (datosUnidades.find(u => String(u.id) === String(initialMovilId)) ?? datosUnidades[0])
+            : datosUnidades[0]
+          fijarColorSeleccionado(String(primeraUnidad.color_id))
         }
       } catch (e) {
         console.error(e)
-        if (mounted) setModel(null)
+        if (montado) fijarModelo(null)
       } finally {
-        if (mounted) setLoading(false)
+        if (montado) fijarCargando(false)
       }
     }
-    loadData()
-    return () => { mounted = false }
+    cargarDatos()
+    return () => { montado = false }
   }, [id])
 
   return (
-    <div className="min-h-screen flex flex-col">
+    <div className="mp-page">
 
       <Navbar />
 
-      <main className="flex-1">
+      <main className="mp-main">
 
-        {loading && <div className="p-10">{t("product.loading")}</div>}
-
-        {!loading && !model && (
-          <div className="p-10">{t("product.notFound")}</div>
+        {cargando && (
+          <div className="mp-state-msg">{t("product.loading")}</div>
         )}
 
-        {!loading && model && (
-          <div className="max-w-6xl mx-auto px-6 py-10 flex flex-col lg:flex-row gap-12">
+        {!cargando && !modelo && (
+          <div className="mp-state-msg">{t("product.notFound")}</div>
+        )}
 
-            {/* IZQUIERDA */}
-            <div className="flex-1 min-w-0 space-y-8">
-              <ProductGallery images={images} selectedColor={galleryColor} />
-              <ProductInfo product={model} />
+        {!cargando && modelo && (
+          <div className="mp-layout">
+
+            {/* 1 — Galería */}
+            <div className="mp-gallery-wrap">
+              <ProductGallery imagenes={imagenes} selectedColor={colorGaleria} />
             </div>
 
-            {/* DERECHA */}
-            <div className="lg:w-[440px] flex-shrink-0">
-              <div className="sticky top-24">
+            {/* 2 — Configurador (selectors + compra) */}
+            <div className="mp-right">
+              <div className="mp-sticky">
                 <ProductConfigurator
-                  units={units}
+                  units={unidades}
                   initialMovilId={initialMovilId}
-                  selectedColor={selectedColor}
-                  setSelectedColor={setSelectedColor}
-                  selectedState={selectedState}
-                  setSelectedState={setSelectedState}
-                  productName={model.nombre}
-                  coverImage={coverImageUrl}
+                  selectedColor={colorSeleccionado}
+                  setSelectedColor={fijarColorSeleccionado}
+                  selectedState={estadoSeleccionado}
+                  setSelectedState={fijarEstadoSeleccionado}
+                  productName={modelo.nombre}
+                  coverImage={urlPortada}
                 />
               </div>
+            </div>
+
+            {/* 3 — Atributos extra */}
+            <div className="mp-info-wrap">
+              <ProductInfo producto={modelo} />
             </div>
 
           </div>
@@ -113,6 +116,78 @@ export default function ModelPage() {
       </main>
 
       <Footer />
+
+      <style>{`
+
+        /* ── Página ─────────────────────────────────────────── */
+        .mp-page {
+          min-height: 100vh;
+          display: flex;
+          flex-direction: column;
+        }
+
+        /* ── Main ───────────────────────────────────────────── */
+        .mp-main { flex: 1; }
+
+        /* ── Mensajes de estado ─────────────────────────────── */
+        .mp-state-msg {
+          padding: 2.5rem;
+          color: #64748b;
+          font-size: 0.9rem;
+        }
+
+        /* ── Layout principal — grid de 2 columnas ─────────── */
+        .mp-layout {
+          max-width: 72rem;
+          margin: 0 auto;
+          padding: 2.5rem 1.5rem;
+          display: grid;
+          grid-template-columns: 1fr 440px;
+          grid-template-rows: auto 1fr;
+          grid-template-areas:
+            "gallery  config"
+            "info     config";
+          column-gap: 3rem;
+          row-gap: 2rem;
+          align-items: start;
+        }
+
+        .mp-gallery-wrap { grid-area: gallery; min-width: 0; }
+        .mp-right        { grid-area: config;  min-width: 0; }
+        .mp-info-wrap    { grid-area: info;    min-width: 0; }
+
+        /* ── Sticky del configurador ────────────────────────── */
+        .mp-sticky {
+          position: sticky;
+          top: 6rem;
+        }
+
+        /* ── Responsive ─────────────────────────────────────── */
+
+        /* Tablet / móvil (≤1024px): columna única, orden: galería → config → info */
+        @media (max-width: 1024px) {
+          .mp-layout {
+            grid-template-columns: 1fr;
+            grid-template-rows: auto;
+            grid-template-areas:
+              "gallery"
+              "config"
+              "info";
+            column-gap: 0;
+            row-gap: 2rem;
+          }
+          .mp-sticky { position: static; }
+        }
+
+        @media (max-width: 640px) {
+          .mp-layout { padding: 1.5rem 1rem; row-gap: 1.5rem; }
+        }
+
+        @media (max-width: 480px) {
+          .mp-layout { padding: 1rem 0.75rem; row-gap: 1.25rem; }
+        }
+
+      `}</style>
 
     </div>
   )

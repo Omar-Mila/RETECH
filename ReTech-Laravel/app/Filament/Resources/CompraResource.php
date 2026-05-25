@@ -3,7 +3,6 @@
 namespace App\Filament\Resources;
 
 use App\Filament\Resources\CompraResource\Pages;
-use App\Filament\Resources\CompraResource\RelationManagers;
 use App\Models\Compra;
 use Filament\Forms;
 use Filament\Resources\Form;
@@ -15,28 +14,33 @@ class CompraResource extends Resource
 {
     protected static ?string $model = Compra::class;
 
-    protected static ?string $navigationIcon = 'heroicon-o-collection';
+    protected static ?string $navigationIcon   = 'heroicon-o-shopping-bag';
+    protected static ?string $navigationLabel  = 'Compras';
+    protected static ?string $modelLabel       = 'Compra';
+    protected static ?string $pluralModelLabel = 'Compras';
+    protected static ?int    $navigationSort   = 2;
 
     public static function form(Form $form): Form
     {
         return $form
-            
             ->schema([
                 Forms\Components\Section::make('Cabecera del Pedido')
                     ->schema([
                         Forms\Components\Select::make('cliente_user_id')
+                            ->label('Cliente')
                             ->relationship('cliente', 'nombre')
                             ->searchable()
                             ->required(),
 
                         Forms\Components\Select::make('metodo_pago')
+                            ->label('Método de pago')
                             ->options([
-                                'Tarjeta'        => 'Tarjeta',
-                                'Transferencia'  => 'Transferencia',
+                                'Tarjeta'       => 'Tarjeta',
+                                'Transferencia' => 'Transferencia',
                             ])->required(),
 
-                        // ── NUEVO: estado del pago ──────────────────────────
                         Forms\Components\Select::make('estado')
+                            ->label('Estado del pago')
                             ->options([
                                 'pendiente' => 'Pendiente',
                                 'pagado'    => 'Pagado',
@@ -53,26 +57,24 @@ class CompraResource extends Resource
                             ->dehydrated()
                             ->default(0),
 
-                        // ── NUEVO: intent de Stripe (solo lectura) ──────────
                         Forms\Components\TextInput::make('stripe_intent')
                             ->label('Stripe Intent ID')
                             ->disabled()
                             ->dehydrated()
                             ->placeholder('Generado automáticamente por Stripe')
                             ->columnSpan(2),
-
                     ])->columns(3),
 
-                Forms\Components\Section::make('Carrito / Ítems')
+                Forms\Components\Section::make('Productos del Pedido')
                     ->schema([
                         Forms\Components\Repeater::make('items')
-                            ->label('Productos en el carrito')
+                            ->label('Artículos')
                             ->reactive()
                             ->afterStateUpdated(function (callable $get, callable $set) {
                                 $items = $get('items') ?? [];
                                 $total = 0;
                                 foreach ($items as $item) {
-                                    $total += (float)($item['precio'] ?? 0) * (int)($item['cantidad'] ?? 1);
+                                    $total += (float) ($item['precio'] ?? 0) * (int) ($item['cantidad'] ?? 1);
                                 }
                                 $set('precio_total', $total);
                             })
@@ -80,7 +82,7 @@ class CompraResource extends Resource
                                 if (is_string($state)) {
                                     $decoded = json_decode($state, true) ?? [];
                                     $component->state(array_map(function ($item) {
-                                        $item['precio'] = (float) ($item['precio'] ?? 0);
+                                        $item['precio']   = (float) ($item['precio'] ?? 0);
                                         $item['cantidad'] = (int) ($item['cantidad'] ?? 1);
                                         return $item;
                                     }, $decoded));
@@ -101,6 +103,7 @@ class CompraResource extends Resource
                                     ->columnSpan(3),
 
                                 Forms\Components\TextInput::make('cantidad')
+                                    ->label('Cantidad')
                                     ->numeric()
                                     ->default(1)
                                     ->required()
@@ -120,7 +123,7 @@ class CompraResource extends Resource
                                     ->columnSpan(2),
                             ])
                             ->columns(6)
-                            ->createItemButtonLabel('Añadir producto')
+                            ->createItemButtonLabel('+ Añadir producto')
                             ->defaultItems(1),
                     ]),
             ]);
@@ -130,13 +133,19 @@ class CompraResource extends Resource
     {
         return $table
             ->columns([
+                Tables\Columns\TextColumn::make('id')
+                    ->label('#')
+                    ->sortable(),
+
                 Tables\Columns\TextColumn::make('created_at')
                     ->label('Fecha')
-                    ->dateTime()
+                    ->dateTime('d/m/Y H:i')
                     ->sortable(),
 
                 Tables\Columns\TextColumn::make('cliente.nombre')
-                    ->label('Cliente'),
+                    ->label('Cliente')
+                    ->searchable()
+                    ->sortable(),
 
                 Tables\Columns\TextColumn::make('precio_total')
                     ->label('Total')
@@ -144,10 +153,15 @@ class CompraResource extends Resource
                     ->sortable(),
 
                 Tables\Columns\BadgeColumn::make('metodo_pago')
-                    ->colors(['primary' => 'stripe', 'success' => 'Tarjeta', 'warning' => 'Transferencia', 'secondary' => 'Efectivo']),
+                    ->label('Método de pago')
+                    ->colors([
+                        'success' => 'Tarjeta',
+                        'warning' => 'Transferencia',
+                        'primary' => 'stripe',
+                    ]),
 
-                // ── NUEVO: badge de estado ──────────────────────────────────
                 Tables\Columns\BadgeColumn::make('estado')
+                    ->label('Estado')
                     ->colors([
                         'warning' => 'pendiente',
                         'success' => 'pagado',
@@ -157,18 +171,70 @@ class CompraResource extends Resource
                 Tables\Columns\TextColumn::make('stripe_intent')
                     ->label('Stripe ID')
                     ->limit(24)
-                    ->tooltip(fn ($record) => $record->stripe_intent),
+                    ->tooltip(fn ($record) => $record->stripe_intent)
+                    ->toggleable(isToggledHiddenByDefault: true),
             ])
+            ->defaultSort('created_at', 'desc')
             ->filters([
-                Tables\Filters\SelectFilter::make('metodo_pago'),
+                // La clave interna 'pago' es distinta del campo real 'metodo_pago'
+                // para evitar que Filament auto-pueble el select con valores de la BD
+                Tables\Filters\Filter::make('filtro_pago')
+                    ->label('Método de pago')
+                    ->form([
+                        \Filament\Forms\Components\Select::make('pago')
+                            ->label('Método de pago')
+                            ->placeholder('Todos')
+                            ->options([
+                                'Tarjeta'       => 'Tarjeta',
+                                'Transferencia' => 'Transferencia',
+                                'stripe'        => 'Stripe',
+                            ]),
+                    ])
+                    ->query(fn ($query, array $data) =>
+                        filled($data['pago'])
+                            ? $query->where('metodo_pago', $data['pago'])
+                            : $query
+                    )
+                    ->indicateUsing(fn (array $data) =>
+                        filled($data['pago']) ? 'Pago: ' . $data['pago'] : null
+                    ),
 
-                // ── NUEVO: filtro por estado ────────────────────────────────
-                Tables\Filters\SelectFilter::make('estado')
-                    ->options([
-                        'pendiente' => 'Pendiente',
-                        'pagado'    => 'Pagado',
-                        'fallido'   => 'Fallido',
-                    ]),
+                Tables\Filters\Filter::make('estado')
+                    ->label('Estado del pago')
+                    ->form([
+                        \Filament\Forms\Components\Select::make('estado')
+                            ->label('Estado')
+                            ->placeholder('Todos')
+                            ->options([
+                                'pendiente' => 'Pendiente',
+                                'pagado'    => 'Pagado',
+                                'fallido'   => 'Fallido',
+                            ]),
+                    ])
+                    ->query(fn ($query, array $data) =>
+                        filled($data['estado'])
+                            ? $query->where('estado', $data['estado'])
+                            : $query
+                    )
+                    ->indicateUsing(fn (array $data) =>
+                        filled($data['estado']) ? 'Estado: ' . ucfirst($data['estado']) : null
+                    ),
+
+                Tables\Filters\Filter::make('hoy')
+                    ->label('Solo hoy')
+                    ->query(fn ($query) => $query->whereDate('created_at', today())),
+
+                Tables\Filters\Filter::make('este_mes')
+                    ->label('Este mes')
+                    ->query(fn ($query) => $query->whereMonth('created_at', now()->month)
+                                                  ->whereYear('created_at', now()->year)),
+            ])
+            ->actions([
+                Tables\Actions\EditAction::make()->label('Editar'),
+                Tables\Actions\DeleteAction::make()->label('Eliminar'),
+            ])
+            ->bulkActions([
+                Tables\Actions\DeleteBulkAction::make()->label('Eliminar seleccionadas'),
             ]);
     }
 

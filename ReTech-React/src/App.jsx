@@ -1,18 +1,18 @@
 import { BrowserRouter, Routes, Route } from "react-router-dom"
-import { AuthProvider } from "./auth/AuthContext"
-import { LanguageProvider } from "./front/context/LanguageContext"
-import AppContent from "./AppContent"
+import { ProveedorAuth } from "./auth/AuthContext"
+import { ProveedorIdioma } from "./front/context/LanguageContext"
+import ContenidoApp from "./AppContent"
 
 export default function App() {
 
   return (
 
     <BrowserRouter>
-      <LanguageProvider>
-        <AuthProvider>
-          <AppContent />
-        </AuthProvider>
-      </LanguageProvider>
+      <ProveedorIdioma>
+        <ProveedorAuth>
+          <ContenidoApp />
+        </ProveedorAuth>
+      </ProveedorIdioma>
     </BrowserRouter>
 
   )

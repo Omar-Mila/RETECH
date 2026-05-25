@@ -1,71 +1,71 @@
 const API_URL = "http://localhost:8000"
 
-function getCookie(name) {
+function obtenerCookie(nombre) {
   return document.cookie
     .split("; ")
-    .find(row => row.startsWith(name + "="))
+    .find(fila => fila.startsWith(nombre + "="))
     ?.split("=")[1];
 }
 
-async function getCSRF() {
+async function obtenerCSRF() {
   await fetch(`${API_URL}/sanctum/csrf-cookie`, { credentials: "include" });
-  return decodeURIComponent(getCookie("XSRF-TOKEN") || "");
+  return decodeURIComponent(obtenerCookie("XSRF-TOKEN") || "");
 }
 
-export async function loginRequest(email, password) {
-  const csrfToken = await getCSRF();
+export async function solicitarLogin(email, password) {
+  const tokenCsrf = await obtenerCSRF();
 
-  const response = await fetch(`${API_URL}/api/login`, {
+  const respuesta = await fetch(`${API_URL}/api/login`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
       "Accept": "application/json",
-      "X-XSRF-TOKEN": csrfToken,
+      "X-XSRF-TOKEN": tokenCsrf,
     },
     credentials: "include",
     body: JSON.stringify({ email, password }),
   })
 
-  if (!response.ok) throw new Error("Credencials incorrectes")
+  if (!respuesta.ok) throw new Error("Credencials incorrectes")
 
-  const data = await response.json();
-  return data.user ?? data
+  const datos = await respuesta.json();
+  return datos.user ?? datos
 }
 
-export async function googleLoginRequest(credential) {
-  const csrfToken = await getCSRF();
+export async function solicitarLoginGoogle(credencial) {
+  const tokenCsrf = await obtenerCSRF();
 
-  const response = await fetch(`${API_URL}/api/auth/google`, {
+  const respuesta = await fetch(`${API_URL}/api/auth/google`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
       "Accept": "application/json",
-      "X-XSRF-TOKEN": csrfToken,
+      "X-XSRF-TOKEN": tokenCsrf,
     },
     credentials: "include",
-    body: JSON.stringify({ credential }),
+    body: JSON.stringify({ credential: credencial }),
   });
 
-  if (!response.ok) throw new Error("Error al iniciar sessió amb Google");
+  if (!respuesta.ok) throw new Error("Error al iniciar sessió amb Google");
 
-  const data = await response.json();
-  return data.user ?? data;
+  const datos = await respuesta.json();
+  return datos.user ?? datos;
 }
 
-export async function logoutRequest() {
-  const csrfToken = getCookie("XSRF-TOKEN");
+export async function solicitarLogout() {
+  const tokenCsrf = obtenerCookie("XSRF-TOKEN");
 
   return await fetch(`${API_URL}/api/logout`, {
     method: "POST",
     credentials: "include",
     headers: {
       "Accept": "application/json",
-      "X-XSRF-TOKEN": decodeURIComponent(csrfToken || ""),
+      "X-XSRF-TOKEN": decodeURIComponent(tokenCsrf || ""),
     },
   });
 }
 
-export const getCurrentUser = async () => {
+export const obtenerUsuarioActual = async () => {
   try {
     const res = await fetch(`${API_URL}/api/user`, {
       method: "GET",

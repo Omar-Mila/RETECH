@@ -20,12 +20,16 @@ class Cliente extends Model
     public $timestamps = false;
 
     protected $fillable = [
-        'user_id', 
-        'nombre', 
-        'apellidos', 
-        'nif', 
-        'direccion', 
-        'telefono'
+        'user_id',
+        'nombre',
+        'apellidos',
+        'nif',
+        'pais',
+        'provincia',
+        'municipio',
+        'codigo_postal',
+        'calle',
+        'telefono',
     ];
 
     public function user(){

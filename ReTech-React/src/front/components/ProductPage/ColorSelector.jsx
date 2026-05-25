@@ -1,42 +1,91 @@
-export default function ColorSelector({ colors, selectedColor, setColor }) {
+export default function ColorSelector({ colores, colorSeleccionado, fijarColor }) {
 
-  if (!colors) return null
+  if (!colores) return null
 
   return (
-    <div className="space-y-6">
+    <div className="cs-container">
 
       <div>
-        <h3 className="font-semibold mb-2">Color</h3>
+        <h3 className="cs-title">Color</h3>
 
-        <div className="grid grid-cols-2 gap-4 w-full">
-            {colors.map(color => (
-                <label key={color.id} className="cursor-pointer w-full">
+        <div className="cs-grid">
+          {colores.map(color => (
+            <label key={color.id} className="cs-label">
 
-                <input
-                    type="radio"
-                    name="color"
-                    value={color.id}
-                    checked={selectedColor === color.id}
-                    onChange={() => setColor(color.id)}
-                    className="hidden"
-                />
+              <input
+                type="radio"
+                name="color"
+                value={color.id}
+                checked={colorSeleccionado === color.id}
+                onChange={() => fijarColor(color.id)}
+                className="cs-input"
+              />
 
-                <div
-                    className={`w-full py-4 border rounded text-center transition
-                    ${
-                        selectedColor === color.id
-                        ? "border-black bg-gray-100"
-                        : "border-gray-300 hover:border-black"
-                    }
-                    `}
-                >
-                    {color.nombre}
-                </div>
+              <div className={`cs-option${colorSeleccionado === color.id ? " cs-option--active" : ""}`}>
+                {color.nombre}
+              </div>
 
-                </label>
-            ))}
-            </div>
+            </label>
+          ))}
+        </div>
       </div>
+
+      <style>{`
+        .cs-container {
+          display: flex;
+          flex-direction: column;
+          gap: 1.5rem;
+        }
+
+        .cs-title {
+          font-weight: 600;
+          margin-bottom: 0.5rem;
+        }
+
+        .cs-grid {
+          display: grid;
+          grid-template-columns: repeat(2, 1fr);
+          gap: 1rem;
+          width: 100%;
+        }
+
+        .cs-label {
+          cursor: pointer;
+          width: 100%;
+        }
+
+        .cs-input {
+          display: none;
+        }
+
+        .cs-option {
+          width: 100%;
+          padding: 1rem 0;
+          border: 1px solid #d1d5db;
+          border-radius: 0.25rem;
+          text-align: center;
+          transition: border-color 0.15s ease;
+        }
+
+        .cs-option:hover {
+          border-color: #000;
+        }
+
+        .cs-option--active {
+          border-color: #000;
+          background-color: #f3f4f6;
+        }
+
+        @media (max-width: 480px) {
+          .cs-grid {
+            grid-template-columns: 1fr;
+          }
+          .cs-option {
+            padding: 0.75rem 0;
+            font-size: 0.9rem;
+          }
+        }
+      `}</style>
 
     </div>
   )

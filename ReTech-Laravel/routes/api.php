@@ -92,11 +92,15 @@ Route::middleware(['web', 'auth:sanctum'])->post('/resend-verification', functio
 Route::middleware('auth:sanctum')->put('/user/cliente', function (Request $request) {
     $user = $request->user();
     $data = $request->validate([
-        'nombre'    => 'nullable|string|max:100',
-        'apellidos' => 'nullable|string|max:100',
-        'nif'       => ['nullable', 'string', 'max:9', Rule::unique('clientes', 'nif')->ignore($user->id, 'user_id')],
-        'direccion' => 'nullable|string|max:255',
-        'telefono'  => 'nullable|string|max:20',
+        'nombre'        => 'nullable|string|max:100',
+        'apellidos'     => 'nullable|string|max:100',
+        'nif'           => ['nullable', 'string', 'max:9', Rule::unique('clientes', 'nif')->ignore($user->id, 'user_id')],
+        'calle'         => 'nullable|string|max:100',
+        'pais'          => 'nullable|string|max:60',
+        'provincia'     => 'nullable|string|max:80',
+        'municipio'     => 'nullable|string|max:80',
+        'codigo_postal' => 'nullable|string|max:10',
+        'telefono'      => 'nullable|string|max:20',
     ]);
 
     // Convertir strings vacíos a null para evitar conflictos de unicidad en NIF

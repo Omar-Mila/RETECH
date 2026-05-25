@@ -25,6 +25,7 @@ class DatabaseSeeder extends Seeder
             ColorSeeder::class,
             ModeloSeeder::class,
             MovilSeeder::class,
+            ModeloImageSeeder::class,
         ]);
     }
 }

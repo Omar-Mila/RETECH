@@ -1,66 +1,62 @@
 const API_URL = "http://localhost:8000/api"
 
-export async function getProducts() {
-  const response = await fetch("http://localhost:8000/api/moviles", {
+export async function obtenerProductos() {
+  const respuesta = await fetch("http://localhost:8000/api/moviles", {
     credentials: "include"
   })
-  const data = await response.json()
-  console.info("BACKEND DATA:", data)
-  return data
+  const datos = await respuesta.json()
+  console.info("BACKEND DATA:", datos)
+  return datos
 }
 
-export async function getBestSellers() {
-  const response = await fetch("http://localhost:8000/api/moviles/best-sellers", {
+export async function obtenerMasVendidos() {
+  const respuesta = await fetch("http://localhost:8000/api/moviles/best-sellers", {
     credentials: "include",
   });
-  return response.json();
+  return respuesta.json();
 }
 
-export async function getProduct(id) {
+export async function obtenerProducto(id) {
     const res = await fetch(`http://localhost:8000/api/models/${id}`, {
         credentials: "include"
     })
 
     if (!res.ok) {
-        throw new Error("Product not found")
+        throw new Error("Producto no encontrado")
     }
 
     return res.json()
 }
 
-export async function getModelOptions(id) {
+export async function obtenerOpcionesModelo(id) {
   const res = await fetch(`http://localhost:8000/api/models/${id}/options`)
-  if (!res.ok) throw new Error("Options error")
+  if (!res.ok) throw new Error("Error en opciones")
   return res.json()
 }
 
-export async function getModelPrice(id, params) {
-
-  const query = new URLSearchParams(params).toString()
-
+export async function obtenerPrecioModelo(id, parametros) {
+  const consulta = new URLSearchParams(parametros).toString()
   const res = await fetch(
-    `http://localhost:8000/api/models/${id}/price?${query}`
+    `http://localhost:8000/api/models/${id}/price?${consulta}`
   )
-
-  if (!res.ok) throw new Error("Price error")
-
+  if (!res.ok) throw new Error("Error en precio")
   return res.json()
 }
 
-export async function getModelImages(id) {
+export async function obtenerImagenesModelo(id) {
   const res = await fetch(`http://localhost:8000/api/models/${id}/images`);
   return res.json();
 }
 
-export async function getFilteredOptions(id, params) {
-  const query = new URLSearchParams(params).toString()
-  const res = await fetch(`http://localhost:8000/api/models/${id}/options?${query}`)
-  if (!res.ok) throw new Error("Options error")
+export async function obtenerOpcionesFiltradas(id, parametros) {
+  const consulta = new URLSearchParams(parametros).toString()
+  const res = await fetch(`http://localhost:8000/api/models/${id}/options?${consulta}`)
+  if (!res.ok) throw new Error("Error en opciones")
   return res.json()
 }
 
-export async function getModelUnits(id) {
+export async function obtenerUnidadesModelo(id) {
   const res = await fetch(`http://localhost:8000/api/models/${id}/units`)
-  if (!res.ok) throw new Error("Units error")
+  if (!res.ok) throw new Error("Error en unidades")
   return res.json()
 }
