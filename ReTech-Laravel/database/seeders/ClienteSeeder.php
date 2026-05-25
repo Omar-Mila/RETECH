@@ -22,16 +22,8 @@ class ClienteSeeder extends Seeder
             'name' => 'omar',
             'email' => 'omar@retech.com',
             'password' => Hash::make('omar'),
-            'role' => 'user',
+            'role' => 'cliente',
         ]);
-
-        Cliente::create([
-            'user_id' => $user->id,
-            'nombre'    => 'Omar',
-            'apellidos' => 'El Fedli Gaibri',
-            'nif'       => '12345678A',
-            'direccion' => 'Calle Cervantes 8, 1-1',
-            'telefono'  => '697295939',
-        ]);
+    
     }
 }
