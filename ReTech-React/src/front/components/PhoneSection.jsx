@@ -44,6 +44,7 @@ export default function PhonesSection() {
                 <PhoneCardS
                     key={phone.id}
                     modeloId={phone.modelo_id}
+                    movilId={phone.id}
                     name={phone.modelo?.nombre ?? phone.modelo}
                     condition={phone.estado}
                     price={phone.precio}

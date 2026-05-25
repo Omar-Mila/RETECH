@@ -93,28 +93,34 @@ class MovilApiController extends Controller
                 'ram'            => $movil->ram,
                 'color'          => $movil->color?->nombre,
                 'stock'          => $movil->stock,
-                'image_url' => $movil->modelo?->images?->first()?->path,
+                'image_url' => $movil->modelo?->images
+                                    ?->firstWhere('color_id', $movil->color_id)?->path
+                                    ?? $movil->modelo?->images?->first()?->path,
             ];
         })->values());
     }
 
     public function show($id)
     {
-        $movil = Movil::with(['modelo.marca', 'color', 'empresa'])
+        $movil = Movil::with(['modelo.marca', 'modelo.images', 'color', 'empresa'])
             ->findOrFail($id);
 
         return response()->json([
-            'id' => $movil->id,
-            'marca' => $movil->modelo->marca->nombre ?? null,
-            'modelo' => $movil->modelo->nombre,
-            'precio' => $movil->precio,
-            'estado' => $movil->estado,
-            'bateria' => $movil->salud_bateria,
+            'id'             => $movil->id,
+            'marca'          => $movil->modelo->marca->nombre ?? null,
+            'modelo'         => $movil->modelo->nombre,
+            'precio'         => $movil->precio,
+            'estado'         => $movil->estado,
+            'bateria'        => $movil->salud_bateria,
             'almacenamiento' => $movil->almacenamiento,
-            'ram' => $movil->ram,
-            'color' => $movil->color->nombre ?? null,
-            'stock' => $movil->stock,
-            'empresa' => $movil->empresa->nombre_empresa ?? null,
+            'ram'            => $movil->ram,
+            'color'          => $movil->color->nombre ?? null,
+            'color_id'       => $movil->color_id,
+            'stock'          => $movil->stock,
+            'empresa'        => $movil->empresa->nombre_empresa ?? null,
+            'imagen_url'     => $movil->modelo?->images
+                                    ?->firstWhere('color_id', $movil->color_id)?->path
+                                    ?? $movil->modelo?->images?->first()?->path,
         ]);
     }
 }

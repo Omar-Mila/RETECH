@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react"
+import { useState, useEffect, useMemo } from "react"
 import { useParams, useSearchParams } from "react-router-dom"
 import { getProduct, getModelImages, getModelUnits } from "../../services/productService"
 
@@ -22,6 +22,21 @@ export default function ModelPage() {
   const [selectedColor, setSelectedColor] = useState("")
   const [selectedState, setSelectedState] = useState("")
 
+  // Color para la galería: si hay selección úsala, si no busca negro, si no el primero disponible
+  const galleryColor = useMemo(() => {
+    if (selectedColor) return selectedColor
+    const negro = units.find(u => u.color?.toLowerCase() === "negro" || u.color?.toLowerCase() === "black")
+    if (negro) return String(negro.color_id)
+    return units[0] ? String(units[0].color_id) : ""
+  }, [selectedColor, units])
+
+  // URL de portada para el color activo (usada al añadir al carrito guest)
+  const coverImageUrl = useMemo(() => {
+    if (images.length === 0) return null
+    const img = images.find(i => String(i.color_id) === String(galleryColor))
+    return img?.url ?? images[0]?.url ?? null
+  }, [images, galleryColor])
+
   useEffect(() => {
     let mounted = true
     async function loadData() {
@@ -35,6 +50,14 @@ export default function ModelPage() {
         setModel(modelData)
         setImages(imagesData)
         setUnits(unitsData)
+
+        // Pre-select color so the gallery filters correctly on first render
+        if (unitsData.length > 0) {
+          const firstUnit = initialMovilId
+            ? (unitsData.find(u => String(u.id) === String(initialMovilId)) ?? unitsData[0])
+            : unitsData[0]
+          setSelectedColor(String(firstUnit.color_id))
+        }
       } catch (e) {
         console.error(e)
         if (mounted) setModel(null)
@@ -64,7 +87,7 @@ export default function ModelPage() {
 
             {/* IZQUIERDA */}
             <div className="flex-1 min-w-0 space-y-8">
-              <ProductGallery images={images} selectedColor={selectedColor} />
+              <ProductGallery images={images} selectedColor={galleryColor} />
               <ProductInfo product={model} />
             </div>
 
@@ -79,6 +102,7 @@ export default function ModelPage() {
                   selectedState={selectedState}
                   setSelectedState={setSelectedState}
                   productName={model.nombre}
+                  coverImage={coverImageUrl}
                 />
               </div>
             </div>

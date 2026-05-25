@@ -1,7 +1,10 @@
 
-import { Routes, Route } from "react-router-dom";
+import { useEffect } from "react";
+import { Routes, Route, useNavigate } from "react-router-dom";
 import { useAuth } from "./auth/AuthContext";
 import { useLanguage } from "./front/context/LanguageContext";
+import { getCurrentUser } from "./auth/authService";
+import { syncGuestCartToServer } from "./services/guestCart";
 
 import Home from "./front/pages/Home";
 import Login from "./auth/Login";
@@ -14,10 +17,30 @@ import UserProfile from "./front/pages/User/UserProfile";
 import OrdersPage from "./front/pages/User/OrdersPage";
 import ModelPage from "./front/pages/ModelPage";
 import Contact from "./front/pages/Contact";
+import VerificadoPage from "./front/pages/VerificadoPage";
 
 export default function AppContent() {
-  const { loading, user } = useAuth();
+  const { loading, user, setUser } = useAuth();
   const { t } = useLanguage();
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    const handleStorage = async (e) => {
+      if (e.key === 'retech-email-verified' && e.newValue !== null) {
+        localStorage.removeItem('retech-email-verified');
+        const fresh = await getCurrentUser();
+        if (fresh) {
+          setUser(fresh);
+          await syncGuestCartToServer();
+        }
+        const returnUrl = sessionStorage.getItem('retech-return-url') || '/';
+        sessionStorage.removeItem('retech-return-url');
+        navigate(returnUrl);
+      }
+    };
+    window.addEventListener('storage', handleStorage);
+    return () => window.removeEventListener('storage', handleStorage);
+  }, []);
 
   if (loading) {
     return (
@@ -41,6 +64,7 @@ export default function AppContent() {
       <Route path="/models/:id" element={<ModelPage />} />
 
       <Route path="/contact" element={<Contact />} />
+      <Route path="/verificado" element={<VerificadoPage />} />
 
       <Route
         path="/admin"

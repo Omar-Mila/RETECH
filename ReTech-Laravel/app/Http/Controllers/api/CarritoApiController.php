@@ -115,7 +115,9 @@ class CarritoApiController extends Controller
                 'salud_bateria'  => $movil->salud_bateria,
                 'stock'          => $movil->stock,
                 'subtotal'       => round($precio * $row['cantidad'], 2),
-                'image_url' => $movil->modelo?->images?->first()?->path,
+                'imagen_url'     => $movil->modelo?->images
+                                        ?->firstWhere('color_id', $movil->color_id)?->path
+                                        ?? $movil->modelo?->images?->first()?->path,
             ];
         }
         return $items;

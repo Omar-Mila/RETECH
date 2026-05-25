@@ -166,14 +166,22 @@ function BatteryBar({ value }) {
   );
 }
 
-function PhoneIcon() {
+function PhoneThumb({ imagenUrl }) {
   return (
-    <div style={{ width: 44, height: 44, borderRadius: 12, background: "#f1f5f9", border: "1px solid #e2e8f0", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+    <div style={{ width: 44, height: 44, borderRadius: 12, background: "#f1f5f9", border: "1px solid #e2e8f0", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, overflow: "hidden", position: "relative" }}>
       <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
         <rect x="6" y="2" width="12" height="20" rx="3" stroke="#64748b" strokeWidth="1.8" />
         <circle cx="12" cy="18.5" r="1" fill="#64748b" />
         <rect x="9" y="5" width="6" height="1.5" rx="0.75" fill="#64748b" opacity="0.5" />
       </svg>
+      {imagenUrl && (
+        <img
+          src={imagenUrl}
+          alt=""
+          style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "contain", padding: 4 }}
+          onError={e => { e.currentTarget.style.display = "none" }}
+        />
+      )}
     </div>
   );
 }
@@ -197,7 +205,7 @@ function OrderItem({ item, movil, t }) {
 
   return (
     <div style={{ display: "flex", gap: 14, padding: "16px 0", borderBottom: "1px solid #f8fafc", alignItems: "flex-start" }}>
-      <PhoneIcon />
+      <PhoneThumb imagenUrl={movil.imagen_url} />
       <div style={{ flex: 1, minWidth: 0 }}>
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 8 }}>
           <div>
@@ -355,11 +363,6 @@ function OrderCard({ order, movilsCache, onToggle, isOpen, user, t }) {
             </button>
           </div>
 
-          {order.stripe_intent && (
-            <p style={{ margin: "10px 0 0", fontSize: 11, color: "#94a3b8", textAlign: "right" }}>
-              Stripe ID: {order.stripe_intent}
-            </p>
-          )}
         </div>
       )}
     </div>

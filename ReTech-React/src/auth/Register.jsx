@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import { useLanguage } from "../front/context/LanguageContext";
 
 const STRENGTH_BAR_COLORS = ["bg-red-500", "bg-red-500", "bg-orange-400", "bg-yellow-400", "bg-green-500"];
@@ -26,7 +26,9 @@ function getRequirements(pwd, t) {
 
 export default function Register() {
   const navigate = useNavigate();
+  const location = useLocation();
   const { t } = useLanguage();
+  const from = location.state?.from || null;
 
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
@@ -67,7 +69,7 @@ export default function Register() {
         throw new Error(data.message || "Error");
       }
 
-      navigate("/login");
+      navigate("/login", { state: { from } });
     } catch (err) {
       if (err.message.includes("Unexpected token")) {
         setError("Error crític: El servidor ha enviat HTML. Revisa la pestanya Network.");
@@ -180,7 +182,7 @@ export default function Register() {
           <p className="text-sm text-center mt-6 text-gray-600">
             {t('register.haveAccount')}{" "}
             <button
-              onClick={() => navigate("/login")}
+              onClick={() => navigate("/login", { state: { from } })}
               className="underline font-bold text-black hover:text-gray-700"
             >
               {t('register.login')}

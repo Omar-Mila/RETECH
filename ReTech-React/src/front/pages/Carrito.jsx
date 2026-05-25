@@ -93,34 +93,15 @@ function CartItem({ item, onRemove, onQty, disabled }) {
   const badge = ESTADO_BADGE[item.estado] ?? ESTADO_BADGE["Bueno"];
   return (
     <div style={{ display:"flex",gap:14,padding:"18px 0",borderBottom:"1px solid #f1f5f9" }}>
-
-    <div
-      style={{
-        width: 70,
-        height: 70,
-        borderRadius: 12,
-        overflow: "hidden",
-        background: "#f8fafc",
-        border: "1px solid #e2e8f0",
-        flexShrink: 0,
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "center",
-      }}
-    >
-      <img
-        src={item.image_url}
-        alt={item.modelo}
-        style={{
-          width: "100%",
-          height: "100%",
-          objectFit: "contain",
-        }}
-        onError={(e) => {
-          e.target.src = "/images/no-image.png"
-        }}
-      />
-    </div>
+      <div style={{ width:52,height:52,borderRadius:13,background:`${item.color_hex ?? "#94a3b8"}22`,border:`1.5px solid ${item.color_hex ?? "#94a3b8"}44`,display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0,overflow:"hidden",position:"relative" }}>
+        <PhoneIcon hex={item.color_hex ?? "#94a3b8"}/>
+        {item.imagen_url && (
+          <img src={item.imagen_url} alt={item.modelo}
+            style={{ position:"absolute",inset:0,width:"100%",height:"100%",objectFit:"contain",padding:4 }}
+            onError={e => { e.currentTarget.style.display = "none" }}
+          />
+        )}
+      </div>
       <div style={{ flex:1,minWidth:0 }}>
         <div style={{ display:"flex",justifyContent:"space-between",alignItems:"flex-start",gap:8 }}>
           <div>
@@ -168,7 +149,7 @@ function CartItem({ item, onRemove, onQty, disabled }) {
   );
 }
 
-function PaymentForm({ total, onSuccess, onCancel, t, profileFormData }) {
+function PaymentForm({ total, onSuccess, onCancel, t, profileFormData, onProfileSaved }) {
   const stripe   = useStripe();
   const elements = useElements();
   const [error,   setError]   = useState(null);
@@ -194,12 +175,13 @@ function PaymentForm({ total, onSuccess, onCancel, t, profileFormData }) {
     if (paymentIntent?.status === "succeeded") {
       if (profileFormData && Object.values(profileFormData).some(v => v !== "")) {
         try {
-          await apiFetch("/user/cliente", {
+          const updatedUser = await apiFetch("/user/cliente", {
             method: "PUT",
             body: JSON.stringify(profileFormData),
           });
-        } catch {
-          // No bloqueamos la compra si falla guardar el perfil
+          onProfileSaved?.(updatedUser);
+        } catch (err) {
+          console.error("Error guardando perfil:", err);
         }
       }
       const res = await apiFetch("/checkout/confirm", {
@@ -256,11 +238,36 @@ function OrderSummary({ items, onCheckout, loadingIntent, t, isGuest }) {
 
   return (
     <div style={{ position: "sticky", top: 24, background: "#fff", border: "1px solid #e2e8f0", borderRadius: 20, padding: 26, boxShadow: "0 4px 24px rgba(15,23,42,.07)" }}>
-      <h2 style={{ margin: "0 0 22px", fontSize: 17, fontWeight: 800, color: "#0f172a", fontFamily: "'Sora',sans-serif", letterSpacing: "-.3px" }}>
+      <h2 style={{ margin: "0 0 16px", fontSize: 17, fontWeight: 800, color: "#0f172a", fontFamily: "'Sora',sans-serif", letterSpacing: "-.3px" }}>
         {t('cart.summaryTitle')}
       </h2>
 
-      <div style={{ display: "flex", flexDirection: "column", gap: 11 }}>
+      {/* Miniaturas de los artículos */}
+      <div style={{ display:"flex", flexDirection:"column", gap:8, marginBottom:16 }}>
+        {items.map(item => (
+          <div key={item.movil_id} style={{ display:"flex", alignItems:"center", gap:10 }}>
+            <div style={{ width:38,height:38,borderRadius:9,background:`${item.color_hex ?? "#94a3b8"}22`,border:`1.5px solid ${item.color_hex ?? "#94a3b8"}44`,flexShrink:0,overflow:"hidden",position:"relative",display:"flex",alignItems:"center",justifyContent:"center" }}>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+                <rect x="6" y="2" width="12" height="20" rx="3" stroke={item.color_hex ?? "#94a3b8"} strokeWidth="1.8"/>
+                <circle cx="12" cy="18.5" r="1" fill={item.color_hex ?? "#94a3b8"}/>
+              </svg>
+              {item.imagen_url && (
+                <img src={item.imagen_url} alt={item.modelo}
+                  style={{ position:"absolute",inset:0,width:"100%",height:"100%",objectFit:"contain",padding:2 }}
+                  onError={e => { e.currentTarget.style.display = "none" }}
+                />
+              )}
+            </div>
+            <div style={{ flex:1,minWidth:0 }}>
+              <p style={{ margin:0,fontSize:12,fontWeight:700,color:"#0f172a",whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis" }}>{item.modelo}</p>
+              <p style={{ margin:0,fontSize:11,color:"#64748b" }}>{item.almacenamiento}GB · x{item.cantidad}</p>
+            </div>
+            <span style={{ fontSize:12,fontWeight:700,color:"#0f172a",flexShrink:0 }}>{fmt(item.subtotal)}</span>
+          </div>
+        ))}
+      </div>
+
+      <div style={{ borderTop:"1px solid #f1f5f9", paddingTop:14, display: "flex", flexDirection: "column", gap: 11 }}>
         <Row label={t('cart.subtotal')(totalItems)} value={fmt(total)} />
         <Row label={t('cart.total')} value={fmt(total)} bold large />
       </div>
@@ -729,6 +736,14 @@ export default function CartCheckoutPage() {
 
   useEffect(() => { loadCart(); }, [loadCart]);
 
+  // Si el usuario venía del botón de compra, disparar checkout automáticamente al autenticarse
+  useEffect(() => {
+    if (!isAuthenticated || fetchLoading) return;
+    if (sessionStorage.getItem('retech-auto-checkout') !== '1') return;
+    sessionStorage.removeItem('retech-auto-checkout');
+    handleCheckout();
+  }, [isAuthenticated, fetchLoading]);
+
   const handleRemove = async (movilId) => {
     if (!isAuthenticated) {
       const updated = getGuestCart().filter(i => i.movil_id !== movilId);
@@ -775,6 +790,7 @@ export default function CartCheckoutPage() {
 
   const handleCheckout = async () => {
     if (!isAuthenticated) {
+      sessionStorage.setItem('retech-auto-checkout', '1');
       navigate("/login", { state: { from: location.pathname } });
       return;
     }
@@ -802,10 +818,11 @@ export default function CartCheckoutPage() {
       }
     } catch (err) {
       if (err.message === "Unauthenticated.") {
+        sessionStorage.setItem('retech-auto-checkout', '1');
         setAuthToast(true);
         setTimeout(() => {
           setAuthToast(false);
-          navigate("/login");
+          navigate("/login", { state: { from: location.pathname } });
         }, 2500);
       } else {
         setApiError(err.message || "Error desconocido: " + err);
@@ -884,7 +901,7 @@ export default function CartCheckoutPage() {
                       {t('cart.paymentData')}
                     </h3>
                     <Elements stripe={stripePromise} options={{ clientSecret, appearance:{ theme:"stripe", variables:{ colorPrimary:"#6366f1", borderRadius:"10px", fontFamily:"Inter, sans-serif" } } }}>
-                      <PaymentForm total={intentTotal} onSuccess={(id) => setSuccessId(id)} onCancel={() => setClientSecret(null)} t={t} profileFormData={profileFormData}/>
+                      <PaymentForm total={intentTotal} onSuccess={(id) => setSuccessId(id)} onCancel={() => setClientSecret(null)} t={t} profileFormData={profileFormData} onProfileSaved={setUser}/>
                     </Elements>
                   </div>
                 ) : (

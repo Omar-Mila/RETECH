@@ -43,7 +43,9 @@ class ProductosController extends Controller
                     'almacenamiento'   => $movil->almacenamiento,
                     'ram'              => $movil->ram,
                     'sistema_operativo'=> $movil->modelo->sistemaOperativo->nombre,
-                    'image_url'        => $movil->modelo?->images?->first()?->path,
+                    'image_url'        => $movil->modelo?->images
+                                            ?->firstWhere('color_id', $movil->color_id)?->path
+                                            ?? $movil->modelo?->images?->first()?->path,
                 ];
             });
 

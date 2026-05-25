@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useAuth } from "./AuthContext";
 import { useNavigate, useLocation } from "react-router-dom";
 import { GoogleLogin } from "@react-oauth/google";
@@ -9,7 +9,19 @@ export default function Login() {
   const { t, lang } = useLanguage();
   const navigate = useNavigate();
   const location = useLocation();
-  const from = location.state?.from || null;
+
+  // If Login is rendered inline at a protected route (e.g. /perfil), use pathname as fallback
+  const from = location.state?.from || (
+    location.pathname !== '/login' && location.pathname !== '/register'
+      ? location.pathname
+      : null
+  );
+
+  useEffect(() => {
+    if (from && from !== '/') {
+      sessionStorage.setItem('retech-return-url', from);
+    }
+  }, []);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
@@ -106,7 +118,7 @@ export default function Login() {
           <p className="text-sm text-center mt-6 text-gray-600">
             {t('login.noAccount')}{" "}
             <button
-              onClick={() => navigate("/register")}
+              onClick={() => navigate("/register", { state: { from } })}
               className="underline font-bold text-black hover:text-gray-700"
             >
               {t('login.register')}

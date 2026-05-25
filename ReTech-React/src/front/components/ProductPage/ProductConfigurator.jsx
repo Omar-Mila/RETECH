@@ -40,11 +40,13 @@ export default function ProductConfigurator({
   selectedState,
   setSelectedState,
   productName,
+  coverImage = null,
 }) {
   const { isAuthenticated } = useAuth()
   const { t } = useLanguage()
 
   const [adding, setAdding] = useState(false)
+  const [stateModalOpen, setStateModalOpen] = useState(false)
   const [estado, setEstado] = useState("")
   const [almacenamiento, setAlmacenamiento] = useState("")
   const [bateria, setBateria] = useState("")
@@ -207,6 +209,7 @@ export default function ProductConfigurator({
           color:          colorObj?.nombre ?? "",
           color_hex:      "#94a3b8",
           stock:          matchingUnit.stock,
+          imagen_url:     coverImage,
         })
       }
       setGuestCart(cart)
@@ -257,6 +260,7 @@ export default function ProductConfigurator({
   const stateInfo = t("product.stateInfo")
 
   return (
+    <>
     <div className="space-y-6">
 
       {productName && (
@@ -307,7 +311,8 @@ export default function ProductConfigurator({
             <img
               src={STATE_IMG[estado]}
               alt={stateInfo[estado].badge}
-              className="w-20 h-20 object-contain flex-shrink-0"
+              onClick={() => setStateModalOpen(true)}
+              className="w-20 h-20 object-contain flex-shrink-0 cursor-zoom-in hover:scale-105 transition-transform"
             />
             <div>
               <span className="inline-block text-xs font-semibold bg-black text-white px-2 py-0.5 rounded-full mb-1">
@@ -463,5 +468,22 @@ export default function ProductConfigurator({
       </div>
 
     </div>
+
+    {/* Modal lightbox estado */}
+
+    {stateModalOpen && estado && (
+      <div
+        className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm cursor-zoom-out"
+        onClick={() => setStateModalOpen(false)}
+      >
+        <img
+          src={STATE_IMG[estado]}
+          alt={estado}
+          className="max-w-[90vw] max-h-[90vh] w-96 h-96 object-contain drop-shadow-2xl bg-white rounded-2xl p-4"
+          onClick={e => e.stopPropagation()}
+        />
+      </div>
+    )}
+    </>
   )
 }
