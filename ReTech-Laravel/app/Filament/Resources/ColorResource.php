@@ -3,44 +3,42 @@
 namespace App\Filament\Resources;
 
 use App\Filament\Resources\ColorResource\Pages;
-use App\Filament\Resources\ColorResource\RelationManagers;
 use App\Models\Color;
 use Filament\Forms;
 use Filament\Resources\Form;
 use Filament\Resources\Resource;
 use Filament\Resources\Table;
 use Filament\Tables;
-use Illuminate\Database\Eloquent\Builder;
-use Illuminate\Database\Eloquent\SoftDeletingScope;
-use Illuminate\Support\Facades\Auth;
 
 class ColorResource extends Resource
 {
     protected static ?string $model = Color::class;
 
-    protected static ?string $navigationIcon = 'heroicon-o-collection';
+    protected static ?string $navigationIcon   = 'heroicon-o-color-swatch';
+    protected static ?string $navigationLabel  = 'Colores';
+    protected static ?string $modelLabel       = 'Color';
+    protected static ?string $pluralModelLabel = 'Colores';
+    protected static ?int    $navigationSort   = 6;
 
     public static function form(Form $form): Form
     {
         return $form
             ->schema([
-                // Usamos una Card para que el formulario no ocupe toda la pantalla y se vea centrado
                 Forms\Components\Card::make()
                     ->schema([
                         Forms\Components\TextInput::make('nombre')
                             ->label('Nombre del Color')
                             ->required()
-                            ->unique(ignoreRecord: true) // Evita duplicar nombres (Negro, Rojo, etc.)
+                            ->unique(ignoreRecord: true)
                             ->placeholder('Ej: Azul Medianoche')
                             ->maxLength(30),
 
-                        // El ColorPicker permite al admin elegir el color en una paleta visual
                         Forms\Components\ColorPicker::make('codigo_hex')
-                            ->label('Selector de Color Visual')
+                            ->label('Color Visual')
                             ->placeholder('#000000')
                             ->required(),
                     ])
-                    ->columns(2), // Ponemos los dos campos uno al lado del otro
+                    ->columns(2),
             ]);
     }
 
@@ -53,49 +51,48 @@ class ColorResource extends Resource
                     ->sortable()
                     ->searchable(),
 
-                // Mostramos el código Hexadecimal
                 Tables\Columns\TextColumn::make('codigo_hex')
                     ->label('Código HEX')
-                    ->fontFamily('mono'),
+                    ->fontFamily('mono')
+                    ->searchable(),
 
-                // En Filament v2, para ver el color usamos un truco con 'copyable' o estilos
-                // Si tu versión soporta ColorColumn úsala, si no, TextColumn cumple:
-                Tables\Columns\TextColumn::make('Muestra')
+                // Muestra visual del color
+                Tables\Columns\TextColumn::make('muestra')
                     ->label('Muestra')
-                    ->formatStateUsing(fn ($state) => ' ') // Vaciamos el texto
+                    ->formatStateUsing(fn ($state) => ' ')
                     ->extraAttributes(fn ($record) => [
-                        'style' => "background-color: {$record->codigo_hex}; 
-                                    width: 40px; 
-                                    height: 20px; 
+                        'style' => "background-color: {$record->codigo_hex};
+                                    width: 40px;
+                                    height: 22px;
                                     border-radius: 4px;
-                                    border: 1px solid #ccc;",
+                                    border: 1px solid #ccc;
+                                    display: inline-block;",
                     ]),
             ])
+            ->defaultSort('nombre')
             ->filters([
-                //
+                // Sin filtros específicos para colores
             ])
             ->actions([
-                Tables\Actions\EditAction::make(),
-                Tables\Actions\DeleteAction::make(),
+                Tables\Actions\EditAction::make()->label('Editar'),
+                Tables\Actions\DeleteAction::make()->label('Eliminar'),
             ])
             ->bulkActions([
-                Tables\Actions\DeleteBulkAction::make(),
+                Tables\Actions\DeleteBulkAction::make()->label('Eliminar seleccionados'),
             ]);
     }
-    
+
     public static function getRelations(): array
     {
-        return [
-            //
-        ];
+        return [];
     }
-    
+
     public static function getPages(): array
     {
         return [
-            'index' => Pages\ListColors::route('/'),
+            'index'  => Pages\ListColors::route('/'),
             'create' => Pages\CreateColor::route('/create'),
-            'edit' => Pages\EditColor::route('/{record}/edit'),
+            'edit'   => Pages\EditColor::route('/{record}/edit'),
         ];
-    }    
+    }
 }

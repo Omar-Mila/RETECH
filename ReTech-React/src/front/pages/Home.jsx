@@ -8,7 +8,7 @@ import Footer from "../components/Footer";
 
 export default function Home() {
   return (
-    <div className="mx-auto">
+    <div className="hm-page">
       <Navbar />
       <Carousel />
       <SeccionMoviles />
@@ -16,6 +16,13 @@ export default function Home() {
       <WhyReTech />
       <FAQSection />
       <Footer />
+
+      <style>{`
+        .hm-page {
+          width: 100%;
+          margin: 0 auto;
+        }
+      `}</style>
     </div>
-  )
+  );
 }

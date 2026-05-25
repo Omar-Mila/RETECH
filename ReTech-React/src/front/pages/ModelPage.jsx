@@ -15,11 +15,11 @@ export default function ModelPage() {
   const [searchParams] = useSearchParams()
   const initialMovilId = searchParams.get("movil")
 
-  const [modelo, fijarModelo]           = useState(null)
-  const [unidades, fijarUnidades]       = useState([])
-  const [cargando, fijarCargando]       = useState(true)
-  const [imagenes, fijarImagenes]       = useState([])
-  const [colorSeleccionado, fijarColorSeleccionado] = useState("")
+  const [modelo,             fijarModelo]             = useState(null)
+  const [unidades,           fijarUnidades]           = useState([])
+  const [cargando,           fijarCargando]           = useState(true)
+  const [imagenes,           fijarImagenes]           = useState([])
+  const [colorSeleccionado,  fijarColorSeleccionado]  = useState("")
   const [estadoSeleccionado, fijarEstadoSeleccionado] = useState("")
 
   const colorGaleria = useMemo(() => {
@@ -67,30 +67,31 @@ export default function ModelPage() {
   }, [id])
 
   return (
-    <div className="min-h-screen flex flex-col">
+    <div className="mp-page">
 
       <Navbar />
 
-      <main className="flex-1">
+      <main className="mp-main">
 
-        {cargando && <div className="p-10">{t("product.loading")}</div>}
+        {cargando && (
+          <div className="mp-state-msg">{t("product.loading")}</div>
+        )}
 
         {!cargando && !modelo && (
-          <div className="p-10">{t("product.notFound")}</div>
+          <div className="mp-state-msg">{t("product.notFound")}</div>
         )}
 
         {!cargando && modelo && (
-          <div className="max-w-6xl mx-auto px-6 py-10 flex flex-col lg:flex-row gap-12">
+          <div className="mp-layout">
 
-            {/* IZQUIERDA */}
-            <div className="flex-1 min-w-0 space-y-8">
+            {/* 1 — Galería */}
+            <div className="mp-gallery-wrap">
               <ProductGallery imagenes={imagenes} selectedColor={colorGaleria} />
-              <ProductInfo producto={modelo} />
             </div>
 
-            {/* DERECHA */}
-            <div className="lg:w-[440px] flex-shrink-0">
-              <div className="sticky top-24">
+            {/* 2 — Configurador (selectors + compra) */}
+            <div className="mp-right">
+              <div className="mp-sticky">
                 <ProductConfigurator
                   units={unidades}
                   initialMovilId={initialMovilId}
@@ -104,12 +105,89 @@ export default function ModelPage() {
               </div>
             </div>
 
+            {/* 3 — Atributos extra */}
+            <div className="mp-info-wrap">
+              <ProductInfo producto={modelo} />
+            </div>
+
           </div>
         )}
 
       </main>
 
       <Footer />
+
+      <style>{`
+
+        /* ── Página ─────────────────────────────────────────── */
+        .mp-page {
+          min-height: 100vh;
+          display: flex;
+          flex-direction: column;
+        }
+
+        /* ── Main ───────────────────────────────────────────── */
+        .mp-main { flex: 1; }
+
+        /* ── Mensajes de estado ─────────────────────────────── */
+        .mp-state-msg {
+          padding: 2.5rem;
+          color: #64748b;
+          font-size: 0.9rem;
+        }
+
+        /* ── Layout principal — grid de 2 columnas ─────────── */
+        .mp-layout {
+          max-width: 72rem;
+          margin: 0 auto;
+          padding: 2.5rem 1.5rem;
+          display: grid;
+          grid-template-columns: 1fr 440px;
+          grid-template-rows: auto 1fr;
+          grid-template-areas:
+            "gallery  config"
+            "info     config";
+          column-gap: 3rem;
+          row-gap: 2rem;
+          align-items: start;
+        }
+
+        .mp-gallery-wrap { grid-area: gallery; min-width: 0; }
+        .mp-right        { grid-area: config;  min-width: 0; }
+        .mp-info-wrap    { grid-area: info;    min-width: 0; }
+
+        /* ── Sticky del configurador ────────────────────────── */
+        .mp-sticky {
+          position: sticky;
+          top: 6rem;
+        }
+
+        /* ── Responsive ─────────────────────────────────────── */
+
+        /* Tablet / móvil (≤1024px): columna única, orden: galería → config → info */
+        @media (max-width: 1024px) {
+          .mp-layout {
+            grid-template-columns: 1fr;
+            grid-template-rows: auto;
+            grid-template-areas:
+              "gallery"
+              "config"
+              "info";
+            column-gap: 0;
+            row-gap: 2rem;
+          }
+          .mp-sticky { position: static; }
+        }
+
+        @media (max-width: 640px) {
+          .mp-layout { padding: 1.5rem 1rem; row-gap: 1.5rem; }
+        }
+
+        @media (max-width: 480px) {
+          .mp-layout { padding: 1rem 0.75rem; row-gap: 1.25rem; }
+        }
+
+      `}</style>
 
     </div>
   )

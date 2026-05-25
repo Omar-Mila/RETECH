@@ -1,7 +1,14 @@
 {
   "permissions": {
     "allow": [
-      "PowerShell(Remove-Item *)"
+      "PowerShell(Remove-Item *)",
+      "Bash(php -l app/Filament/Resources/MovilResource.php)",
+      "Bash(php -l app/Filament/Resources/ClienteResource.php)",
+      "Bash(php -l app/Filament/Resources/ClienteResource/Pages/CreateCliente.php)",
+      "Bash(php -l app/Filament/Resources/ClienteResource/Pages/EditCliente.php)",
+      "Bash(php artisan *)",
+      "Bash(php -l app/Filament/Resources/ModeloResource.php)",
+      "Bash(php -l app/Filament/Resources/CompraResource.php)"
     ]
   }
 }

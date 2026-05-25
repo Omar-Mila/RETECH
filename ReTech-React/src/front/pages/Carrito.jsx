@@ -47,16 +47,16 @@ const fmtPrecio = (n) =>
   new Intl.NumberFormat("es-ES", { style: "currency", currency: "EUR" }).format(n);
 
 const ESTADO_CLASE = {
-  Excelente:   "est-excelente",
-  "Muy Bueno": "est-mbueno",
-  Bueno:       "est-bueno",
-  Aceptable:   "est-aceptable",
+  Excelente:   "cr-est-excelente",
+  "Muy Bueno": "cr-est-mbueno",
+  Bueno:       "cr-est-bueno",
+  Aceptable:   "cr-est-aceptable",
 };
 
 function IconoMovil({ hex }) {
   return (
     <div
-      className="phone-icono"
+      className="cr-phone-icon"
       style={{
         background: `${hex}22`,
         border: `2px solid ${hex}55`,
@@ -72,13 +72,13 @@ function IconoMovil({ hex }) {
 }
 
 function BarraBateria({ valor }) {
-  const claseColor = valor >= 85 ? "bat-alta" : valor >= 70 ? "bat-media" : "bat-baja";
+  const claseColor = valor >= 85 ? "cr-bat-alta" : valor >= 70 ? "cr-bat-media" : "cr-bat-baja";
   return (
-    <div className="bat-wrap">
-      <div className="bat-fondo">
-        <div className={`bat-relleno ${claseColor}`} style={{ width: `${valor}%` }} />
+    <div className="cr-bat-wrap">
+      <div className="cr-bat-fondo">
+        <div className={`cr-bat-relleno ${claseColor}`} style={{ width: `${valor}%` }} />
       </div>
-      <span className={`bat-valor ${claseColor}`}>{valor}%</span>
+      <span className={`cr-bat-valor ${claseColor}`}>{valor}%</span>
     </div>
   );
 }
@@ -88,7 +88,7 @@ function BtnCantidad({ etiq, alClick, deshabilitado }) {
     <button
       onClick={alClick}
       disabled={deshabilitado}
-      className={`btn-cant${deshabilitado ? " deshabilitado" : ""}`}
+      className={`cr-btn-cant${deshabilitado ? " cr-disabled" : ""}`}
     >
       {etiq}
     </button>
@@ -98,9 +98,9 @@ function BtnCantidad({ etiq, alClick, deshabilitado }) {
 function ItemCarro({ art, alQuitar, alCant, deshabilitado }) {
   const claseEstado = ESTADO_CLASE[art.estado] ?? ESTADO_CLASE["Bueno"];
   return (
-    <div className="carro-item-fila">
+    <div className="cr-item-row">
       <div
-        className="carro-item-thumb"
+        className="cr-item-thumb"
         style={{
           background: `${art.color_hex ?? "#94a3b8"}22`,
           border: `1.5px solid ${art.color_hex ?? "#94a3b8"}44`,
@@ -109,20 +109,20 @@ function ItemCarro({ art, alQuitar, alCant, deshabilitado }) {
         <IconoMovil hex={art.color_hex ?? "#94a3b8"} />
         {art.imagen_url && (
           <img src={art.imagen_url} alt={art.modelo}
-            className="carro-item-thumb-img"
+            className="cr-item-thumb-img"
             onError={e => { e.currentTarget.style.display = "none" }}
           />
         )}
       </div>
-      <div className="carro-item-body">
-        <div className="carro-item-top">
+      <div className="cr-item-body">
+        <div className="cr-item-top">
           <div>
-            <p className="carro-item-modelo">{art.modelo}</p>
-            <p className="carro-item-specs">
+            <p className="cr-item-modelo">{art.modelo}</p>
+            <p className="cr-item-specs">
               {art.almacenamiento} GB · {art.ram} GB RAM ·{" "}
-              <span className="carro-color-wrap">
+              <span className="cr-color-wrap">
                 <span
-                  className="carro-color-punto"
+                  className="cr-color-dot"
                   style={{ background: art.color_hex }}
                 />
                 {art.color}
@@ -132,7 +132,7 @@ function ItemCarro({ art, alQuitar, alCant, deshabilitado }) {
           <button
             onClick={() => !deshabilitado && alQuitar(art.movil_id)}
             disabled={deshabilitado}
-            className={`btn-quitar-item${deshabilitado ? " deshabilitado" : ""}`}
+            className={`cr-btn-remove${deshabilitado ? " cr-disabled" : ""}`}
           >
             <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2">
               <path d="M18 6L6 18M6 6l12 12"/>
@@ -140,20 +140,20 @@ function ItemCarro({ art, alQuitar, alCant, deshabilitado }) {
           </button>
         </div>
 
-        <div className="carro-item-badges">
-          <span className={`carro-estado ${claseEstado}`}>{art.estado}</span>
+        <div className="cr-item-badges">
+          <span className={`cr-item-estado ${claseEstado}`}>{art.estado}</span>
           <BarraBateria valor={art.salud_bateria}/>
         </div>
 
-        <div className="carro-item-acciones">
-          <div className="carro-qty-wrap">
+        <div className="cr-item-actions">
+          <div className="cr-qty-wrap">
             <BtnCantidad etiq="−" alClick={() => !deshabilitado && alCant(art.movil_id, art.cantidad - 1)} deshabilitado={deshabilitado || art.cantidad <= 1}/>
-            <span className="carro-qty-num">{art.cantidad}</span>
+            <span className="cr-qty-num">{art.cantidad}</span>
             <BtnCantidad etiq="+" alClick={() => !deshabilitado && alCant(art.movil_id, art.cantidad + 1)} deshabilitado={deshabilitado || art.cantidad >= art.stock}/>
           </div>
-          <div className="carro-precio-col">
-            <p className="carro-subtotal">{fmtPrecio(art.subtotal)}</p>
-            {art.cantidad > 1 && <p className="carro-precio-ud">{fmtPrecio(art.precio)} / ud.</p>}
+          <div className="cr-price-col">
+            <p className="cr-subtotal">{fmtPrecio(art.subtotal)}</p>
+            {art.cantidad > 1 && <p className="cr-price-unit">{fmtPrecio(art.precio)} / ud.</p>}
           </div>
         </div>
       </div>
@@ -213,16 +213,16 @@ function FormPago({ total, alExito, alCancelar, t, datosPerfil, alGuardarPerfil 
     <div>
       <PaymentElement options={{ layout:"tabs", fields:{ billingDetails:{ address:{ country:"never" } } } }}/>
       {errorPago && (
-        <div id="error-pago">{errorPago}</div>
+        <div className="cr-error-pago">{errorPago}</div>
       )}
-      <div className="pago-botones">
-        <button onClick={alCancelar} disabled={cargando} className="btn-volver-pago">
+      <div className="cr-pay-btns">
+        <button onClick={alCancelar} disabled={cargando} className="cr-btn-back">
           {t('cart.back')}
         </button>
         <button
           onClick={pagar}
           disabled={!pagoStripe || cargando}
-          className={`btn-pagar${cargando || !pagoStripe ? " inactivo" : " activo"}`}
+          className={`cr-btn-pay${cargando || !pagoStripe ? " inactivo" : " activo"}`}
         >
           {cargando ? <><Girador/> {t('cart.processing')}</> : <><IconoCandado/> {t('cart.pay')(fmtPrecio(total))}</>}
         </button>
@@ -233,11 +233,11 @@ function FormPago({ total, alExito, alCancelar, t, datosPerfil, alGuardarPerfil 
 
 function FilaResumen({ etiq, valor, opaco, negrita, grande }) {
   return (
-    <div className="fila-resumen">
-      <span className={`fila-etiq${grande ? " grande" : ""}${opaco ? " opaco" : ""}${negrita ? " negrita" : ""}`}>
+    <div className="cr-summary-row">
+      <span className={`cr-summary-label${grande ? " grande" : ""}${opaco ? " opaco" : ""}${negrita ? " negrita" : ""}`}>
         {etiq}
       </span>
-      <span className={`fila-valor${grande ? " grande" : ""}${negrita ? " negrita" : ""}${opaco ? " opaco" : ""}`}>
+      <span className={`cr-summary-value${grande ? " grande" : ""}${negrita ? " negrita" : ""}${opaco ? " opaco" : ""}`}>
         {valor}
       </span>
     </div>
@@ -249,14 +249,14 @@ function ResumenPedido({ arts, alPagar, cargandoIntento, t, esInvitado }) {
   const totalPiezas = arts.reduce((s, a) => s + a.cantidad, 0);
 
   return (
-    <div id="resumen-pedido">
-      <h2 id="resumen-titulo">{t('cart.summaryTitle')}</h2>
+    <div className="cr-resumen">
+      <h2 className="cr-resumen-titulo">{t('cart.summaryTitle')}</h2>
 
-      <div id="resumen-items">
+      <div className="cr-resumen-items">
         {arts.map(art => (
-          <div key={art.movil_id} className="resumen-item">
+          <div key={art.movil_id} className="cr-resumen-item">
             <div
-              className="resumen-item-thumb"
+              className="cr-resumen-item-thumb"
               style={{
                 background: `${art.color_hex ?? "#94a3b8"}22`,
                 border: `1.5px solid ${art.color_hex ?? "#94a3b8"}44`,
@@ -268,33 +268,33 @@ function ResumenPedido({ arts, alPagar, cargandoIntento, t, esInvitado }) {
               </svg>
               {art.imagen_url && (
                 <img src={art.imagen_url} alt={art.modelo}
-                  className="resumen-item-thumb-img"
+                  className="cr-resumen-item-thumb-img"
                   onError={e => { e.currentTarget.style.display = "none" }}
                 />
               )}
             </div>
-            <div className="resumen-item-info">
-              <p className="resumen-item-modelo">{art.modelo}</p>
-              <p className="resumen-item-specs">{art.almacenamiento}GB · x{art.cantidad}</p>
+            <div className="cr-resumen-item-info">
+              <p className="cr-resumen-item-modelo">{art.modelo}</p>
+              <p className="cr-resumen-item-specs">{art.almacenamiento}GB · x{art.cantidad}</p>
             </div>
-            <span className="resumen-item-precio">{fmtPrecio(art.subtotal)}</span>
+            <span className="cr-resumen-item-precio">{fmtPrecio(art.subtotal)}</span>
           </div>
         ))}
       </div>
 
-      <div id="resumen-totales">
+      <div className="cr-resumen-totales">
         <FilaResumen etiq={t('cart.subtotal')(totalPiezas)} valor={fmtPrecio(total)} />
         <FilaResumen etiq={t('cart.total')} valor={fmtPrecio(total)} negrita grande />
       </div>
 
-      <div id="resumen-envio">
-        <span id="resumen-envio-texto">{t('cart.freeShipping')}</span>
+      <div className="cr-resumen-envio">
+        <span className="cr-resumen-envio-texto">{t('cart.freeShipping')}</span>
       </div>
 
       {esInvitado ? (
-        <div id="resumen-guest">
-          <div id="resumen-guest-aviso">{t('cart.guestCheckout')}</div>
-          <button onClick={alPagar} className="btn-comprar activo">
+        <div className="cr-resumen-guest">
+          <div className="cr-resumen-guest-aviso">{t('cart.guestCheckout')}</div>
+          <button onClick={alPagar} className="cr-btn-comprar activo">
             <IconoCandado /> {t('cart.loginToBuy')}
           </button>
         </div>
@@ -303,17 +303,17 @@ function ResumenPedido({ arts, alPagar, cargandoIntento, t, esInvitado }) {
           <button
             onClick={alPagar}
             disabled={cargandoIntento || arts.length === 0}
-            className={`btn-comprar${cargandoIntento || arts.length === 0 ? " inactivo" : " activo"}`}
+            className={`cr-btn-comprar${cargandoIntento || arts.length === 0 ? " inactivo" : " activo"}`}
             onMouseEnter={(e) => { if (!cargandoIntento) e.currentTarget.classList.add("hover"); }}
             onMouseLeave={(e) => { e.currentTarget.classList.remove("hover"); }}
           >
             {cargandoIntento ? <><Girador /> {t('cart.preparingPay')}</> : <><IconoCandado /> {t('cart.checkout')}</>}
           </button>
-          <div id="resumen-stripe">
+          <div className="cr-resumen-stripe">
             <svg width="34" height="14" viewBox="0 0 60 25">
               <text x="0" y="18" fontFamily="Arial" fontSize="18" fontWeight="bold" fill="#635bff">stripe</text>
             </svg>
-            <span id="resumen-stripe-texto">{t('cart.stripeSecure')}</span>
+            <span className="cr-resumen-stripe-texto">{t('cart.stripeSecure')}</span>
           </div>
         </>
       )}
@@ -525,110 +525,118 @@ function PantallaExito({ compraId, datosPerfil, usuario: usuarioProp }) {
 
   return (
     <>
-    <style>{`
-      @import url('https://fonts.googleapis.com/css2?family=Sora:wght@400;600;700;800&family=Inter:wght@400;500;600&display=swap');
-      * { box-sizing: border-box; }
-      body { margin: 0; font-family: 'Inter', sans-serif; background: #f8fafc; }
-      @keyframes spin { to { transform: rotate(360deg); } }
-      .spinner { animation: spin .8s linear infinite; }
-      #exito-wrap {
-        min-height: 100vh;
-        background: #f8fafc;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        padding: 24px;
-      }
-      #exito-caja {
-        background: #fff;
-        border-radius: 24px;
-        padding: 40px;
-        text-align: center;
-        max-width: 480px;
-        width: 100%;
-        border: 1px solid #e2e8f0;
-        box-shadow: 0 8px 32px rgba(15, 23, 42, .08);
-      }
-      #exito-icono {
-        width: 72px;
-        height: 72px;
-        border-radius: 50%;
-        background: #0f172a;
-        margin: 0 auto 20px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        box-shadow: 0 8px 20px rgba(15, 23, 42, .2);
-      }
-      #exito-titulo {
-        margin: 0 0 8px;
-        font-size: 24px;
-        font-weight: 800;
-        color: #0f172a;
-        font-family: 'Sora', sans-serif;
-      }
-      #exito-procesado { margin: 0 0 4px; color: #64748b; font-size: 14px; }
-      #exito-num       { margin: 0 0 24px; color: #94a3b8; font-size: 12.5px; }
-      #exito-spinner   { margin-bottom: 24px; }
-      #exito-botones {
-        display: flex;
-        gap: 12px;
-        justify-content: center;
-        flex-wrap: wrap;
-      }
-      .btn-factura-exito {
-        padding: 12px 22px;
-        background: #f8fafc;
-        border: 1px solid #e2e8f0;
-        border-radius: 10px;
-        font-size: 13.5px;
-        font-weight: 700;
-        cursor: pointer;
-        color: #0f172a;
-        font-family: 'Sora', sans-serif;
-      }
-      .btn-factura-exito.inactivo { cursor: not-allowed; opacity: 0.5; }
-      .btn-seguir-comprando {
-        padding: 12px 22px;
-        background: linear-gradient(135deg, #6366f1, #4f46e5);
-        color: #fff;
-        border-radius: 10px;
-        text-decoration: none;
-        font-size: 13.5px;
-        font-weight: 700;
-        font-family: 'Sora', sans-serif;
-        box-shadow: 0 4px 12px rgba(99, 102, 241, .35);
-      }
-    `}</style>
-    <div id="exito-wrap">
-      <div id="exito-caja">
-        <div id="exito-icono">
-          <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5">
-            <polyline points="20 6 9 17 4 12"/>
-          </svg>
-        </div>
-        <h1 id="exito-titulo">{t('cart.orderConfirmed')}</h1>
-        <p id="exito-procesado">{t('cart.orderProcessed')}</p>
-        <p id="exito-num">#{compraId}</p>
+      <div className="cr-success-wrap">
+        <div className="cr-success-box">
+          <div className="cr-success-icon">
+            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5">
+              <polyline points="20 6 9 17 4 12"/>
+            </svg>
+          </div>
+          <h1 className="cr-success-title">{t('cart.orderConfirmed')}</h1>
+          <p className="cr-success-processed">{t('cart.orderProcessed')}</p>
+          <p className="cr-success-num">#{compraId}</p>
 
-        {cargandoPedido && (
-          <div id="exito-spinner"><Girador tamano={22} color="#6366f1"/></div>
-        )}
+          {cargandoPedido && (
+            <div className="cr-success-spinner"><Girador tamano={22} color="#6366f1"/></div>
+          )}
 
-        <div id="exito-botones">
-          <button
-            onClick={verFactura}
-            disabled={cargandoPedido || arts.length === 0}
-            className={`btn-factura-exito${cargandoPedido || arts.length === 0 ? " inactivo" : ""}`}
-          >
-            {t('cart.downloadInvoice')}
-          </button>
-          <a href="/" className="btn-seguir-comprando">
-            {t('cart.keepShopping')}
-          </a>
+          <div className="cr-success-btns">
+            <button
+              onClick={verFactura}
+              disabled={cargandoPedido || arts.length === 0}
+              className={`cr-btn-invoice${cargandoPedido || arts.length === 0 ? " inactivo" : ""}`}
+            >
+              {t('cart.downloadInvoice')}
+            </button>
+            <a href="/" className="cr-btn-keep-shopping">
+              {t('cart.keepShopping')}
+            </a>
+          </div>
         </div>
       </div>
-    </div>
+
+      <style>{`
+        @import url('https://fonts.googleapis.com/css2?family=Sora:wght@400;600;700;800&family=Inter:wght@400;500;600&display=swap');
+        * { box-sizing: border-box; }
+        body { margin: 0; font-family: 'Inter', sans-serif; background: #f8fafc; }
+        @keyframes cr-spin { to { transform: rotate(360deg); } }
+        .spinner { animation: cr-spin .8s linear infinite; }
+
+        .cr-success-wrap {
+          min-height: 100vh;
+          background: #f8fafc;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          padding: 24px;
+        }
+        .cr-success-box {
+          background: #fff;
+          border-radius: 24px;
+          padding: 40px;
+          text-align: center;
+          max-width: 480px;
+          width: 100%;
+          border: 1px solid #e2e8f0;
+          box-shadow: 0 8px 32px rgba(15, 23, 42, .08);
+        }
+        .cr-success-icon {
+          width: 72px;
+          height: 72px;
+          border-radius: 50%;
+          background: #0f172a;
+          margin: 0 auto 20px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          box-shadow: 0 8px 20px rgba(15, 23, 42, .2);
+        }
+        .cr-success-title {
+          margin: 0 0 8px;
+          font-size: 24px;
+          font-weight: 800;
+          color: #0f172a;
+          font-family: 'Sora', sans-serif;
+        }
+        .cr-success-processed { margin: 0 0 4px; color: #64748b; font-size: 14px; }
+        .cr-success-num       { margin: 0 0 24px; color: #94a3b8; font-size: 12.5px; }
+        .cr-success-spinner   { margin-bottom: 24px; }
+        .cr-success-btns {
+          display: flex;
+          gap: 12px;
+          justify-content: center;
+          flex-wrap: wrap;
+        }
+        .cr-btn-invoice {
+          padding: 12px 22px;
+          background: #f8fafc;
+          border: 1px solid #e2e8f0;
+          border-radius: 10px;
+          font-size: 13.5px;
+          font-weight: 700;
+          cursor: pointer;
+          color: #0f172a;
+          font-family: 'Sora', sans-serif;
+        }
+        .cr-btn-invoice.inactivo { cursor: not-allowed; opacity: 0.5; }
+        .cr-btn-keep-shopping {
+          padding: 12px 22px;
+          background: linear-gradient(135deg, #6366f1, #4f46e5);
+          color: #fff;
+          border-radius: 10px;
+          text-decoration: none;
+          font-size: 13.5px;
+          font-weight: 700;
+          font-family: 'Sora', sans-serif;
+          box-shadow: 0 4px 12px rgba(99, 102, 241, .35);
+        }
+
+        @media (max-width: 480px) {
+          .cr-success-box { padding: 28px 20px; }
+          .cr-success-title { font-size: 20px; }
+          .cr-success-btns { flex-direction: column; align-items: center; }
+        }
+      `}</style>
     </>
   );
 }
@@ -750,71 +758,71 @@ function FormPerfil({ usuario, alCambiarDatos, t }) {
 
     return (
       <div>
-        <label className="form-campo-etiq">{etiq}</label>
-        <div className="form-campo-rel">
+        <label className="cr-field-label">{etiq}</label>
+        <div className="cr-field-wrap">
           <input
             type="text"
             value={datos[campo]}
             onChange={e => alCambiar(campo, e.target.value)}
             onBlur={() => fijarTocados(p => ({ ...p, [campo]: true }))}
-            className={`form-campo-input ${estado}`}
+            className={`cr-field-input ${estado}`}
           />
           {mostrarTick && (
-            <svg className="form-campo-tick" width="15" height="15" viewBox="0 0 20 20" fill="currentColor">
+            <svg className="cr-field-tick" width="15" height="15" viewBox="0 0 20 20" fill="currentColor">
               <path fillRule="evenodd" d="M16.704 4.153a.75.75 0 01.143 1.052l-8 10.5a.75.75 0 01-1.127.075l-4.5-4.5a.75.75 0 011.06-1.06l3.894 3.893 7.48-9.817a.75.75 0 011.05-.143z" clipRule="evenodd"/>
             </svg>
           )}
         </div>
         {mostrarError && (
-          <p className="form-campo-error">{MENSAJES_ERROR[campo]}</p>
+          <p className="cr-field-error">{MENSAJES_ERROR[campo]}</p>
         )}
       </div>
     );
   };
 
   return (
-    <div id="form-perfil">
-      <h3 id="form-perfil-titulo">{t('cart.profileModalTitle')}</h3>
-      <p id="form-perfil-desc">{t('cart.profileModalDesc')}</p>
-      <div id="form-perfil-campos">
+    <div className="cr-form-perfil">
+      <h3 className="cr-form-titulo">{t('cart.profileModalTitle')}</h3>
+      <p className="cr-form-desc">{t('cart.profileModalDesc')}</p>
+      <div className="cr-form-campos">
         {campoInput(t('profile.name'),     "nombre")}
         {campoInput(t('profile.surnames'), "apellidos")}
         {campoInput(t('profile.nif'),      "nif")}
 
         {/* País — selector */}
         <div>
-          <label className="form-campo-etiq">{t('profile.pais')}</label>
+          <label className="cr-field-label">{t('profile.pais')}</label>
           <select
             value={datos.pais}
             onChange={e => alCambiar("pais", e.target.value)}
             onBlur={() => fijarTocados(p => ({ ...p, pais: true }))}
-            className={`form-select${tocados.pais && !datos.pais ? " error" : datos.pais ? " valido" : " neutro"}${datos.pais ? " tiene-valor" : ""}`}
+            className={`cr-field-select${tocados.pais && !datos.pais ? " error" : datos.pais ? " valido" : " neutro"}${datos.pais ? " tiene-valor" : ""}`}
           >
             <option value="">— {t('profile.pais')} —</option>
             {PAISES.map(p => <option key={p.code} value={p.code}>{p.label}</option>)}
           </select>
-          {tocados.pais && !datos.pais && <p className="form-campo-error">{t('cart.profileFieldRequired')}</p>}
+          {tocados.pais && !datos.pais && <p className="cr-field-error">{t('cart.profileFieldRequired')}</p>}
         </div>
 
         {/* Código postal con validación automática */}
         <div>
-          <label className="form-campo-etiq">{t('profile.codigoPostal')}</label>
+          <label className="cr-field-label">{t('profile.codigoPostal')}</label>
           <input
             type="text"
             value={datos.codigo_postal}
             onChange={e => alCambiar("codigo_postal", e.target.value)}
             onBlur={() => fijarTocados(p => ({ ...p, codigo_postal: true }))}
-            className={`form-campo-input${
+            className={`cr-field-input${
               tocados.codigo_postal && !datos.codigo_postal ? " error"
               : estadoCp === 'valid'   ? " valido"
               : estadoCp === 'invalid' ? " error"
               : " neutro"
             }`}
           />
-          {estadoCp === 'loading' && <p className="form-campo-estado validando">Validando…</p>}
-          {estadoCp === 'valid'   && <p className="form-campo-estado cp-ok">✓ Código postal válido</p>}
-          {estadoCp === 'invalid' && <p className="form-campo-estado cp-err">{t('cart.profileCpNotFound')}</p>}
-          {tocados.codigo_postal && !datos.codigo_postal && <p className="form-campo-error">{t('cart.profileFieldRequired')}</p>}
+          {estadoCp === 'loading' && <p className="cr-field-status validando">Validando…</p>}
+          {estadoCp === 'valid'   && <p className="cr-field-status cp-ok">✓ Código postal válido</p>}
+          {estadoCp === 'invalid' && <p className="cr-field-status cp-err">{t('cart.profileCpNotFound')}</p>}
+          {tocados.codigo_postal && !datos.codigo_postal && <p className="cr-field-error">{t('cart.profileFieldRequired')}</p>}
         </div>
 
         {campoInput(t('profile.provincia'), "provincia")}
@@ -952,599 +960,13 @@ export default function PaginaCarrito() {
 
   return (
     <>
-      <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=Sora:wght@400;600;700;800&family=Inter:wght@400;500;600&display=swap');
-        * { box-sizing: border-box; }
-        body { margin: 0; font-family: 'Inter', sans-serif; background: #f8fafc; }
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
-        @keyframes spin { to { transform: rotate(360deg); } }
-
-        /* Spinner */
-        .spinner { animation: spin .8s linear infinite; }
-
-        /* Batería */
-        .bat-wrap  { display: flex; align-items: center; gap: 5px; }
-        .bat-fondo { width: 34px; height: 7px; background: #e5e7eb; border-radius: 4px; overflow: hidden; }
-        .bat-relleno { height: 100%; border-radius: 4px; transition: width .5s; }
-        .bat-alta  { background: #22c55e; color: #22c55e; }
-        .bat-media { background: #f59e0b; color: #f59e0b; }
-        .bat-baja  { background: #ef4444; color: #ef4444; }
-        .bat-valor { font-size: 10px; font-weight: 700; background: transparent; }
-
-        /* Icono de teléfono */
-        .phone-icono {
-          width: 52px;
-          height: 52px;
-          border-radius: 13px;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          flex-shrink: 0;
-        }
-
-        /* Botón de cantidad */
-        .btn-cant {
-          width: 30px;
-          height: 30px;
-          border: none;
-          background: none;
-          font-size: 17px;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-        }
-        .btn-cant.deshabilitado { cursor: not-allowed; color: #cbd5e1; }
-        .btn-cant:not(.deshabilitado) { cursor: pointer; color: #475569; }
-
-        /* Estados de producto */
-        .est-excelente { background: #d1fae5; color: #065f46; }
-        .est-mbueno    { background: #dbeafe; color: #1e40af; }
-        .est-bueno     { background: #fef9c3; color: #854d0e; }
-        .est-aceptable { background: #fee2e2; color: #991b1b; }
-
-        /* Item del carrito */
-        .carro-item-fila {
-          display: flex;
-          gap: 14px;
-          padding: 18px 0;
-          border-bottom: 1px solid #f1f5f9;
-        }
-        .carro-item-thumb {
-          width: 52px;
-          height: 52px;
-          border-radius: 13px;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          flex-shrink: 0;
-          overflow: hidden;
-          position: relative;
-        }
-        .carro-item-thumb-img {
-          position: absolute;
-          inset: 0;
-          width: 100%;
-          height: 100%;
-          object-fit: contain;
-          padding: 4px;
-        }
-        .carro-item-body { flex: 1; min-width: 0; }
-        .carro-item-top {
-          display: flex;
-          justify-content: space-between;
-          align-items: flex-start;
-          gap: 8px;
-        }
-        .carro-item-modelo {
-          margin: 0;
-          font-weight: 700;
-          font-size: 14.5px;
-          color: #0f172a;
-          font-family: 'Sora', sans-serif;
-        }
-        .carro-item-specs { margin: 2px 0 0; font-size: 12px; color: #64748b; }
-        .carro-color-wrap {
-          display: inline-flex;
-          align-items: center;
-          gap: 3px;
-        }
-        .carro-color-punto {
-          width: 7px;
-          height: 7px;
-          border-radius: 50%;
-          display: inline-block;
-          border: 1px solid #cbd5e1;
-        }
-        .btn-quitar-item {
-          background: none;
-          border: none;
-          padding: 3px;
-          line-height: 1;
-          color: #94a3b8;
-          transition: color .15s;
-        }
-        .btn-quitar-item:not(.deshabilitado) { cursor: pointer; }
-        .btn-quitar-item:not(.deshabilitado):hover { color: #ef4444; }
-        .btn-quitar-item.deshabilitado { cursor: not-allowed; }
-        .carro-item-badges {
-          display: flex;
-          align-items: center;
-          gap: 8px;
-          margin-top: 7px;
-        }
-        .carro-estado {
-          font-size: 10.5px;
-          font-weight: 700;
-          padding: 2px 7px;
-          border-radius: 20px;
-        }
-        .carro-item-acciones {
-          display: flex;
-          align-items: center;
-          justify-content: space-between;
-          margin-top: 10px;
-        }
-        .carro-qty-wrap {
-          display: flex;
-          align-items: center;
-          background: #f8fafc;
-          border: 1px solid #e2e8f0;
-          border-radius: 8px;
-        }
-        .carro-qty-num {
-          width: 26px;
-          text-align: center;
-          font-size: 13px;
-          font-weight: 700;
-          color: #0f172a;
-        }
-        .carro-precio-col { text-align: right; }
-        .carro-subtotal {
-          margin: 0;
-          font-weight: 800;
-          font-size: 16px;
-          color: #0f172a;
-          font-family: 'Sora', sans-serif;
-        }
-        .carro-precio-ud { margin: 0; font-size: 10.5px; color: #94a3b8; }
-
-        /* Formulario de pago */
-        #error-pago {
-          margin-top: 12px;
-          padding: 10px 14px;
-          background: #fef2f2;
-          border: 1px solid #fecaca;
-          border-radius: 8px;
-          font-size: 12.5px;
-          color: #dc2626;
-        }
-        .pago-botones {
-          display: flex;
-          gap: 10px;
-          margin-top: 20px;
-        }
-        .btn-volver-pago {
-          flex: 1;
-          padding: 13px;
-          background: #f8fafc;
-          border: 1px solid #e2e8f0;
-          border-radius: 10px;
-          font-size: 13.5px;
-          font-weight: 600;
-          cursor: pointer;
-          color: #475569;
-        }
-        .btn-pagar {
-          flex: 2;
-          padding: 13px;
-          color: #fff;
-          border: none;
-          border-radius: 10px;
-          font-size: 14px;
-          font-weight: 700;
-          font-family: 'Sora', sans-serif;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          gap: 8px;
-        }
-        .btn-pagar.activo {
-          background: linear-gradient(135deg, #6366f1, #4f46e5);
-          cursor: pointer;
-          box-shadow: 0 4px 14px rgba(99, 102, 241, .4);
-        }
-        .btn-pagar.inactivo {
-          background: #94a3b8;
-          cursor: not-allowed;
-          box-shadow: none;
-        }
-
-        /* Fila de resumen */
-        .fila-resumen {
-          display: flex;
-          justify-content: space-between;
-          align-items: center;
-        }
-        .fila-etiq { font-size: 13px; color: #475569; font-weight: 400; }
-        .fila-etiq.grande  { font-size: 14.5px; }
-        .fila-etiq.opaco   { color: #94a3b8; }
-        .fila-etiq.negrita { color: #0f172a; font-weight: 800; font-family: 'Sora', sans-serif; }
-        .fila-valor { font-size: 13px; font-weight: 600; color: #0f172a; font-family: 'Sora', sans-serif; }
-        .fila-valor.grande  { font-size: 19px; font-weight: 800; }
-        .fila-valor.negrita { color: #4f46e5; font-weight: 800; }
-        .fila-valor.opaco   { color: #94a3b8; }
-
-        /* Resumen del pedido */
-        #resumen-pedido {
-          position: sticky;
-          top: 24px;
-          background: #fff;
-          border: 1px solid #e2e8f0;
-          border-radius: 20px;
-          padding: 26px;
-          box-shadow: 0 4px 24px rgba(15, 23, 42, .07);
-        }
-        #resumen-titulo {
-          margin: 0 0 16px;
-          font-size: 17px;
-          font-weight: 800;
-          color: #0f172a;
-          font-family: 'Sora', sans-serif;
-          letter-spacing: -.3px;
-        }
-        #resumen-items { display: flex; flex-direction: column; gap: 8px; margin-bottom: 16px; }
-        .resumen-item { display: flex; align-items: center; gap: 10px; }
-        .resumen-item-thumb {
-          width: 38px;
-          height: 38px;
-          border-radius: 9px;
-          flex-shrink: 0;
-          overflow: hidden;
-          position: relative;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-        }
-        .resumen-item-thumb-img {
-          position: absolute;
-          inset: 0;
-          width: 100%;
-          height: 100%;
-          object-fit: contain;
-          padding: 2px;
-        }
-        .resumen-item-info { flex: 1; min-width: 0; }
-        .resumen-item-modelo {
-          margin: 0;
-          font-size: 12px;
-          font-weight: 700;
-          color: #0f172a;
-          white-space: nowrap;
-          overflow: hidden;
-          text-overflow: ellipsis;
-        }
-        .resumen-item-specs { margin: 0; font-size: 11px; color: #64748b; }
-        .resumen-item-precio { font-size: 12px; font-weight: 700; color: #0f172a; flex-shrink: 0; }
-        #resumen-totales {
-          border-top: 1px solid #f1f5f9;
-          padding-top: 14px;
-          display: flex;
-          flex-direction: column;
-          gap: 11px;
-        }
-        #resumen-envio {
-          margin: 18px 0;
-          background: #f0fdf4;
-          border: 1px solid #bbf7d0;
-          border-radius: 10px;
-          padding: 9px 13px;
-          display: flex;
-          align-items: center;
-          gap: 7px;
-        }
-        #resumen-envio-texto { font-size: 12px; color: #15803d; font-weight: 600; }
-        #resumen-guest { margin-top: 4px; }
-        #resumen-guest-aviso {
-          padding: 12px 14px;
-          background: #fefce8;
-          border: 1px solid #fde68a;
-          border-radius: 10px;
-          margin-bottom: 12px;
-          font-size: 12.5px;
-          color: #92400e;
-          line-height: 1.5;
-        }
-
-        /* Botón de comprar / ir al pago */
-        .btn-comprar {
-          width: 100%;
-          padding: 15px;
-          color: #fff;
-          border: none;
-          border-radius: 12px;
-          font-size: 14.5px;
-          font-weight: 700;
-          font-family: 'Sora', sans-serif;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          gap: 9px;
-          transition: transform .15s;
-        }
-        .btn-comprar.activo {
-          background: linear-gradient(135deg, #6366f1, #4f46e5);
-          cursor: pointer;
-          box-shadow: 0 4px 14px rgba(99, 102, 241, .4);
-        }
-        .btn-comprar.activo.hover { transform: translateY(-1px); }
-        .btn-comprar.inactivo {
-          background: #94a3b8;
-          cursor: not-allowed;
-          box-shadow: none;
-        }
-        #resumen-stripe {
-          margin-top: 12px;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          gap: 5px;
-        }
-        #resumen-stripe-texto { font-size: 10.5px; color: #94a3b8; }
-
-        /* Pantalla de éxito */
-        #exito-wrap {
-          min-height: 100vh;
-          background: #f8fafc;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          padding: 24px;
-        }
-        #exito-caja {
-          background: #fff;
-          border-radius: 24px;
-          padding: 40px;
-          text-align: center;
-          max-width: 480px;
-          width: 100%;
-          border: 1px solid #e2e8f0;
-          box-shadow: 0 8px 32px rgba(15, 23, 42, .08);
-        }
-        #exito-icono {
-          width: 72px;
-          height: 72px;
-          border-radius: 50%;
-          background: #0f172a;
-          margin: 0 auto 20px;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          box-shadow: 0 8px 20px rgba(15, 23, 42, .2);
-        }
-        #exito-titulo {
-          margin: 0 0 8px;
-          font-size: 24px;
-          font-weight: 800;
-          color: #0f172a;
-          font-family: 'Sora', sans-serif;
-        }
-        #exito-procesado { margin: 0 0 4px; color: #64748b; font-size: 14px; }
-        #exito-num       { margin: 0 0 24px; color: #94a3b8; font-size: 12.5px; }
-        #exito-spinner   { margin-bottom: 24px; }
-        #exito-botones {
-          display: flex;
-          gap: 12px;
-          justify-content: center;
-          flex-wrap: wrap;
-        }
-        .btn-factura-exito {
-          padding: 12px 22px;
-          background: #f8fafc;
-          border: 1px solid #e2e8f0;
-          border-radius: 10px;
-          font-size: 13.5px;
-          font-weight: 700;
-          cursor: pointer;
-          color: #0f172a;
-          font-family: 'Sora', sans-serif;
-        }
-        .btn-factura-exito.inactivo { cursor: not-allowed; opacity: 0.5; }
-        .btn-seguir-comprando {
-          padding: 12px 22px;
-          background: linear-gradient(135deg, #6366f1, #4f46e5);
-          color: #fff;
-          border-radius: 10px;
-          text-decoration: none;
-          font-size: 13.5px;
-          font-weight: 700;
-          font-family: 'Sora', sans-serif;
-          box-shadow: 0 4px 12px rgba(99, 102, 241, .35);
-        }
-
-        /* Formulario de perfil en checkout */
-        #form-perfil {
-          background: #fff;
-          border: 1px solid #e2e8f0;
-          border-radius: 20px;
-          padding: 22px;
-          box-shadow: 0 4px 24px rgba(15, 23, 42, .07);
-        }
-        #form-perfil-titulo {
-          margin: 0 0 4px;
-          font-size: 14px;
-          font-weight: 800;
-          color: #0f172a;
-          font-family: 'Sora', sans-serif;
-        }
-        #form-perfil-desc { margin: 0 0 16px; font-size: 12px; color: #64748b; }
-        #form-perfil-campos { display: flex; flex-direction: column; gap: 11px; }
-
-        .form-campo-etiq {
-          display: block;
-          font-size: 11px;
-          font-weight: 700;
-          color: #94a3b8;
-          text-transform: uppercase;
-          letter-spacing: .05em;
-          margin-bottom: 4px;
-        }
-        .form-campo-rel { position: relative; }
-        .form-campo-input {
-          width: 100%;
-          box-sizing: border-box;
-          padding: 10px 36px 10px 13px;
-          border-radius: 10px;
-          font-size: 13.5px;
-          outline: none;
-          font-family: inherit;
-          color: #0f172a;
-          transition: border-color .15s, background .15s;
-        }
-        .form-campo-input.neutro { border: 1px solid #e2e8f0; background: #fff; }
-        .form-campo-input.valido { border: 1px solid #86efac; background: #f0fdf4; }
-        .form-campo-input.error  { border: 1px solid #fca5a5; background: #fef2f2; }
-        .form-campo-tick {
-          position: absolute;
-          right: 11px;
-          top: 50%;
-          transform: translateY(-50%);
-          color: #22c55e;
-          flex-shrink: 0;
-        }
-        .form-campo-error { margin: 3px 0 0 2px; font-size: 11px; color: #ef4444; }
-        .form-campo-estado { margin: 3px 0 0 2px; font-size: 11px; }
-        .form-campo-estado.validando { color: #6366f1; }
-        .form-campo-estado.cp-ok     { color: #22c55e; }
-        .form-campo-estado.cp-err    { color: #ef4444; }
-        .form-select {
-          width: 100%;
-          box-sizing: border-box;
-          padding: 10px 13px;
-          border-radius: 10px;
-          font-size: 13.5px;
-          outline: none;
-          font-family: inherit;
-          cursor: pointer;
-        }
-        .form-select.neutro { border: 1px solid #e2e8f0; background: #fff; color: #94a3b8; }
-        .form-select.valido { border: 1px solid #86efac; background: #f0fdf4; color: #0f172a; }
-        .form-select.error  { border: 1px solid #fca5a5; background: #fef2f2; color: #0f172a; }
-        .form-select.tiene-valor { color: #0f172a; }
-
-        /* Página del carrito */
-        #pag-carro {
-          min-height: 100vh;
-          background: #f8fafc;
-          padding: 32px 16px 64px;
-        }
-        #carro-contenedor { max-width: 1060px; margin: 0 auto; }
-        #carro-cab {
-          display: flex;
-          align-items: center;
-          gap: 12px;
-          margin-bottom: 28px;
-        }
-        #carro-cab-icono {
-          width: 38px;
-          height: 38px;
-          background: #0f172a;
-          border-radius: 11px;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          box-shadow: 0 4px 10px rgba(99, 102, 241, .3);
-        }
-        #carro-titulo {
-          margin: 0;
-          font-size: 24px;
-          font-weight: 800;
-          color: #0f172a;
-          font-family: 'Sora', sans-serif;
-          letter-spacing: -.5px;
-        }
-        #carro-subtitulo { margin: 0; font-size: 12.5px; color: #64748b; }
-        #carro-error {
-          padding: 12px 16px;
-          background: #fef2f2;
-          border: 1px solid #fecaca;
-          border-radius: 10px;
-          margin-bottom: 20px;
-          font-size: 13px;
-          color: #dc2626;
-          font-weight: 500;
-        }
-        #carro-spinner { text-align: center; padding: 80px; }
-        #carro-vacio {
-          text-align: center;
-          padding: 72px 20px;
-          background: #fff;
-          border-radius: 20px;
-          border: 1px solid #e2e8f0;
-        }
-        #carro-vacio-icono { font-size: 56px; margin-bottom: 14px; }
-        #carro-vacio-titulo {
-          margin: 0 0 6px;
-          font-size: 19px;
-          font-weight: 700;
-          color: #0f172a;
-          font-family: 'Sora', sans-serif;
-        }
-        #carro-vacio-desc { margin: 0; color: #64748b; font-size: 13.5px; }
-        #carro-grid {
-          display: grid;
-          grid-template-columns: 1fr 340px;
-          gap: 24px;
-          align-items: flex-start;
-        }
-        #carro-panel {
-          background: #fff;
-          border-radius: 20px;
-          border: 1px solid #e2e8f0;
-          padding: 6px 24px 4px;
-          box-shadow: 0 2px 10px rgba(15, 23, 42, .04);
-        }
-        #pago-wrap { padding: 20px 0; }
-        #pago-separador { margin: 24px 0; border-top: 2px solid #f1f5f9; }
-        #pago-titulo {
-          margin: 0 0 18px;
-          font-size: 14px;
-          font-weight: 700;
-          color: #94a3b8;
-          text-transform: uppercase;
-          letter-spacing: .7px;
-        }
-        #carro-lista-cab {
-          padding: 14px 0 4px;
-          border-bottom: 2px solid #f1f5f9;
-        }
-        #carro-lista-etiq {
-          font-size: 11.5px;
-          font-weight: 700;
-          color: #94a3b8;
-          text-transform: uppercase;
-          letter-spacing: .7px;
-        }
-        #carro-pie { padding: 14px 0; }
-        .btn-vaciar {
-          background: none;
-          border: none;
-          cursor: pointer;
-          font-size: 12px;
-          color: #ef4444;
-          font-weight: 600;
-          display: flex;
-          align-items: center;
-          gap: 4px;
-          padding: 0;
-        }
-      `}</style>
       <Navbar />
 
-      <div id="pag-carro">
-        <div id="carro-contenedor">
+      <div className="cr-page">
+        <div className="cr-container">
 
-          <div id="carro-cab">
-            <div id="carro-cab-icono">
+          <div className="cr-header">
+            <div className="cr-header-icon">
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.2">
                 <path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4z"/>
                 <line x1="3" y1="6" x2="21" y2="6"/>
@@ -1552,11 +974,11 @@ export default function PaginaCarrito() {
               </svg>
             </div>
             <div>
-              <h1 id="carro-titulo">
+              <h1 className="cr-title">
                 {secretoCliente ? t('cart.payTitle') : t('cart.title')}
               </h1>
               {!secretoCliente && (
-                <p id="carro-subtitulo">
+                <p className="cr-subtitle">
                   {cargando ? t('cart.loading') : arts.length === 0 ? t('cart.emptyStatus') : t('cart.itemsCount')(arts.reduce((s, a) => s + a.cantidad, 0))}
                 </p>
               )}
@@ -1564,47 +986,46 @@ export default function PaginaCarrito() {
           </div>
 
           {errorApi && (
-            <div id="carro-error">{errorApi}</div>
+            <div className="cr-error">{errorApi}</div>
           )}
 
           {cargando ? (
-            <div id="carro-spinner">
+            <div className="cr-spinner">
               <Girador tamano={32} color="#6366f1"/>
             </div>
           ) : arts.length === 0 && !secretoCliente ? (
-            <div id="carro-vacio">
-              <div id="carro-vacio-icono">🛒</div>
-              <h2 id="carro-vacio-titulo">{t('cart.emptyTitle')}</h2>
-              <p id="carro-vacio-desc">{t('cart.emptyDesc')}</p>
+            <div className="cr-empty">
+              <h2 className="cr-empty-title">{t('cart.emptyTitle')}</h2>
+              <p className="cr-empty-desc">{t('cart.emptyDesc')}</p>
             </div>
           ) : (
-            <div id="carro-grid">
-              <div id="carro-panel">
+            <div className="cr-grid">
+              <div className="cr-panel">
                 {secretoCliente ? (
-                  <div id="pago-wrap">
+                  <div className="cr-pay-wrap">
                     <div>
                       <FormPerfil
                         usuario={usuario}
                         alCambiarDatos={(datos) => fijarDatosPerfil(datos)}
                         t={t}
                       />
-                      <div id="pago-separador"/>
+                      <div className="cr-pay-sep"/>
                     </div>
-                    <h3 id="pago-titulo">{t('cart.paymentData')}</h3>
+                    <h3 className="cr-pay-title">{t('cart.paymentData')}</h3>
                     <Elements stripe={promesaStripe} options={{ clientSecret: secretoCliente, appearance:{ theme:"stripe", variables:{ colorPrimary:"#6366f1", borderRadius:"10px", fontFamily:"Inter, sans-serif" } } }}>
                       <FormPago total={totalIntento} alExito={(id) => fijarIdExito(id)} alCancelar={() => fijarSecretoCliente(null)} t={t} datosPerfil={datosPerfil} alGuardarPerfil={fijarUsuario}/>
                     </Elements>
                   </div>
                 ) : (
                   <>
-                    <div id="carro-lista-cab">
-                      <span id="carro-lista-etiq">{t('cart.products')}</span>
+                    <div className="cr-list-head">
+                      <span className="cr-list-label">{t('cart.products')}</span>
                     </div>
                     {arts.map((art) => (
                       <ItemCarro key={art.movil_id} art={art} alQuitar={quitarArt} alCant={cambiarCant} deshabilitado={cargandoIntento}/>
                     ))}
-                    <div id="carro-pie">
-                      <button onClick={vaciarCarro} className="btn-vaciar">
+                    <div className="cr-foot">
+                      <button onClick={vaciarCarro} className="cr-btn-vaciar">
                         <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
                           <polyline points="3 6 5 6 21 6"/>
                           <path d="M19 6l-1 14H6L5 6M10 11v6M14 11v6M9 6V4h6v2"/>
@@ -1620,7 +1041,460 @@ export default function PaginaCarrito() {
           )}
         </div>
       </div>
+
       <Footer />
+
+      <style>{`
+        @import url('https://fonts.googleapis.com/css2?family=Sora:wght@400;600;700;800&family=Inter:wght@400;500;600&display=swap');
+        * { box-sizing: border-box; }
+        body { margin: 0; font-family: 'Inter', sans-serif; background: #f8fafc; }
+        @keyframes cr-spin    { to { transform: rotate(360deg); } }
+        @keyframes cr-fadeIn  { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+
+        /* ── Spinner ───────────────────────────────────────── */
+        .spinner { animation: cr-spin .8s linear infinite; }
+
+        /* ── Batería ───────────────────────────────────────── */
+        .cr-bat-wrap  { display: flex; align-items: center; gap: 5px; }
+        .cr-bat-fondo { width: 34px; height: 7px; background: #e5e7eb; border-radius: 4px; overflow: hidden; }
+        .cr-bat-relleno { height: 100%; border-radius: 4px; transition: width .5s; }
+        .cr-bat-alta  { background: #22c55e; color: #22c55e; }
+        .cr-bat-media { background: #f59e0b; color: #f59e0b; }
+        .cr-bat-baja  { background: #ef4444; color: #ef4444; }
+        .cr-bat-valor { font-size: 10px; font-weight: 700; background: transparent; }
+
+        /* ── Icono de teléfono ─────────────────────────────── */
+        .cr-phone-icon {
+          width: 52px; height: 52px;
+          border-radius: 13px;
+          display: flex; align-items: center; justify-content: center;
+          flex-shrink: 0;
+        }
+
+        /* ── Botón cantidad ────────────────────────────────── */
+        .cr-btn-cant {
+          width: 30px; height: 30px;
+          border: none; background: none;
+          font-size: 17px;
+          display: flex; align-items: center; justify-content: center;
+        }
+        .cr-btn-cant.cr-disabled { cursor: not-allowed; color: #cbd5e1; }
+        .cr-btn-cant:not(.cr-disabled) { cursor: pointer; color: #475569; }
+
+        /* ── Estados de producto ───────────────────────────── */
+        .cr-est-excelente { background: #d1fae5; color: #065f46; }
+        .cr-est-mbueno    { background: #dbeafe; color: #1e40af; }
+        .cr-est-bueno     { background: #fef9c3; color: #854d0e; }
+        .cr-est-aceptable { background: #fee2e2; color: #991b1b; }
+
+        /* ── Item del carrito ──────────────────────────────── */
+        .cr-item-row {
+          display: flex;
+          gap: 14px;
+          padding: 18px 0;
+          border-bottom: 1px solid #f1f5f9;
+        }
+        .cr-item-thumb {
+          width: 52px; height: 52px;
+          border-radius: 13px;
+          display: flex; align-items: center; justify-content: center;
+          flex-shrink: 0;
+          overflow: hidden;
+          position: relative;
+        }
+        .cr-item-thumb-img {
+          position: absolute; inset: 0;
+          width: 100%; height: 100%;
+          object-fit: contain;
+          padding: 4px;
+        }
+        .cr-item-body { flex: 1; min-width: 0; }
+        .cr-item-top {
+          display: flex;
+          justify-content: space-between;
+          align-items: flex-start;
+          gap: 8px;
+        }
+        .cr-item-modelo {
+          margin: 0;
+          font-weight: 700;
+          font-size: 14.5px;
+          color: #0f172a;
+          font-family: 'Sora', sans-serif;
+          white-space: nowrap;
+          overflow: hidden;
+          text-overflow: ellipsis;
+        }
+        .cr-item-specs { margin: 2px 0 0; font-size: 12px; color: #64748b; }
+        .cr-color-wrap { display: inline-flex; align-items: center; gap: 3px; }
+        .cr-color-dot {
+          width: 7px; height: 7px;
+          border-radius: 50%;
+          display: inline-block;
+          border: 1px solid #cbd5e1;
+        }
+        .cr-btn-remove {
+          background: none; border: none;
+          padding: 3px; line-height: 1;
+          color: #94a3b8;
+          transition: color .15s;
+        }
+        .cr-btn-remove:not(.cr-disabled) { cursor: pointer; }
+        .cr-btn-remove:not(.cr-disabled):hover { color: #ef4444; }
+        .cr-btn-remove.cr-disabled { cursor: not-allowed; }
+        .cr-item-badges {
+          display: flex; align-items: center;
+          gap: 8px; margin-top: 7px;
+        }
+        .cr-item-estado {
+          font-size: 10.5px;
+          font-weight: 700;
+          padding: 2px 7px;
+          border-radius: 20px;
+        }
+        .cr-item-actions {
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          margin-top: 10px;
+        }
+        .cr-qty-wrap {
+          display: flex; align-items: center;
+          background: #f8fafc;
+          border: 1px solid #e2e8f0;
+          border-radius: 8px;
+        }
+        .cr-qty-num {
+          width: 26px;
+          text-align: center;
+          font-size: 13px;
+          font-weight: 700;
+          color: #0f172a;
+        }
+        .cr-price-col { text-align: right; }
+        .cr-subtotal {
+          margin: 0;
+          font-weight: 800; font-size: 16px;
+          color: #0f172a;
+          font-family: 'Sora', sans-serif;
+        }
+        .cr-price-unit { margin: 0; font-size: 10.5px; color: #94a3b8; }
+
+        /* ── Formulario de pago ────────────────────────────── */
+        .cr-error-pago {
+          margin-top: 12px;
+          padding: 10px 14px;
+          background: #fef2f2;
+          border: 1px solid #fecaca;
+          border-radius: 8px;
+          font-size: 12.5px;
+          color: #dc2626;
+        }
+        .cr-pay-btns { display: flex; gap: 10px; margin-top: 20px; }
+        .cr-btn-back {
+          flex: 1;
+          padding: 13px;
+          background: #f8fafc;
+          border: 1px solid #e2e8f0;
+          border-radius: 10px;
+          font-size: 13.5px; font-weight: 600;
+          cursor: pointer; color: #475569;
+        }
+        .cr-btn-pay {
+          flex: 2;
+          padding: 13px;
+          color: #fff; border: none;
+          border-radius: 10px;
+          font-size: 14px; font-weight: 700;
+          font-family: 'Sora', sans-serif;
+          display: flex; align-items: center; justify-content: center;
+          gap: 8px;
+        }
+        .cr-btn-pay.activo {
+          background: linear-gradient(135deg, #6366f1, #4f46e5);
+          cursor: pointer;
+          box-shadow: 0 4px 14px rgba(99, 102, 241, .4);
+        }
+        .cr-btn-pay.inactivo { background: #94a3b8; cursor: not-allowed; }
+
+        /* ── Fila de resumen ───────────────────────────────── */
+        .cr-summary-row { display: flex; justify-content: space-between; align-items: center; }
+        .cr-summary-label { font-size: 13px; color: #475569; font-weight: 400; }
+        .cr-summary-label.grande  { font-size: 14.5px; }
+        .cr-summary-label.opaco   { color: #94a3b8; }
+        .cr-summary-label.negrita { color: #0f172a; font-weight: 800; font-family: 'Sora', sans-serif; }
+        .cr-summary-value { font-size: 13px; font-weight: 600; color: #0f172a; font-family: 'Sora', sans-serif; }
+        .cr-summary-value.grande  { font-size: 19px; font-weight: 800; }
+        .cr-summary-value.negrita { color: #4f46e5; font-weight: 800; }
+        .cr-summary-value.opaco   { color: #94a3b8; }
+
+        /* ── Resumen del pedido ────────────────────────────── */
+        .cr-resumen {
+          position: sticky; top: 24px;
+          background: #fff;
+          border: 1px solid #e2e8f0;
+          border-radius: 20px;
+          padding: 26px;
+          box-shadow: 0 4px 24px rgba(15, 23, 42, .07);
+        }
+        .cr-resumen-titulo {
+          margin: 0 0 16px;
+          font-size: 17px; font-weight: 800;
+          color: #0f172a;
+          font-family: 'Sora', sans-serif;
+          letter-spacing: -.3px;
+        }
+        .cr-resumen-items { display: flex; flex-direction: column; gap: 8px; margin-bottom: 16px; }
+        .cr-resumen-item { display: flex; align-items: center; gap: 10px; }
+        .cr-resumen-item-thumb {
+          width: 38px; height: 38px;
+          border-radius: 9px;
+          flex-shrink: 0;
+          overflow: hidden; position: relative;
+          display: flex; align-items: center; justify-content: center;
+        }
+        .cr-resumen-item-thumb-img {
+          position: absolute; inset: 0;
+          width: 100%; height: 100%;
+          object-fit: contain; padding: 2px;
+        }
+        .cr-resumen-item-info { flex: 1; min-width: 0; }
+        .cr-resumen-item-modelo {
+          margin: 0;
+          font-size: 12px; font-weight: 700; color: #0f172a;
+          white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+        }
+        .cr-resumen-item-specs { margin: 0; font-size: 11px; color: #64748b; }
+        .cr-resumen-item-precio { font-size: 12px; font-weight: 700; color: #0f172a; flex-shrink: 0; }
+        .cr-resumen-totales {
+          border-top: 1px solid #f1f5f9;
+          padding-top: 14px;
+          display: flex; flex-direction: column; gap: 11px;
+        }
+        .cr-resumen-envio {
+          margin: 18px 0;
+          background: #f0fdf4;
+          border: 1px solid #bbf7d0;
+          border-radius: 10px;
+          padding: 9px 13px;
+          display: flex; align-items: center; gap: 7px;
+        }
+        .cr-resumen-envio-texto { font-size: 12px; color: #15803d; font-weight: 600; }
+        .cr-resumen-guest { margin-top: 4px; }
+        .cr-resumen-guest-aviso {
+          padding: 12px 14px;
+          background: #fefce8;
+          border: 1px solid #fde68a;
+          border-radius: 10px;
+          margin-bottom: 12px;
+          font-size: 12.5px; color: #92400e; line-height: 1.5;
+        }
+
+        /* ── Botón comprar ─────────────────────────────────── */
+        .cr-btn-comprar {
+          width: 100%;
+          padding: 15px;
+          color: #fff; border: none;
+          border-radius: 12px;
+          font-size: 14.5px; font-weight: 700;
+          font-family: 'Sora', sans-serif;
+          display: flex; align-items: center; justify-content: center;
+          gap: 9px;
+          transition: transform .15s;
+        }
+        .cr-btn-comprar.activo {
+          background: linear-gradient(135deg, #6366f1, #4f46e5);
+          cursor: pointer;
+          box-shadow: 0 4px 14px rgba(99, 102, 241, .4);
+        }
+        .cr-btn-comprar.activo.hover { transform: translateY(-1px); }
+        .cr-btn-comprar.inactivo { background: #94a3b8; cursor: not-allowed; }
+        .cr-resumen-stripe {
+          margin-top: 12px;
+          display: flex; align-items: center; justify-content: center; gap: 5px;
+        }
+        .cr-resumen-stripe-texto { font-size: 10.5px; color: #94a3b8; }
+
+        /* ── Formulario de perfil en checkout ─────────────── */
+        .cr-form-perfil {
+          background: #fff;
+          border: 1px solid #e2e8f0;
+          border-radius: 20px;
+          padding: 22px;
+          box-shadow: 0 4px 24px rgba(15, 23, 42, .07);
+        }
+        .cr-form-titulo {
+          margin: 0 0 4px;
+          font-size: 14px; font-weight: 800;
+          color: #0f172a;
+          font-family: 'Sora', sans-serif;
+        }
+        .cr-form-desc { margin: 0 0 16px; font-size: 12px; color: #64748b; }
+        .cr-form-campos { display: flex; flex-direction: column; gap: 11px; }
+
+        .cr-field-label {
+          display: block;
+          font-size: 11px; font-weight: 700;
+          color: #94a3b8;
+          text-transform: uppercase; letter-spacing: .05em;
+          margin-bottom: 4px;
+        }
+        .cr-field-wrap { position: relative; }
+        .cr-field-input {
+          width: 100%; box-sizing: border-box;
+          padding: 10px 36px 10px 13px;
+          border-radius: 10px;
+          font-size: 13.5px; outline: none;
+          font-family: inherit; color: #0f172a;
+          transition: border-color .15s, background .15s;
+        }
+        .cr-field-input.neutro { border: 1px solid #e2e8f0; background: #fff; }
+        .cr-field-input.valido { border: 1px solid #86efac; background: #f0fdf4; }
+        .cr-field-input.error  { border: 1px solid #fca5a5; background: #fef2f2; }
+        .cr-field-tick {
+          position: absolute;
+          right: 11px; top: 50%;
+          transform: translateY(-50%);
+          color: #22c55e;
+          flex-shrink: 0;
+        }
+        .cr-field-error  { margin: 3px 0 0 2px; font-size: 11px; color: #ef4444; }
+        .cr-field-status { margin: 3px 0 0 2px; font-size: 11px; }
+        .cr-field-status.validando { color: #6366f1; }
+        .cr-field-status.cp-ok     { color: #22c55e; }
+        .cr-field-status.cp-err    { color: #ef4444; }
+        .cr-field-select {
+          width: 100%; box-sizing: border-box;
+          padding: 10px 13px;
+          border-radius: 10px;
+          font-size: 13.5px; outline: none;
+          font-family: inherit; cursor: pointer;
+        }
+        .cr-field-select.neutro { border: 1px solid #e2e8f0; background: #fff; color: #94a3b8; }
+        .cr-field-select.valido { border: 1px solid #86efac; background: #f0fdf4; color: #0f172a; }
+        .cr-field-select.error  { border: 1px solid #fca5a5; background: #fef2f2; color: #0f172a; }
+        .cr-field-select.tiene-valor { color: #0f172a; }
+
+        /* ── Página del carrito ────────────────────────────── */
+        .cr-page {
+          min-height: 100vh;
+          background: #f8fafc;
+          padding: 32px 16px 64px;
+        }
+        .cr-container { max-width: 1060px; margin: 0 auto; }
+        .cr-header {
+          display: flex; align-items: center;
+          gap: 12px; margin-bottom: 28px;
+        }
+        .cr-header-icon {
+          width: 38px; height: 38px;
+          background: #0f172a;
+          border-radius: 11px;
+          display: flex; align-items: center; justify-content: center;
+          box-shadow: 0 4px 10px rgba(99, 102, 241, .3);
+          flex-shrink: 0;
+        }
+        .cr-title {
+          margin: 0;
+          font-size: 24px; font-weight: 800;
+          color: #0f172a;
+          font-family: 'Sora', sans-serif;
+          letter-spacing: -.5px;
+        }
+        .cr-subtitle { margin: 0; font-size: 12.5px; color: #64748b; }
+        .cr-error {
+          padding: 12px 16px;
+          background: #fef2f2;
+          border: 1px solid #fecaca;
+          border-radius: 10px;
+          margin-bottom: 20px;
+          font-size: 13px; color: #dc2626; font-weight: 500;
+        }
+        .cr-spinner { text-align: center; padding: 80px; }
+        .cr-empty {
+          text-align: center;
+          padding: 72px 20px;
+          background: #fff;
+          border-radius: 20px;
+          border: 1px solid #e2e8f0;
+        }
+        .cr-empty-icon { font-size: 56px; margin-bottom: 14px; }
+        .cr-empty-title {
+          margin: 0 0 6px;
+          font-size: 19px; font-weight: 700;
+          color: #0f172a;
+          font-family: 'Sora', sans-serif;
+        }
+        .cr-empty-desc { margin: 0; color: #64748b; font-size: 13.5px; }
+        .cr-grid {
+          display: grid;
+          grid-template-columns: 1fr 340px;
+          gap: 24px;
+          align-items: flex-start;
+        }
+        .cr-panel {
+          background: #fff;
+          border-radius: 20px;
+          border: 1px solid #e2e8f0;
+          padding: 6px 24px 4px;
+          box-shadow: 0 2px 10px rgba(15, 23, 42, .04);
+        }
+        .cr-pay-wrap { padding: 20px 0; }
+        .cr-pay-sep  { margin: 24px 0; border-top: 2px solid #f1f5f9; }
+        .cr-pay-title {
+          margin: 0 0 18px;
+          font-size: 14px; font-weight: 700;
+          color: #94a3b8;
+          text-transform: uppercase; letter-spacing: .7px;
+        }
+        .cr-list-head { padding: 14px 0 4px; border-bottom: 2px solid #f1f5f9; }
+        .cr-list-label {
+          font-size: 11.5px; font-weight: 700;
+          color: #94a3b8;
+          text-transform: uppercase; letter-spacing: .7px;
+        }
+        .cr-foot { padding: 14px 0; }
+        .cr-btn-vaciar {
+          background: none; border: none;
+          cursor: pointer;
+          font-size: 12px; color: #ef4444; font-weight: 600;
+          display: flex; align-items: center; gap: 4px;
+          padding: 0;
+        }
+
+        /* ── Responsive ────────────────────────────────────── */
+        @media (max-width: 900px) {
+          .cr-grid {
+            grid-template-columns: 1fr;
+          }
+          .cr-resumen {
+            position: static;
+          }
+        }
+
+        @media (max-width: 640px) {
+          .cr-page   { padding: 20px 12px 48px; }
+          .cr-header { margin-bottom: 20px; }
+          .cr-title  { font-size: 20px; }
+          .cr-panel  { padding: 4px 16px 4px; }
+          .cr-resumen { padding: 18px; }
+          .cr-empty  { padding: 48px 16px; }
+          .cr-empty-icon { font-size: 44px; }
+          .cr-empty-title { font-size: 16px; }
+        }
+
+        @media (max-width: 480px) {
+          .cr-page   { padding: 14px 10px 40px; }
+          .cr-title  { font-size: 18px; }
+          .cr-header-icon { width: 32px; height: 32px; }
+          .cr-pay-btns { flex-direction: column; }
+          .cr-btn-pay  { flex: none; }
+          .cr-btn-back { flex: none; }
+          .cr-item-modelo { font-size: 13px; }
+          .cr-subtotal    { font-size: 14px; }
+        }
+
+      `}</style>
     </>
   );
 }

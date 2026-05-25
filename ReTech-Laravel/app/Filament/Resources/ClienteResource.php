@@ -16,10 +16,12 @@ class ClienteResource extends Resource
 {
     protected static ?string $model = User::class;
 
-    protected static ?string $navigationIcon = 'heroicon-o-identification';
-    protected static ?string $navigationLabel = 'Clientes';
+    protected static ?string $navigationIcon   = 'heroicon-o-identification';
+    protected static ?string $navigationLabel  = 'Clientes';
+    protected static ?string $modelLabel       = 'Cliente';
     protected static ?string $pluralModelLabel = 'Clientes';
-    protected static ?string $slug = 'clientes';
+    protected static ?string $slug            = 'clientes';
+    protected static ?int    $navigationSort  = 2;
 
     public static function getEloquentQuery(): Builder
     {
@@ -37,6 +39,7 @@ class ClienteResource extends Resource
                         ->maxLength(30),
 
                     Forms\Components\TextInput::make('email')
+                        ->label('Correo electrónico')
                         ->email()
                         ->required()
                         ->unique(User::class, 'email', ignoreRecord: true),
@@ -47,10 +50,10 @@ class ClienteResource extends Resource
                         ->dehydrateStateUsing(fn ($state) => filled($state) ? Hash::make($state) : null)
                         ->dehydrated(fn ($state) => filled($state))
                         ->required(fn (string $context) => $context === 'create')
-                        ->helperText('Déjalo vacío para no cambiar'),
+                        ->helperText('Déjalo vacío para no cambiar la contraseña'),
                 ])->columns(2),
 
-            Forms\Components\Section::make('Datos del cliente')
+            Forms\Components\Section::make('Datos personales')
                 ->description('Si el cliente se registró con Google y aún no completó su perfil, estos campos estarán vacíos.')
                 ->schema([
                     Forms\Components\TextInput::make('nif')
@@ -63,17 +66,37 @@ class ClienteResource extends Resource
                         ->maxLength(30),
 
                     Forms\Components\TextInput::make('apellidos')
+                        ->label('Apellidos')
                         ->maxLength(50),
 
                     Forms\Components\TextInput::make('telefono')
                         ->label('Teléfono')
                         ->tel()
                         ->maxLength(15),
+                ])->columns(2),
 
-                    Forms\Components\TextInput::make('direccion')
-                        ->label('Dirección')
-                        ->maxLength(100)
-                        ->columnSpanFull(),
+            Forms\Components\Section::make('Dirección')
+                ->schema([
+                    Forms\Components\TextInput::make('calle')
+                        ->label('Calle y número')
+                        ->maxLength(100),
+
+                    Forms\Components\TextInput::make('municipio')
+                        ->label('Municipio / Ciudad')
+                        ->maxLength(80),
+
+                    Forms\Components\TextInput::make('provincia')
+                        ->label('Provincia')
+                        ->maxLength(80),
+
+                    Forms\Components\TextInput::make('codigo_postal')
+                        ->label('Código Postal')
+                        ->maxLength(10),
+
+                    Forms\Components\TextInput::make('pais')
+                        ->label('País')
+                        ->maxLength(60)
+                        ->default('España'),
                 ])->columns(2),
         ]);
     }
@@ -101,7 +124,7 @@ class ClienteResource extends Resource
                     ->default('—'),
 
                 Tables\Columns\TextColumn::make('full_name')
-                    ->label('Nombre Completo')
+                    ->label('Nombre completo')
                     ->getStateUsing(fn ($record) => $record->cliente
                         ? trim("{$record->cliente->nombre} {$record->cliente->apellidos}")
                         : '—'),
@@ -111,8 +134,9 @@ class ClienteResource extends Resource
                     ->default('—'),
 
                 Tables\Columns\TextColumn::make('email')
-                    ->label('Email')
+                    ->label('Correo electrónico')
                     ->icon('heroicon-s-mail')
+                    ->searchable()
                     ->copyable(),
 
                 Tables\Columns\IconColumn::make('email_verified_at')
@@ -123,13 +147,30 @@ class ClienteResource extends Resource
                     ->trueColor('success')
                     ->falseColor('danger'),
             ])
-            ->filters([])
+            ->defaultSort('name')
+            ->filters([
+                Tables\Filters\Filter::make('verificados')
+                    ->label('Email verificado')
+                    ->query(fn ($query) => $query->whereNotNull('email_verified_at')),
+
+                Tables\Filters\Filter::make('sin_verificar')
+                    ->label('Sin verificar')
+                    ->query(fn ($query) => $query->whereNull('email_verified_at')),
+
+                Tables\Filters\Filter::make('google')
+                    ->label('Registrado con Google')
+                    ->query(fn ($query) => $query->whereNotNull('google_id')),
+
+                Tables\Filters\Filter::make('sin_perfil')
+                    ->label('Sin perfil completo')
+                    ->query(fn ($query) => $query->doesntHave('cliente')),
+            ])
             ->actions([
-                Tables\Actions\EditAction::make(),
-                Tables\Actions\DeleteAction::make(),
+                Tables\Actions\EditAction::make()->label('Editar'),
+                Tables\Actions\DeleteAction::make()->label('Eliminar'),
             ])
             ->bulkActions([
-                Tables\Actions\DeleteBulkAction::make(),
+                Tables\Actions\DeleteBulkAction::make()->label('Eliminar seleccionados'),
             ]);
     }
 

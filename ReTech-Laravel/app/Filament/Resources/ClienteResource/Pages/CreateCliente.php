@@ -13,15 +13,25 @@ class CreateCliente extends CreateRecord
 
     protected function mutateFormDataBeforeCreate(array $data): array
     {
+        // Extraemos los campos que pertenecen a la tabla 'clientes'
         $this->clienteData = [
-            'nif'       => $data['nif'] ?? null,
-            'nombre'    => $data['nombre'] ?? null,
-            'apellidos' => $data['apellidos'] ?? null,
-            'telefono'  => $data['telefono'] ?? null,
-            'direccion' => $data['direccion'] ?? null,
+            'nif'           => $data['nif']           ?? null,
+            'nombre'        => $data['nombre']        ?? null,
+            'apellidos'     => $data['apellidos']     ?? null,
+            'telefono'      => $data['telefono']      ?? null,
+            'calle'         => $data['calle']         ?? null,
+            'municipio'     => $data['municipio']     ?? null,
+            'provincia'     => $data['provincia']     ?? null,
+            'codigo_postal' => $data['codigo_postal'] ?? null,
+            'pais'          => $data['pais']          ?? null,
         ];
 
-        unset($data['nif'], $data['nombre'], $data['apellidos'], $data['telefono'], $data['direccion']);
+        unset(
+            $data['nif'], $data['nombre'], $data['apellidos'], $data['telefono'],
+            $data['calle'], $data['municipio'], $data['provincia'],
+            $data['codigo_postal'], $data['pais']
+        );
+
         $data['role'] = 'cliente';
 
         return $data;
@@ -29,10 +39,11 @@ class CreateCliente extends CreateRecord
 
     protected function afterCreate(): void
     {
-        $required = ['nombre', 'apellidos', 'nif', 'direccion', 'telefono'];
-        $allFilled = collect($required)->every(fn ($k) => filled($this->clienteData[$k] ?? null));
+        // Solo creamos el perfil si los campos obligatorios están rellenos
+        $obligatorios = ['nombre', 'apellidos', 'nif', 'telefono'];
+        $todoRelleno  = collect($obligatorios)->every(fn ($k) => filled($this->clienteData[$k] ?? null));
 
-        if ($allFilled) {
+        if ($todoRelleno) {
             $this->record->cliente()->create($this->clienteData);
         }
     }

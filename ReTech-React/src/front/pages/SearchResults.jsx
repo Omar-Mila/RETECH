@@ -7,19 +7,19 @@ import { useIdioma } from "../context/LanguageContext"
 function PhoneImage({ src, alt }) {
     const [status, setStatus] = useState("loading")
     return (
-        <div className="img-wrap-rel">
+        <div className="sr-img-wrap">
             {status !== "loaded" && (
-                <div className="img-placeholder">
+                <div className="sr-img-placeholder">
                     {status === "error"
-                        ? <span className="img-error-icono">📱</span>
-                        : <div className="img-skeleton" />
+                        ? <span className="sr-img-error">📱</span>
+                        : <div className="sr-img-skeleton" />
                     }
                 </div>
             )}
             <img
                 src={src}
                 alt={alt}
-                className={`img-producto${status === "loaded" ? " cargada" : ""}`}
+                className={`sr-img${status === "loaded" ? " sr-img--loaded" : ""}`}
                 onLoad={() => setStatus("loaded")}
                 onError={() => setStatus("error")}
             />
@@ -28,10 +28,10 @@ function PhoneImage({ src, alt }) {
 }
 
 const ESTADO_LABELS = {
-    "nuevo":        { label: "Nou",         color: "bg-green-100 text-green-700" },
-    "muy_bueno":    { label: "Molt bo",     color: "bg-blue-100 text-blue-700" },
-    "bueno":        { label: "Bo",          color: "bg-yellow-100 text-yellow-700" },
-    "aceptable":    { label: "Acceptable",  color: "bg-orange-100 text-orange-700" },
+    "nuevo":        { label: "Nou",        cls: "sr-est-nuevo" },
+    "muy_bueno":    { label: "Molt bo",    cls: "sr-est-mbueno" },
+    "bueno":        { label: "Bo",         cls: "sr-est-bueno" },
+    "aceptable":    { label: "Acceptable", cls: "sr-est-aceptable" },
 }
 
 function FunnelIcon({ size = 15, color = "currentColor" }) {
@@ -47,10 +47,10 @@ function SortButton({ label, sort, onClick }) {
     return (
         <button
             onClick={onClick}
-            className={`btn-orden${sort ? " activo" : ""}`}
+            className={`sr-btn-sort${sort ? " sr-btn-sort--active" : ""}`}
         >
             {label}
-            <span className={`btn-orden-icono${sort ? " visible" : ""}`}>{icon}</span>
+            <span className={`sr-btn-sort-icon${sort ? " sr-btn-sort-icon--visible" : ""}`}>{icon}</span>
         </button>
     )
 }
@@ -70,25 +70,25 @@ function FilterPanel({ products, filters, onChange, collapsed, onToggleCollapse,
     const activeCount = filters.modelos.length + filters.colores.length + filters.almacenamientos.length + (filters.precioMax < maxPrice ? 1 : 0)
 
     return (
-        <aside className={`panel-filtros${collapsed ? " colapsado" : ""}`}>
+        <aside className={`sr-filter-panel${collapsed ? " sr-filter-panel--collapsed" : ""}`}>
             {/* Cabecera */}
-            <div className={`panel-filtros-cab${collapsed ? " centrado" : ""}`}>
+            <div className={`sr-filter-head${collapsed ? " sr-filter-head--centered" : ""}`}>
                 <button
                     onClick={onToggleCollapse}
                     title={collapsed ? "Mostrar filtres" : "Ocultar filtres"}
-                    className={`btn-filtros${activeCount > 0 ? " con-activos" : ""}${collapsed ? " compacto" : ""}`}
+                    className={`sr-btn-filter${activeCount > 0 ? " sr-btn-filter--active" : ""}${collapsed ? " sr-btn-filter--compact" : ""}`}
                 >
                     <FunnelIcon size={15} color={activeCount > 0 ? "#fff" : "#334155"} />
-                    {!collapsed && <span className="btn-filtros-etiq">Filtres</span>}
+                    {!collapsed && <span className="sr-btn-filter-label">Filtres</span>}
                     {activeCount > 0 && (
-                        <span className="filtros-badge">{activeCount}</span>
+                        <span className="sr-filter-badge">{activeCount}</span>
                     )}
                 </button>
 
                 {!collapsed && activeCount > 0 && (
                     <button
                         onClick={() => onChange({ modelos: [], colores: [], almacenamientos: [], precioMax: maxPrice })}
-                        className="btn-limpiar-filtros"
+                        className="sr-btn-clear-filters"
                     >
                         {t('search.clear')}
                     </button>
@@ -97,45 +97,45 @@ function FilterPanel({ products, filters, onChange, collapsed, onToggleCollapse,
 
             {/* Contenido */}
             {!collapsed && (
-                <div className="panel-filtros-body">
-                    <Section title={t('search.filterModel')}>
+                <div className="sr-filter-body">
+                    <FilterSection title={t('search.filterModel')}>
                         {modelos.map(m => (
                             <CheckRow key={m} label={m} checked={filters.modelos.includes(m)} onChange={() => toggle("modelos", m)} />
                         ))}
-                    </Section>
-                    <Section title={t('search.filterColor')}>
+                    </FilterSection>
+                    <FilterSection title={t('search.filterColor')}>
                         {colores.map(c => (
                             <CheckRow key={c} label={c} checked={filters.colores.includes(c)} onChange={() => toggle("colores", c)} />
                         ))}
-                    </Section>
-                    <Section title={t('search.filterStorage')}>
+                    </FilterSection>
+                    <FilterSection title={t('search.filterStorage')}>
                         {almacenamientos.map(a => (
                             <CheckRow key={a} label={`${a} GB`} checked={filters.almacenamientos.includes(a)} onChange={() => toggle("almacenamientos", a)} />
                         ))}
-                    </Section>
-                    <Section title={t('search.filterMaxPrice')}>
-                        <div className="filtro-precio-wrap">
-                            <div className="filtro-precio-row">
-                                <span className="filtro-precio-min">0 €</span>
-                                <span className="filtro-precio-max">{filters.precioMax} €</span>
+                    </FilterSection>
+                    <FilterSection title={t('search.filterMaxPrice')}>
+                        <div className="sr-filter-price-wrap">
+                            <div className="sr-filter-price-row">
+                                <span className="sr-filter-price-min">0 €</span>
+                                <span className="sr-filter-price-max">{filters.precioMax} €</span>
                             </div>
                             <input
                                 type="range" min={0} max={maxPrice} value={filters.precioMax}
                                 onChange={e => onChange({ ...filters, precioMax: Number(e.target.value) })}
-                                className="filtro-rango"
+                                className="sr-filter-range"
                             />
                         </div>
-                    </Section>
+                    </FilterSection>
                 </div>
             )}
         </aside>
     )
 }
 
-function Section({ title, children }) {
+function FilterSection({ title, children }) {
     return (
-        <div className="filtro-seccion">
-            <p className="filtro-seccion-titulo">{title}</p>
+        <div className="sr-filter-section">
+            <p className="sr-filter-section-title">{title}</p>
             {children}
         </div>
     )
@@ -143,9 +143,9 @@ function Section({ title, children }) {
 
 function CheckRow({ label, checked, onChange }) {
     return (
-        <label className="filtro-check-fila">
-            <input type="checkbox" checked={checked} onChange={onChange} className="filtro-check" />
-            <span className="filtro-check-etiq">{label}</span>
+        <label className="sr-filter-check-row">
+            <input type="checkbox" checked={checked} onChange={onChange} className="sr-filter-check" />
+            <span className="sr-filter-check-label">{label}</span>
         </label>
     )
 }
@@ -255,293 +255,20 @@ export default function SearchResults() {
     ]
 
     return (
-        <div className="min-h-screen flex flex-col">
-            <style>{`
-                /* Imagen de producto */
-                .img-wrap-rel {
-                    position: relative;
-                    width: 100%;
-                    height: 100%;
-                }
-                .img-placeholder {
-                    position: absolute;
-                    inset: 0;
-                    display: flex;
-                    align-items: center;
-                    justify-content: center;
-                }
-                .img-error-icono {
-                    font-size: 36px;
-                    opacity: 0.25;
-                }
-                .img-skeleton {
-                    width: 52px;
-                    height: 80px;
-                    background: #e2e8f0;
-                    border-radius: 8px;
-                    animation: pulse 1.5s ease-in-out infinite;
-                }
-                .img-producto {
-                    height: 100%;
-                    width: 100%;
-                    object-fit: contain;
-                    opacity: 0;
-                    transition: opacity 0.25s;
-                    display: block;
-                }
-                .img-producto.cargada { opacity: 1; }
-
-                /* Botón ordenar */
-                .btn-orden {
-                    display: inline-flex;
-                    align-items: center;
-                    gap: 4px;
-                    padding: 5px 10px;
-                    border: 1px solid #e2e8f0;
-                    border-radius: 8px;
-                    background: #fff;
-                    color: #475569;
-                    font-size: 12px;
-                    font-weight: 600;
-                    cursor: pointer;
-                    white-space: nowrap;
-                }
-                .btn-orden.activo {
-                    border-color: #0f172a;
-                    background: #0f172a;
-                    color: #fff;
-                }
-                .btn-orden-icono {
-                    font-size: 10px;
-                    opacity: 0.4;
-                }
-                .btn-orden-icono.visible { opacity: 1; }
-                .thumb-img-wrap { overflow: hidden; }
-
-                /* Panel de filtros */
-                .panel-filtros {
-                    width: 236px;
-                    min-width: 236px;
-                    flex-shrink: 0;
-                    transition: width 0.2s, min-width 0.2s;
-                    background: #fff;
-                    border: 1px solid #f1f5f9;
-                    border-radius: 12px;
-                    align-self: flex-start;
-                    position: sticky;
-                    top: 88px;
-                    overflow: hidden;
-                    max-height: calc(100vh - 104px);
-                    display: flex;
-                    flex-direction: column;
-                    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.04);
-                }
-                .panel-filtros.colapsado {
-                    width: 44px;
-                    min-width: 44px;
-                }
-                .panel-filtros-cab {
-                    padding: 12px 14px;
-                    border-bottom: 1px solid #f1f5f9;
-                    display: flex;
-                    justify-content: space-between;
-                    align-items: center;
-                    flex-shrink: 0;
-                }
-                .panel-filtros-cab.centrado {
-                    padding: 12px 0;
-                    border-bottom: none;
-                    justify-content: center;
-                }
-                .btn-filtros {
-                    background: transparent;
-                    border: 1px solid #e2e8f0;
-                    border-radius: 8px;
-                    padding: 6px 10px;
-                    cursor: pointer;
-                    display: flex;
-                    align-items: center;
-                    gap: 6px;
-                    color: #334155;
-                    position: relative;
-                    flex-shrink: 0;
-                }
-                .btn-filtros.compacto { padding: 7px; }
-                .btn-filtros.con-activos {
-                    background: #0f172a;
-                    border-color: #0f172a;
-                    color: #fff;
-                }
-                .btn-filtros-etiq {
-                    font-size: 12px;
-                    font-weight: 700;
-                    letter-spacing: 0.02em;
-                }
-                .filtros-badge {
-                    background: #6366f1;
-                    color: #fff;
-                    font-size: 9px;
-                    font-weight: 700;
-                    width: 15px;
-                    height: 15px;
-                    border-radius: 50%;
-                    display: flex;
-                    align-items: center;
-                    justify-content: center;
-                    border: 2px solid #fff;
-                    position: absolute;
-                    top: -6px;
-                    right: -6px;
-                }
-                .btn-limpiar-filtros {
-                    font-size: 11px;
-                    color: #64748b;
-                    background: none;
-                    border: none;
-                    cursor: pointer;
-                    text-decoration: underline;
-                }
-                .panel-filtros-body {
-                    flex: 1;
-                    overflow-y: auto;
-                }
-                .filtro-seccion {
-                    border-bottom: 1px solid #f1f5f9;
-                }
-                .filtro-seccion-titulo {
-                    margin: 0;
-                    padding: 10px 14px 5px;
-                    font-size: 10px;
-                    font-weight: 700;
-                    color: #94a3b8;
-                    text-transform: uppercase;
-                    letter-spacing: 0.07em;
-                }
-                .filtro-check-fila {
-                    display: flex;
-                    align-items: center;
-                    gap: 8px;
-                    padding: 5px 14px;
-                    cursor: pointer;
-                }
-                .filtro-check {
-                    accent-color: #0f172a;
-                    width: 13px;
-                    height: 13px;
-                }
-                .filtro-check-etiq {
-                    font-size: 12px;
-                    color: #334155;
-                }
-                .filtro-precio-wrap {
-                    padding: 4px 14px 14px;
-                }
-                .filtro-precio-row {
-                    display: flex;
-                    justify-content: space-between;
-                    margin-bottom: 8px;
-                }
-                .filtro-precio-min {
-                    font-size: 11px;
-                    color: #64748b;
-                }
-                .filtro-precio-max {
-                    font-size: 12px;
-                    font-weight: 700;
-                    color: #0f172a;
-                }
-                .filtro-rango {
-                    width: 100%;
-                    accent-color: #0f172a;
-                }
-
-                /* Lista de resultados */
-                .resultados-wrap {
-                    flex: 1;
-                    min-width: 0;
-                    transition: opacity 0.2s;
-                }
-                .resultados-wrap.cargando { opacity: 0.5; }
-                .resultados-cab {
-                    display: flex;
-                    flex-wrap: wrap;
-                    align-items: center;
-                    gap: 8px;
-                    margin-bottom: 4px;
-                }
-                .resultados-titulo {
-                    font-size: 17px;
-                    font-weight: 700;
-                    margin: 0;
-                    white-space: nowrap;
-                }
-                .resultados-orden {
-                    display: flex;
-                    gap: 6px;
-                    align-items: center;
-                }
-                .chips-activos {
-                    display: flex;
-                    flex-wrap: wrap;
-                    gap: 4px;
-                    align-items: center;
-                }
-                .chip-filtro {
-                    display: inline-flex;
-                    align-items: center;
-                    gap: 3px;
-                    background: #f8fafc;
-                    color: #475569;
-                    font-size: 11px;
-                    font-weight: 500;
-                    padding: 3px 6px 3px 9px;
-                    border-radius: 999px;
-                    border: 1px solid #e2e8f0;
-                }
-                .btn-chip-quitar {
-                    background: none;
-                    border: none;
-                    cursor: pointer;
-                    color: #94a3b8;
-                    font-size: 14px;
-                    line-height: 1;
-                    padding: 0 2px;
-                    display: flex;
-                    align-items: center;
-                }
-                .resultados-conteo {
-                    font-size: 12px;
-                    color: #94a3b8;
-                    margin-bottom: 20px;
-                    margin-top: 2px;
-                }
-                .centinela { height: 1px; }
-                .cargando-mas {
-                    text-align: center;
-                    padding: 24px 0 8px;
-                    color: #94a3b8;
-                    font-size: 13px;
-                }
-                .todo-cargado {
-                    text-align: center;
-                    padding: 24px 0 8px;
-                    color: #cbd5e1;
-                    font-size: 12px;
-                }
-            `}</style>
+        <div className="sr-page">
 
             <Navbar />
 
-            <main className="flex-1 flex flex-col md:flex-row gap-6 max-w-7xl mx-auto w-full px-6 py-6 items-start">
+            <main className="sr-main">
 
                 {cargando && (
-                    <div className="flex justify-center py-16 w-full">
-                        <p className="text-gray-400 animate-pulse">{t('search.searching')(query)}</p>
+                    <div className="sr-loading">
+                        <p className="sr-loading-text">{t('search.searching')(query)}</p>
                     </div>
                 )}
 
                 {error && (
-                    <div className="p-6 text-red-500 w-full">Error: {error}</div>
+                    <div className="sr-error">Error: {error}</div>
                 )}
 
                 {!cargando && !error && (
@@ -555,78 +282,73 @@ export default function SearchResults() {
                             t={t}
                         />
 
-                        <div className={`resultados-wrap${cargandoNueva ? " cargando" : ""}`}>
+                        <div className={`sr-results${cargandoNueva ? " sr-results--loading" : ""}`}>
+
                             {/* Cabecera */}
-                            <div className="resultados-cab">
-                                <h1 className="resultados-titulo">
+                            <div className="sr-results-head">
+                                <h1 className="sr-results-title">
                                     {t('search.results')(query)}
                                 </h1>
-
-                                <div className="resultados-orden">
+                                <div className="sr-results-sort">
                                     <SortButton label={t('search.price')} sort={ordenPrecio} onClick={alternarOrdenPrecio} />
-                                    <SortButton label={t('search.name')} sort={ordenNombre} onClick={alternarOrdenNombre} />
+                                    <SortButton label={t('search.name')}  sort={ordenNombre} onClick={alternarOrdenNombre} />
                                 </div>
-
                                 {etiquetasFiltrosActivos.length > 0 && (
-                                    <div className="chips-activos">
+                                    <div className="sr-chips">
                                         {etiquetasFiltrosActivos.map((chip, i) => (
-                                            <span key={i} className="chip-filtro">
+                                            <span key={i} className="sr-chip">
                                                 {chip.label}
-                                                <button onClick={chip.quitar} className="btn-chip-quitar">×</button>
+                                                <button onClick={chip.quitar} className="sr-chip-remove">×</button>
                                             </span>
                                         ))}
                                     </div>
                                 )}
                             </div>
 
-                            <p className="resultados-conteo">{t('search.found')(filtrados.length)}</p>
+                            <p className="sr-results-count">{t('search.found')(filtrados.length)}</p>
 
                             {filtrados.length === 0 ? (
-                                <div className="text-center py-16 text-gray-400">
-                                    <p className="text-4xl mb-3">🔍</p>
-                                    <p className="text-lg">{t('search.noResults')(query)}</p>
+                                <div className="sr-no-results">
+                                    <p className="sr-no-results-icon">🔍</p>
+                                    <p className="sr-no-results-text">{t('search.noResults')(query)}</p>
                                 </div>
                             ) : (
                                 <>
-                                    <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+                                    <div className="sr-grid">
                                         {visibles.map(producto => {
-                                            const estat = ESTADO_LABELS[producto.estado] ?? { label: producto.estado, color: "bg-gray-100 text-gray-600" }
-
+                                            const estat = ESTADO_LABELS[producto.estado] ?? { label: producto.estado, cls: "sr-est-default" }
                                             return (
                                                 <Link
                                                     to={`/models/${producto.modelo_id}?movil=${producto.id}`}
                                                     key={producto.id}
-                                                    className="border rounded-xl p-3 hover:shadow-lg transition flex flex-col"
+                                                    className="sr-card"
                                                 >
-                                                    <div className="bg-gray-50 rounded-lg h-44 mb-3 thumb-img-wrap">
+                                                    <div className="sr-card-img">
                                                         <PhoneImage
                                                             src={producto.image_url}
                                                             alt={`${producto.marca} ${producto.modelo}`}
                                                         />
                                                     </div>
-                                                    <p className="text-xs text-gray-400 uppercase tracking-wide">{producto.marca}</p>
-                                                    <p className="font-semibold text-sm leading-tight">{producto.modelo}</p>
-                                                    <p className="text-xs text-gray-500 mt-1">
+                                                    <p className="sr-card-brand">{producto.marca}</p>
+                                                    <p className="sr-card-name">{producto.modelo}</p>
+                                                    <p className="sr-card-specs">
                                                         {producto.almacenamiento}GB · {producto.ram}GB RAM · {producto.color}
                                                     </p>
-                                                    <span className={`mt-2 text-xs px-2 py-0.5 rounded-full w-fit ${estat.color}`}>
-                                                        {estat.label}
-                                                    </span>
-                                                    <p className="text-xs text-gray-400 mt-1">{t('search.battery')(producto.salud_bateria)}</p>
-                                                    <p className="text-lg font-bold mt-auto pt-2">{producto.precio} €</p>
+                                                    <span className={`sr-card-badge ${estat.cls}`}>{estat.label}</span>
+                                                    <p className="sr-card-battery">{t('search.battery')(producto.salud_bateria)}</p>
+                                                    <p className="sr-card-price">{producto.precio} €</p>
                                                 </Link>
                                             )
                                         })}
                                     </div>
 
-                                    <div ref={centinelaRef} className="centinela" />
+                                    <div ref={centinelaRef} className="sr-sentinel" />
 
                                     {hayMas && (
-                                        <div className="cargando-mas">{t('search.loadingMore')}</div>
+                                        <div className="sr-loading-more">{t('search.loadingMore')}</div>
                                     )}
-
                                     {!hayMas && filtrados.length > LIMITE && (
-                                        <div className="todo-cargado">{t('search.allLoaded')(filtrados.length)}</div>
+                                        <div className="sr-all-loaded">{t('search.allLoaded')(filtrados.length)}</div>
                                     )}
                                 </>
                             )}
@@ -636,6 +358,381 @@ export default function SearchResults() {
             </main>
 
             <Footer />
+
+            <style>{`
+
+              @keyframes sr-pulse {
+                0%, 100% { opacity: 1; }
+                50%       { opacity: 0.45; }
+              }
+              @keyframes sr-fade-in {
+                from { opacity: 0; transform: translateY(6px); }
+                to   { opacity: 1; transform: translateY(0); }
+              }
+
+              /* ── Página ───────────────────────────────────────── */
+              .sr-page {
+                min-height: 100vh;
+                display: flex;
+                flex-direction: column;
+              }
+
+              /* ── Main ─────────────────────────────────────────── */
+              .sr-main {
+                flex: 1;
+                display: flex;
+                flex-direction: row;
+                gap: 1.5rem;
+                max-width: 80rem;
+                margin: 0 auto;
+                width: 100%;
+                padding: 1.5rem;
+                align-items: flex-start;
+                box-sizing: border-box;
+              }
+
+              /* ── Estados de carga ─────────────────────────────── */
+              .sr-loading {
+                display: flex;
+                justify-content: center;
+                padding: 4rem 0;
+                width: 100%;
+              }
+              .sr-loading-text {
+                color: #9ca3af;
+                animation: sr-pulse 1.5s ease-in-out infinite;
+              }
+              .sr-error {
+                padding: 1.5rem;
+                color: #ef4444;
+                width: 100%;
+              }
+
+              /* ── Imagen de producto ───────────────────────────── */
+              .sr-img-wrap {
+                position: relative;
+                width: 100%;
+                height: 100%;
+              }
+              .sr-img-placeholder {
+                position: absolute;
+                inset: 0;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+              }
+              .sr-img-error {
+                font-size: 36px;
+                opacity: 0.25;
+              }
+              .sr-img-skeleton {
+                width: 52px; height: 80px;
+                background: #e2e8f0;
+                border-radius: 8px;
+                animation: sr-pulse 1.5s ease-in-out infinite;
+              }
+              .sr-img {
+                height: 100%; width: 100%;
+                object-fit: contain;
+                opacity: 0;
+                transition: opacity 0.25s;
+                display: block;
+              }
+              .sr-img--loaded { opacity: 1; }
+
+              /* ── Botón ordenar ────────────────────────────────── */
+              .sr-btn-sort {
+                display: inline-flex;
+                align-items: center;
+                gap: 4px;
+                padding: 5px 10px;
+                border: 1px solid #e2e8f0;
+                border-radius: 8px;
+                background: #fff;
+                color: #475569;
+                font-size: 12px;
+                font-weight: 600;
+                cursor: pointer;
+                white-space: nowrap;
+              }
+              .sr-btn-sort--active {
+                border-color: #0f172a;
+                background: #0f172a;
+                color: #fff;
+              }
+              .sr-btn-sort-icon { font-size: 10px; opacity: 0.4; }
+              .sr-btn-sort-icon--visible { opacity: 1; }
+
+              /* ── Panel de filtros ─────────────────────────────── */
+              .sr-filter-panel {
+                width: 236px;
+                min-width: 236px;
+                flex-shrink: 0;
+                transition: width 0.2s, min-width 0.2s;
+                background: #fff;
+                border: 1px solid #f1f5f9;
+                border-radius: 12px;
+                align-self: flex-start;
+                position: sticky;
+                top: 88px;
+                overflow: hidden;
+                max-height: calc(100vh - 104px);
+                display: flex;
+                flex-direction: column;
+                box-shadow: 0 1px 4px rgba(0,0,0,0.04);
+              }
+              .sr-filter-panel--collapsed {
+                width: 44px;
+                min-width: 44px;
+              }
+              .sr-filter-head {
+                padding: 12px 14px;
+                border-bottom: 1px solid #f1f5f9;
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                flex-shrink: 0;
+              }
+              .sr-filter-head--centered {
+                padding: 12px 0;
+                border-bottom: none;
+                justify-content: center;
+              }
+              .sr-btn-filter {
+                background: transparent;
+                border: 1px solid #e2e8f0;
+                border-radius: 8px;
+                padding: 6px 10px;
+                cursor: pointer;
+                display: flex;
+                align-items: center;
+                gap: 6px;
+                color: #334155;
+                position: relative;
+                flex-shrink: 0;
+              }
+              .sr-btn-filter--compact { padding: 7px; }
+              .sr-btn-filter--active {
+                background: #0f172a;
+                border-color: #0f172a;
+                color: #fff;
+              }
+              .sr-btn-filter-label {
+                font-size: 12px;
+                font-weight: 700;
+                letter-spacing: 0.02em;
+              }
+              .sr-filter-badge {
+                background: #6366f1;
+                color: #fff;
+                font-size: 9px; font-weight: 700;
+                width: 15px; height: 15px;
+                border-radius: 50%;
+                display: flex; align-items: center; justify-content: center;
+                border: 2px solid #fff;
+                position: absolute;
+                top: -6px; right: -6px;
+              }
+              .sr-btn-clear-filters {
+                font-size: 11px;
+                color: #64748b;
+                background: none; border: none;
+                cursor: pointer;
+                text-decoration: underline;
+              }
+              .sr-filter-body { flex: 1; overflow-y: auto; }
+              .sr-filter-section { border-bottom: 1px solid #f1f5f9; }
+              .sr-filter-section-title {
+                margin: 0;
+                padding: 10px 14px 5px;
+                font-size: 10px; font-weight: 700;
+                color: #94a3b8;
+                text-transform: uppercase; letter-spacing: 0.07em;
+              }
+              .sr-filter-check-row {
+                display: flex;
+                align-items: center;
+                gap: 8px;
+                padding: 5px 14px;
+                cursor: pointer;
+              }
+              .sr-filter-check { accent-color: #0f172a; width: 13px; height: 13px; }
+              .sr-filter-check-label { font-size: 12px; color: #334155; }
+              .sr-filter-price-wrap { padding: 4px 14px 14px; }
+              .sr-filter-price-row { display: flex; justify-content: space-between; margin-bottom: 8px; }
+              .sr-filter-price-min { font-size: 11px; color: #64748b; }
+              .sr-filter-price-max { font-size: 12px; font-weight: 700; color: #0f172a; }
+              .sr-filter-range { width: 100%; accent-color: #0f172a; }
+
+              /* ── Resultados ───────────────────────────────────── */
+              .sr-results { flex: 1; min-width: 0; transition: opacity 0.2s; }
+              .sr-results--loading { opacity: 0.5; }
+              .sr-results-head {
+                display: flex;
+                flex-wrap: wrap;
+                align-items: center;
+                gap: 8px;
+                margin-bottom: 4px;
+              }
+              .sr-results-title {
+                font-size: 17px; font-weight: 700;
+                margin: 0;
+                white-space: nowrap;
+              }
+              .sr-results-sort { display: flex; gap: 6px; align-items: center; }
+              .sr-chips { display: flex; flex-wrap: wrap; gap: 4px; align-items: center; }
+              .sr-chip {
+                display: inline-flex;
+                align-items: center;
+                gap: 3px;
+                background: #f8fafc;
+                color: #475569;
+                font-size: 11px; font-weight: 500;
+                padding: 3px 6px 3px 9px;
+                border-radius: 999px;
+                border: 1px solid #e2e8f0;
+              }
+              .sr-chip-remove {
+                background: none; border: none;
+                cursor: pointer;
+                color: #94a3b8;
+                font-size: 14px; line-height: 1;
+                padding: 0 2px;
+                display: flex; align-items: center;
+              }
+              .sr-results-count {
+                font-size: 12px; color: #94a3b8;
+                margin-bottom: 20px; margin-top: 2px;
+              }
+
+              /* ── Sin resultados ───────────────────────────────── */
+              .sr-no-results {
+                text-align: center;
+                padding: 4rem 1rem;
+                color: #9ca3af;
+              }
+              .sr-no-results-icon { font-size: 2.5rem; margin-bottom: 0.75rem; }
+              .sr-no-results-text { font-size: 1.125rem; margin: 0; }
+
+              /* ── Grid de productos ────────────────────────────── */
+              .sr-grid {
+                display: grid;
+                grid-template-columns: repeat(4, 1fr);
+                gap: 1rem;
+              }
+
+              /* ── Tarjeta de producto ──────────────────────────── */
+              .sr-card {
+                border: 1px solid #e5e7eb;
+                border-radius: 12px;
+                padding: 0.75rem;
+                display: flex;
+                flex-direction: column;
+                text-decoration: none;
+                color: inherit;
+                transition: box-shadow 0.2s;
+                background: #fff;
+                animation: sr-fade-in 0.2s ease both;
+              }
+              .sr-card:hover { box-shadow: 0 8px 24px rgba(0,0,0,0.1); }
+              .sr-card-img {
+                background: #f9fafb;
+                border-radius: 8px;
+                height: 11rem;
+                margin-bottom: 0.75rem;
+                overflow: hidden;
+              }
+              .sr-card-brand {
+                font-size: 11px; color: #9ca3af;
+                text-transform: uppercase;
+                letter-spacing: 0.05em;
+                margin: 0;
+              }
+              .sr-card-name {
+                font-weight: 600; font-size: 0.875rem;
+                line-height: 1.3;
+                margin: 2px 0 0;
+                white-space: nowrap;
+                overflow: hidden;
+                text-overflow: ellipsis;
+              }
+              .sr-card-specs {
+                font-size: 11px; color: #6b7280;
+                margin: 4px 0 0;
+              }
+              .sr-card-badge {
+                display: inline-block;
+                margin-top: 8px;
+                font-size: 11px;
+                padding: 2px 8px;
+                border-radius: 999px;
+              }
+              .sr-est-nuevo     { background: #dcfce7; color: #15803d; }
+              .sr-est-mbueno    { background: #dbeafe; color: #1d4ed8; }
+              .sr-est-bueno     { background: #fef9c3; color: #a16207; }
+              .sr-est-aceptable { background: #ffedd5; color: #c2410c; }
+              .sr-est-default   { background: #f3f4f6; color: #4b5563; }
+              .sr-card-battery {
+                font-size: 11px; color: #9ca3af;
+                margin: 4px 0 0;
+              }
+              .sr-card-price {
+                font-size: 1.125rem; font-weight: 700;
+                margin: auto 0 0;
+                padding-top: 8px;
+              }
+
+              /* ── Centinela e infinite scroll ──────────────────── */
+              .sr-sentinel    { height: 1px; }
+              .sr-loading-more {
+                text-align: center;
+                padding: 24px 0 8px;
+                color: #94a3b8; font-size: 13px;
+              }
+              .sr-all-loaded {
+                text-align: center;
+                padding: 24px 0 8px;
+                color: #cbd5e1; font-size: 12px;
+              }
+
+              /* ── Responsive ───────────────────────────────────── */
+              @media (max-width: 1024px) {
+                .sr-grid { grid-template-columns: repeat(3, 1fr); }
+              }
+
+              @media (max-width: 768px) {
+                .sr-main {
+                  flex-direction: column;
+                  padding: 1rem;
+                  gap: 1rem;
+                }
+                .sr-filter-panel {
+                  position: static;
+                  width: 100%;
+                  min-width: 0;
+                  max-height: none;
+                }
+                .sr-filter-panel--collapsed {
+                  width: 44px;
+                  min-width: 44px;
+                }
+                .sr-grid { grid-template-columns: repeat(2, 1fr); }
+              }
+
+              @media (max-width: 480px) {
+                .sr-main    { padding: 0.75rem; }
+                .sr-grid    { gap: 0.625rem; }
+                .sr-card    { padding: 0.625rem; }
+                .sr-card-img { height: 9rem; }
+                .sr-results-title { font-size: 15px; }
+              }
+
+              @media (max-width: 360px) {
+                .sr-grid { grid-template-columns: 1fr; }
+              }
+
+            `}</style>
+
         </div>
     )
 }

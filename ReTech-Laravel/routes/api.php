@@ -95,6 +95,7 @@ Route::middleware('auth:sanctum')->put('/user/cliente', function (Request $reque
         'nombre'        => 'nullable|string|max:100',
         'apellidos'     => 'nullable|string|max:100',
         'nif'           => ['nullable', 'string', 'max:9', Rule::unique('clientes', 'nif')->ignore($user->id, 'user_id')],
+        'calle'         => 'nullable|string|max:100',
         'pais'          => 'nullable|string|max:60',
         'provincia'     => 'nullable|string|max:80',
         'municipio'     => 'nullable|string|max:80',

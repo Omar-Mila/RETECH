@@ -8,8 +8,8 @@ import { useIdioma } from "../../context/LanguageContext";
 
 const CampoLectura = ({ label, value }) => (
   <section>
-    <label className="campo-etiq">{label}</label>
-    <div className={`campo-lectura${value ? "" : " vacio"}`}>
+    <label className="up-field-label">{label}</label>
+    <div className={`up-field-read${value ? "" : " up-field-read--empty"}`}>
       {value || "—"}
     </div>
   </section>
@@ -17,44 +17,44 @@ const CampoLectura = ({ label, value }) => (
 
 const CampoEdicion = ({ label, name, value, onChange }) => (
   <section>
-    <label className="campo-etiq">{label}</label>
+    <label className="up-field-label">{label}</label>
     <input
       type="text"
       name={name}
       value={value}
       onChange={onChange}
-      className="campo-input"
+      className="up-field-input"
     />
   </section>
 );
 
 const PAISES = [
-  { code: 'ES', label: 'España' },
-  { code: 'PT', label: 'Portugal' },
-  { code: 'FR', label: 'Francia' },
-  { code: 'DE', label: 'Alemania' },
-  { code: 'IT', label: 'Italia' },
-  { code: 'GB', label: 'Reino Unido' },
-  { code: 'NL', label: 'Países Bajos' },
-  { code: 'BE', label: 'Bélgica' },
-  { code: 'CH', label: 'Suiza' },
-  { code: 'AT', label: 'Austria' },
-  { code: 'MX', label: 'México' },
-  { code: 'AR', label: 'Argentina' },
-  { code: 'CO', label: 'Colombia' },
-  { code: 'US', label: 'Estados Unidos' },
+  { code: 'ES', label: 'España'        },
+  { code: 'PT', label: 'Portugal'      },
+  { code: 'FR', label: 'Francia'       },
+  { code: 'DE', label: 'Alemania'      },
+  { code: 'IT', label: 'Italia'        },
+  { code: 'GB', label: 'Reino Unido'   },
+  { code: 'NL', label: 'Países Bajos'  },
+  { code: 'BE', label: 'Bélgica'       },
+  { code: 'CH', label: 'Suiza'         },
+  { code: 'AT', label: 'Austria'       },
+  { code: 'MX', label: 'México'        },
+  { code: 'AR', label: 'Argentina'     },
+  { code: 'CO', label: 'Colombia'      },
+  { code: 'US', label: 'Estados Unidos'},
 ];
 
 const etiqPais = (code) => PAISES.find(p => p.code === code)?.label ?? code ?? "—";
 
 const SelectEdicion = ({ label, name, value, onChange }) => (
   <section>
-    <label className="campo-etiq">{label}</label>
+    <label className="up-field-label">{label}</label>
     <select
       name={name}
       value={value}
       onChange={onChange}
-      className={`campo-select${value ? " tiene-valor" : ""}`}
+      className={`up-field-select${value ? " up-field-select--filled" : ""}`}
     >
       <option value="">— Selecciona país —</option>
       {PAISES.map(p => (
@@ -65,14 +65,14 @@ const SelectEdicion = ({ label, name, value, onChange }) => (
 );
 
 const TituloSeccion = ({ color = "#6366f1", children }) => (
-  <h2 className="seccion-titulo" style={{ color }}>
+  <h2 className="up-section-title" style={{ color }}>
     {children}
   </h2>
 );
 
 function BadgeVerificado({ verified, label }) {
   return (
-    <span className={`badge-verif${verified ? " verificado" : " pendiente"}`}>
+    <span className={`up-badge${verified ? " up-badge--verified" : " up-badge--pending"}`}>
       {verified ? "✓" : "!"} {label}
     </span>
   );
@@ -80,63 +80,18 @@ function BadgeVerificado({ verified, label }) {
 
 export default function UserProfile() {
   const { user, setUser } = useAutenticacion();
-  const { t } = useIdioma();
-  const ubicacion = useLocation();
-  const navegar = useNavigate();
-  const cliente = user?.cliente;
+  const { t }             = useIdioma();
+  const ubicacion         = useLocation();
+  const navegar           = useNavigate();
+  const cliente           = user?.cliente;
 
-  const [editando, fijarEditando] = useState(false);
-  const [guardando, fijarGuardando] = useState(false);
-  const [error, fijarError] = useState("");
-  const [toastVerif, fijarToastVerif] = useState(null);
-  const [reenviando, fijarReenviando] = useState(false);
-  const [msgReenvio, fijarMsgReenvio] = useState(null);
-
-  const reenviarVerificacion = async () => {
-    fijarReenviando(true);
-    fijarMsgReenvio(null);
-    try {
-      const tokenXsrf = document.cookie
-        .split("; ")
-        .find(fila => fila.startsWith("XSRF-TOKEN="))
-        ?.split("=")[1];
-
-      const res = await fetch("/api/resend-verification", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "X-XSRF-TOKEN": decodeURIComponent(tokenXsrf || ""),
-        },
-        credentials: "include",
-        body: JSON.stringify({ lang: localStorage.getItem("retech-lang") || "es" }),
-      });
-      const respData = await res.json();
-      if (res.ok && respData.message !== "error") {
-        fijarMsgReenvio("success");
-      } else {
-        fijarMsgReenvio("error");
-      }
-    } catch {
-      fijarMsgReenvio("error");
-    } finally {
-      fijarReenviando(false);
-    }
-  };
-
-  useEffect(() => {
-    const params = new URLSearchParams(ubicacion.search);
-    const verificado = params.get("verified");
-    if (verificado === "1") {
-      fijarToastVerif("success");
-      navegar("/perfil", { replace: true });
-      obtenerUsuarioActual().then(fresco => { if (fresco) setUser(fresco); });
-    } else if (verificado === "invalid") {
-      fijarToastVerif("invalid");
-      navegar("/perfil", { replace: true });
-    }
-  }, []);
-
-  const [estadoCp, fijarEstadoCp] = useState(null);
+  const [editando,    fijarEditando]    = useState(false);
+  const [guardando,   fijarGuardando]   = useState(false);
+  const [error,       fijarError]       = useState("");
+  const [toastVerif,  fijarToastVerif]  = useState(null);
+  const [reenviando,  fijarReenviando]  = useState(false);
+  const [msgReenvio,  fijarMsgReenvio]  = useState(null);
+  const [estadoCp,    fijarEstadoCp]    = useState(null);
 
   const [datos, fijarDatos] = useState({
     nombre:        user?.cliente?.nombre        || "",
@@ -149,6 +104,39 @@ export default function UserProfile() {
     calle:         user?.cliente?.calle         || "",
     telefono:      user?.cliente?.telefono      || "",
   });
+
+  const reenviarVerificacion = async () => {
+    fijarReenviando(true);
+    fijarMsgReenvio(null);
+    try {
+      const tokenXsrf = document.cookie
+        .split("; ")
+        .find(f => f.startsWith("XSRF-TOKEN="))
+        ?.split("=")[1];
+      const res = await fetch("/api/resend-verification", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", "X-XSRF-TOKEN": decodeURIComponent(tokenXsrf || "") },
+        credentials: "include",
+        body: JSON.stringify({ lang: localStorage.getItem("retech-lang") || "es" }),
+      });
+      const data = await res.json();
+      fijarMsgReenvio(res.ok && data.message !== "error" ? "success" : "error");
+    } catch { fijarMsgReenvio("error"); }
+    finally  { fijarReenviando(false); }
+  };
+
+  useEffect(() => {
+    const params    = new URLSearchParams(ubicacion.search);
+    const verificado = params.get("verified");
+    if (verificado === "1") {
+      fijarToastVerif("success");
+      navegar("/perfil", { replace: true });
+      obtenerUsuarioActual().then(f => { if (f) setUser(f); });
+    } else if (verificado === "invalid") {
+      fijarToastVerif("invalid");
+      navegar("/perfil", { replace: true });
+    }
+  }, []);
 
   useEffect(() => {
     if (user?.cliente) {
@@ -168,12 +156,11 @@ export default function UserProfile() {
 
   useEffect(() => {
     if (!editando) return;
-    const cp = datos.codigo_postal?.trim();
+    const cp   = datos.codigo_postal?.trim();
     const pais = datos.pais?.trim();
     if (!cp || cp.length < 4 || !pais) { fijarEstadoCp(null); return; }
-
     fijarEstadoCp('loading');
-    const temporizador = setTimeout(async () => {
+    const timer = setTimeout(async () => {
       try {
         const res = await fetch(`https://api.zippopotam.us/${pais}/${cp}`);
         if (!res.ok) { fijarEstadoCp('invalid'); return; }
@@ -181,62 +168,31 @@ export default function UserProfile() {
         const sitio = lugar.places?.[0];
         if (sitio) {
           fijarEstadoCp('valid');
-          fijarDatos(prev => ({
-            ...prev,
-            municipio: sitio['place name'] || prev.municipio,
-            provincia: sitio.state || prev.provincia,
-          }));
-        } else {
-          fijarEstadoCp('invalid');
-        }
-      } catch {
-        fijarEstadoCp(null);
-      }
+          fijarDatos(prev => ({ ...prev, municipio: sitio['place name'] || prev.municipio, provincia: sitio.state || prev.provincia }));
+        } else { fijarEstadoCp('invalid'); }
+      } catch { fijarEstadoCp(null); }
     }, 600);
-    return () => clearTimeout(temporizador);
+    return () => clearTimeout(timer);
   }, [datos.codigo_postal, datos.pais, editando]);
 
-  const alCambiar = (e) => {
-    fijarDatos(prev => ({ ...prev, [e.target.name]: e.target.value }));
-  };
+  const alCambiar = (e) => fijarDatos(prev => ({ ...prev, [e.target.name]: e.target.value }));
 
   const guardar = async () => {
-    fijarGuardando(true);
-    fijarError("");
+    fijarGuardando(true); fijarError("");
     try {
-      const tokenXsrf = document.cookie
-        .split("; ")
-        .find(fila => fila.startsWith("XSRF-TOKEN="))
-        ?.split("=")[1];
-
+      const tokenXsrf = document.cookie.split("; ").find(f => f.startsWith("XSRF-TOKEN="))?.split("=")[1];
       const res = await fetch("/api/user/cliente", {
         method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
-          "X-XSRF-TOKEN": decodeURIComponent(tokenXsrf || ""),
-        },
+        headers: { "Content-Type": "application/json", "X-XSRF-TOKEN": decodeURIComponent(tokenXsrf || "") },
         credentials: "include",
         body: JSON.stringify(datos),
       });
-
-      const respData = await res.json();
-
-      if (!res.ok) {
-        if (respData.errors?.nif) {
-          fijarError(t('profile.nifDuplicate'));
-        } else {
-          fijarError(t('profile.saveError'));
-        }
-        return;
-      }
-
-      setUser(respData);
+      const data = await res.json();
+      if (!res.ok) { fijarError(data.errors?.nif ? t('profile.nifDuplicate') : t('profile.saveError')); return; }
+      setUser(data);
       fijarEditando(false);
-    } catch {
-      fijarError(t('profile.saveError'));
-    } finally {
-      fijarGuardando(false);
-    }
+    } catch { fijarError(t('profile.saveError')); }
+    finally  { fijarGuardando(false); }
   };
 
   const cancelar = () => {
@@ -251,176 +207,67 @@ export default function UserProfile() {
       calle:         cliente?.calle         || "",
       telefono:      cliente?.telefono      || "",
     });
-    fijarEstadoCp(null);
-    fijarEditando(false);
-    fijarError("");
+    fijarEstadoCp(null); fijarEditando(false); fijarError("");
   };
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <style>{`
-        .campo-etiq {
-          font-size: 11px;
-          color: #94a3b8;
-          text-transform: uppercase;
-          font-weight: 800;
-          letter-spacing: 0.05em;
-        }
-        .campo-lectura {
-          margin-top: 6px;
-          padding: 12px 16px;
-          background: #f8fafc;
-          border-radius: 12px;
-          border: 1px solid #f1f5f9;
-          font-size: 15px;
-          font-weight: 600;
-          color: #1e293b;
-        }
-        .campo-lectura.vacio { color: #cbd5e1; }
-        .campo-input {
-          display: block;
-          margin-top: 6px;
-          padding: 12px 16px;
-          width: 100%;
-          box-sizing: border-box;
-          background: #fff;
-          border-radius: 12px;
-          border: 1px solid #6366f1;
-          font-size: 15px;
-          font-weight: 600;
-          color: #1e293b;
-          outline: none;
-        }
-        .campo-select {
-          display: block;
-          margin-top: 6px;
-          padding: 12px 16px;
-          width: 100%;
-          box-sizing: border-box;
-          background: #fff;
-          border-radius: 12px;
-          border: 1px solid #6366f1;
-          font-size: 15px;
-          font-weight: 600;
-          color: #94a3b8;
-          outline: none;
-          cursor: pointer;
-        }
-        .campo-select.tiene-valor { color: #1e293b; }
-        .seccion-titulo {
-          font-size: 12px;
-          font-weight: 800;
-          text-transform: uppercase;
-          letter-spacing: 0.08em;
-          margin-bottom: 16px;
-          margin-top: 0;
-        }
-        .badge-verif {
-          display: inline-flex;
-          align-items: center;
-          gap: 4px;
-          font-size: 11px;
-          font-weight: 700;
-          padding: 3px 8px;
-          border-radius: 20px;
-        }
-        .badge-verif.verificado { background: #dbeafe; color: #1d4ed8; }
-        .badge-verif.pendiente  { background: #fef3c7; color: #92400e; }
-        .toast-verif {
-          margin-bottom: 20px;
-          padding: 14px 20px;
-          border-radius: 12px;
-          font-weight: 600;
-          font-size: 14px;
-          display: flex;
-          align-items: center;
-          justify-content: space-between;
-        }
-        .toast-verif.exito { background: #dcfce7; color: #15803d; border: 1px solid #bbf7d0; }
-        .toast-verif.invalido { background: #fef3c7; color: #92400e; border: 1px solid #fde68a; }
-        .btn-cerrar-toast { background: none; border: none; cursor: pointer; font-size: 16px; color: inherit; padding: 0 4px; }
-        #perfil-wrap { max-width: 900px; margin: 60px auto; padding: 0 20px; }
-        #perfil-cab { text-align: center; margin-bottom: 32px; }
-        #perfil-avatar { width: 80px; height: 80px; background: #f1f5f9; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 16px; }
-        #perfil-avatar-icono { font-size: 32px; }
-        #perfil-titulo { margin: 0; font-size: 24px; font-weight: 800; color: #0f172a; display: flex; align-items: center; justify-content: center; gap: 8px; }
-        #perfil-verif-icono { display: inline-flex; align-items: center; justify-content: center; width: 26px; height: 26px; border-radius: 50%; background: #3b82f6; color: #fff; font-size: 14px; font-weight: 900; flex-shrink: 0; }
-        #perfil-verif-texto { margin: 6px 0 0; font-size: 13px; color: #3b82f6; font-weight: 600; }
-        #perfil-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; align-items: start; }
-        .perfil-tarjeta { background: #fff; padding: 32px; border-radius: 24px; border: 1px solid #e2e8f0; box-shadow: 0 4px 20px rgba(0, 0, 0, 0.03); }
-        .perfil-campos { display: flex; flex-direction: column; gap: 16px; }
-        .email-fila { display: flex; align-items: center; justify-content: space-between; margin-bottom: 6px; }
-        .btn-reenviar { font-size: 12px; font-weight: 700; padding: 7px 14px; border-radius: 8px; border: 1px solid #e2e8f0; cursor: pointer; transition: all 0.2s; }
-        .btn-reenviar.exito { background: #f0fdf4; color: #15803d; cursor: default; }
-        .btn-reenviar.normal { background: #fff; color: #6366f1; }
-        .btn-reenviar.enviando { opacity: 0.7; }
-        .resend-wrap { margin-top: 10px; }
-        .btn-reenviar-error { margin: 6px 0 0; font-size: 12px; color: #ef4444; }
-        .perfil-der-cab { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; }
-        .btn-editar { font-size: 12px; font-weight: 700; color: #6366f1; background: #eef2ff; border: none; border-radius: 8px; padding: 6px 14px; cursor: pointer; margin-bottom: 16px; }
-        .perfil-error { color: #ef4444; font-size: 13px; margin-bottom: 12px; }
-        .cp-estado { margin: 3px 0 0; font-size: 11px; }
-        .cp-validando { color: #6366f1; }
-        .cp-valido    { color: #22c55e; }
-        .cp-invalido  { color: #ef4444; }
-        .perfil-botones { display: flex; gap: 10px; margin-top: 4px; }
-        .btn-guardar { flex: 1; background: #10b981; color: #fff; border: none; border-radius: 10px; padding: 11px 0; font-weight: 700; font-size: 14px; }
-        .btn-guardar.guardando { cursor: not-allowed; opacity: 0.7; }
-        .btn-guardar:not(.guardando) { cursor: pointer; }
-        .btn-cancelar { flex: 1; background: #f1f5f9; color: #64748b; border: none; border-radius: 10px; padding: 11px 0; font-weight: 700; font-size: 14px; cursor: pointer; }
-      `}</style>
-
+    <div className="up-page">
       <Navbar />
-      <div id="perfil-wrap">
 
+      <div className="up-wrap">
+
+        {/* Toast verificación */}
         {toastVerif && (
-          <div className={`toast-verif${toastVerif === "success" ? " exito" : " invalido"}`}>
+          <div className={`up-toast${toastVerif === "success" ? " up-toast--ok" : " up-toast--warn"}`}>
             <span>
               {toastVerif === "success" ? "✓ " : "! "}
               {toastVerif === "success" ? t('profile.verifiedSuccess') : t('profile.verifiedInvalid')}
             </span>
-            <button className="btn-cerrar-toast" onClick={() => fijarToastVerif(null)}>×</button>
+            <button className="up-toast-close" onClick={() => fijarToastVerif(null)}>×</button>
           </div>
         )}
 
-        <div id="perfil-cab">
-          <div id="perfil-avatar">
-            <span id="perfil-avatar-icono">👤</span>
+        {/* Cabecera avatar */}
+        <div className="up-header">
+          <div className="up-avatar">
+            <span className="up-avatar-icon">👤</span>
           </div>
-          <h1 id="perfil-titulo">
+          <h1 className="up-title">
             {t('profile.title')}
             {user?.email_verified_at && (
-              <span id="perfil-verif-icono" title={t('profile.verifiedAccount')}>✓</span>
+              <span className="up-verified-icon" title={t('profile.verifiedAccount')}>✓</span>
             )}
           </h1>
           {user?.email_verified_at && (
-            <p id="perfil-verif-texto">{t('profile.verifiedAccount')}</p>
+            <p className="up-verified-text">{t('profile.verifiedAccount')}</p>
           )}
         </div>
 
-        <div id="perfil-grid">
+        {/* Grid tarjetas */}
+        <div className="up-grid">
 
-          <div className="perfil-tarjeta">
+          {/* Tarjeta cuenta */}
+          <div className="up-card">
             <TituloSeccion>{t('profile.account')}</TituloSeccion>
-            <div className="perfil-campos">
+            <div className="up-fields">
               <CampoLectura label={t('profile.username')} value={user?.name} />
               <section>
-                <div className="email-fila">
-                  <label className="campo-etiq">{t('profile.email')}</label>
+                <div className="up-email-row">
+                  <label className="up-field-label">{t('profile.email')}</label>
                   <BadgeVerificado
                     verified={!!user?.email_verified_at}
                     label={user?.email_verified_at ? t('profile.verified') : t('profile.notVerified')}
                   />
                 </div>
-                <div className={`campo-lectura${user?.email ? "" : " vacio"}`}>
+                <div className={`up-field-read${user?.email ? "" : " up-field-read--empty"}`}>
                   {user?.email || "—"}
                 </div>
                 {!user?.email_verified_at && (
-                  <div className="resend-wrap">
+                  <div className="up-resend-wrap">
                     <button
                       onClick={reenviarVerificacion}
                       disabled={reenviando || msgReenvio === "success"}
-                      className={`btn-reenviar${msgReenvio === "success" ? " exito" : " normal"}${reenviando ? " enviando" : ""}`}
+                      className={`up-btn-resend${msgReenvio === "success" ? " up-btn-resend--ok" : " up-btn-resend--normal"}${reenviando ? " up-btn-resend--sending" : ""}`}
                     >
                       {reenviando
                         ? t('profile.resendingSending')
@@ -429,7 +276,7 @@ export default function UserProfile() {
                           : t('profile.resendVerification')}
                     </button>
                     {msgReenvio === "error" && (
-                      <p className="btn-reenviar-error">{t('profile.resendError')}</p>
+                      <p className="up-resend-error">{t('profile.resendError')}</p>
                     )}
                   </div>
                 )}
@@ -437,19 +284,20 @@ export default function UserProfile() {
             </div>
           </div>
 
-          <div className="perfil-tarjeta">
-            <div className="perfil-der-cab">
+          {/* Tarjeta datos personales */}
+          <div className="up-card">
+            <div className="up-card-head">
               <TituloSeccion color="#10b981">{t('profile.personalData')}</TituloSeccion>
               {!editando && (
-                <button className="btn-editar" onClick={() => fijarEditando(true)}>
+                <button className="up-btn-edit" onClick={() => fijarEditando(true)}>
                   {t('profile.edit')}
                 </button>
               )}
             </div>
 
-            {error && <p className="perfil-error">{error}</p>}
+            {error && <p className="up-error">{error}</p>}
 
-            <div className="perfil-campos">
+            <div className="up-fields">
               {editando ? (
                 <>
                   <CampoEdicion label={t('profile.name')}         name="nombre"        value={datos.nombre}        onChange={alCambiar} />
@@ -458,24 +306,20 @@ export default function UserProfile() {
                   <SelectEdicion label={t('profile.pais')}        name="pais"          value={datos.pais}          onChange={alCambiar} />
                   <div>
                     <CampoEdicion label={t('profile.codigoPostal')} name="codigo_postal" value={datos.codigo_postal} onChange={alCambiar} />
-                    {estadoCp === 'loading' && <p className="cp-estado cp-validando">Validando…</p>}
-                    {estadoCp === 'valid'   && <p className="cp-estado cp-valido">✓ Código postal válido</p>}
-                    {estadoCp === 'invalid' && <p className="cp-estado cp-invalido">{t('cart.profileCpNotFound')}</p>}
+                    {estadoCp === 'loading' && <p className="up-cp-msg up-cp-msg--loading">Validando…</p>}
+                    {estadoCp === 'valid'   && <p className="up-cp-msg up-cp-msg--ok">✓ Código postal válido</p>}
+                    {estadoCp === 'invalid' && <p className="up-cp-msg up-cp-msg--error">{t('cart.profileCpNotFound')}</p>}
                   </div>
                   <CampoEdicion label={t('profile.provincia')}    name="provincia"     value={datos.provincia}     onChange={alCambiar} />
                   <CampoEdicion label={t('profile.municipio')}    name="municipio"     value={datos.municipio}     onChange={alCambiar} />
                   <CampoEdicion label={t('profile.calle')}        name="calle"         value={datos.calle}         onChange={alCambiar} />
                   <CampoEdicion label={t('profile.phone')}        name="telefono"      value={datos.telefono}      onChange={alCambiar} />
 
-                  <div className="perfil-botones">
-                    <button
-                      onClick={guardar}
-                      disabled={guardando}
-                      className={`btn-guardar${guardando ? " guardando" : ""}`}
-                    >
+                  <div className="up-btn-row">
+                    <button onClick={guardar} disabled={guardando} className={`up-btn-save${guardando ? " up-btn-save--loading" : ""}`}>
                       {guardando ? t('profile.saving') : t('profile.save')}
                     </button>
-                    <button onClick={cancelar} disabled={guardando} className="btn-cancelar">
+                    <button onClick={cancelar} disabled={guardando} className="up-btn-cancel">
                       {t('profile.cancel')}
                     </button>
                   </div>
@@ -495,9 +339,235 @@ export default function UserProfile() {
               )}
             </div>
           </div>
+
         </div>
       </div>
+
       <Footer />
+
+      <style>{`
+
+        /* ── Página ─────────────────────────────────────────── */
+        .up-page { min-height: 100vh; background: #f8fafc; }
+        .up-wrap {
+          max-width: 56rem;
+          margin: 0 auto;
+          padding: 3.75rem 1.25rem 4rem;
+        }
+
+        /* ── Toast ──────────────────────────────────────────── */
+        .up-toast {
+          margin-bottom: 1.25rem;
+          padding: .875rem 1.25rem;
+          border-radius: .75rem;
+          font-weight: 600;
+          font-size: .875rem;
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+        }
+        .up-toast--ok   { background: #dcfce7; color: #15803d; border: 1px solid #bbf7d0; }
+        .up-toast--warn { background: #fef3c7; color: #92400e; border: 1px solid #fde68a; }
+        .up-toast-close { background: none; border: none; cursor: pointer; font-size: 1rem; color: inherit; padding: 0 .25rem; }
+
+        /* ── Cabecera ───────────────────────────────────────── */
+        .up-header { text-align: center; margin-bottom: 2rem; }
+        .up-avatar {
+          width: 5rem; height: 5rem;
+          background: #f1f5f9;
+          border-radius: 50%;
+          display: flex; align-items: center; justify-content: center;
+          margin: 0 auto 1rem;
+        }
+        .up-avatar-icon   { font-size: 2rem; }
+        .up-title {
+          margin: 0;
+          font-size: 1.5rem;
+          font-weight: 800;
+          color: #0f172a;
+          display: flex; align-items: center; justify-content: center; gap: .5rem;
+        }
+        .up-verified-icon {
+          display: inline-flex; align-items: center; justify-content: center;
+          width: 1.625rem; height: 1.625rem;
+          border-radius: 50%;
+          background: #3b82f6; color: #fff;
+          font-size: .875rem; font-weight: 900; flex-shrink: 0;
+        }
+        .up-verified-text { margin: .375rem 0 0; font-size: .8125rem; color: #3b82f6; font-weight: 600; }
+
+        /* ── Grid ───────────────────────────────────────────── */
+        .up-grid {
+          display: grid;
+          grid-template-columns: 1fr 1fr;
+          gap: 1.5rem;
+          align-items: start;
+        }
+
+        /* ── Tarjeta ────────────────────────────────────────── */
+        .up-card {
+          background: #fff;
+          padding: 2rem;
+          border-radius: 1.5rem;
+          border: 1px solid #e2e8f0;
+          box-shadow: 0 4px 20px rgba(0,0,0,.03);
+        }
+        .up-card-head {
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          margin-bottom: 1rem;
+        }
+
+        /* ── Campos ─────────────────────────────────────────── */
+        .up-fields         { display: flex; flex-direction: column; gap: 1rem; }
+        .up-field-label {
+          font-size: .6875rem;
+          color: #94a3b8;
+          text-transform: uppercase;
+          font-weight: 800;
+          letter-spacing: .05em;
+          display: block;
+        }
+        .up-field-read {
+          margin-top: .375rem;
+          padding: .75rem 1rem;
+          background: #f8fafc;
+          border-radius: .75rem;
+          border: 1px solid #f1f5f9;
+          font-size: .9375rem;
+          font-weight: 600;
+          color: #1e293b;
+        }
+        .up-field-read--empty { color: #cbd5e1; }
+        .up-field-input {
+          display: block;
+          margin-top: .375rem;
+          padding: .75rem 1rem;
+          width: 100%;
+          box-sizing: border-box;
+          background: #fff;
+          border-radius: .75rem;
+          border: 1px solid #6366f1;
+          font-size: .9375rem;
+          font-weight: 600;
+          color: #1e293b;
+          outline: none;
+          transition: box-shadow .15s;
+        }
+        .up-field-input:focus { box-shadow: 0 0 0 3px rgba(99,102,241,.15); }
+        .up-field-select {
+          display: block;
+          margin-top: .375rem;
+          padding: .75rem 1rem;
+          width: 100%;
+          box-sizing: border-box;
+          background: #fff;
+          border-radius: .75rem;
+          border: 1px solid #6366f1;
+          font-size: .9375rem;
+          font-weight: 600;
+          color: #94a3b8;
+          outline: none;
+          cursor: pointer;
+        }
+        .up-field-select--filled { color: #1e293b; }
+
+        /* ── Sección título ─────────────────────────────────── */
+        .up-section-title {
+          font-size: .75rem;
+          font-weight: 800;
+          text-transform: uppercase;
+          letter-spacing: .08em;
+          margin: 0 0 1rem;
+        }
+
+        /* ── Badge verificado ───────────────────────────────── */
+        .up-badge {
+          display: inline-flex; align-items: center; gap: .25rem;
+          font-size: .6875rem; font-weight: 700;
+          padding: .1875rem .5rem; border-radius: 20px;
+        }
+        .up-badge--verified { background: #dbeafe; color: #1d4ed8; }
+        .up-badge--pending  { background: #fef3c7; color: #92400e; }
+
+        /* ── Email fila ─────────────────────────────────────── */
+        .up-email-row {
+          display: flex; align-items: center;
+          justify-content: space-between;
+          margin-bottom: .375rem;
+        }
+
+        /* ── Reenviar ───────────────────────────────────────── */
+        .up-resend-wrap  { margin-top: .625rem; }
+        .up-btn-resend {
+          font-size: .75rem; font-weight: 700;
+          padding: .4375rem .875rem;
+          border-radius: .5rem; border: 1px solid #e2e8f0;
+          cursor: pointer; transition: all .2s;
+        }
+        .up-btn-resend--ok      { background: #f0fdf4; color: #15803d; cursor: default; }
+        .up-btn-resend--normal  { background: #fff; color: #6366f1; }
+        .up-btn-resend--sending { opacity: .7; }
+        .up-resend-error        { margin: .375rem 0 0; font-size: .75rem; color: #ef4444; }
+
+        /* ── Código postal ──────────────────────────────────── */
+        .up-cp-msg          { margin: .1875rem 0 0; font-size: .6875rem; }
+        .up-cp-msg--loading { color: #6366f1; }
+        .up-cp-msg--ok      { color: #22c55e; }
+        .up-cp-msg--error   { color: #ef4444; }
+
+        /* ── Botón editar ───────────────────────────────────── */
+        .up-btn-edit {
+          font-size: .75rem; font-weight: 700;
+          color: #6366f1; background: #eef2ff;
+          border: none; border-radius: .5rem;
+          padding: .375rem .875rem; cursor: pointer;
+          transition: background .15s;
+        }
+        .up-btn-edit:hover { background: #e0e7ff; }
+
+        /* ── Error ──────────────────────────────────────────── */
+        .up-error { color: #ef4444; font-size: .8125rem; margin-bottom: .75rem; }
+
+        /* ── Botones guardar/cancelar ───────────────────────── */
+        .up-btn-row { display: flex; gap: .625rem; margin-top: .25rem; }
+        .up-btn-save {
+          flex: 1; background: #10b981; color: #fff;
+          border: none; border-radius: .625rem;
+          padding: .6875rem 0; font-weight: 700;
+          font-size: .875rem; cursor: pointer;
+          transition: background .15s;
+        }
+        .up-btn-save:hover:not(.up-btn-save--loading) { background: #059669; }
+        .up-btn-save--loading { cursor: not-allowed; opacity: .7; }
+        .up-btn-cancel {
+          flex: 1; background: #f1f5f9; color: #64748b;
+          border: none; border-radius: .625rem;
+          padding: .6875rem 0; font-weight: 700;
+          font-size: .875rem; cursor: pointer;
+          transition: background .15s;
+        }
+        .up-btn-cancel:hover { background: #e2e8f0; }
+
+        /* ── Responsive ─────────────────────────────────────── */
+        @media (max-width: 768px) {
+          .up-grid { grid-template-columns: 1fr; }
+          .up-wrap { padding: 2rem 1rem 3rem; }
+        }
+
+        @media (max-width: 480px) {
+          .up-card      { padding: 1.25rem; border-radius: 1rem; }
+          .up-title     { font-size: 1.25rem; }
+          .up-field-read,
+          .up-field-input,
+          .up-field-select { font-size: .875rem; padding: .625rem .875rem; }
+          .up-btn-row   { flex-direction: column; }
+          .up-btn-save,
+          .up-btn-cancel { padding: .625rem 0; }
+        }
+
+      `}</style>
     </div>
   );
 }
