@@ -6,8 +6,8 @@ import Navbar from "../../components/Navbar";
 import Footer from "../../components/Footer";
 import { useIdioma } from "../../context/LanguageContext";
 
-const CampoLectura = ({ label, value }) => (
-  <section>
+const CampoLectura = ({ label, value, className }) => (
+  <section className={className}>
     <label className="up-field-label">{label}</label>
     <div className={`up-field-read${value ? "" : " up-field-read--empty"}`}>
       {value || "—"}
@@ -15,8 +15,8 @@ const CampoLectura = ({ label, value }) => (
   </section>
 );
 
-const CampoEdicion = ({ label, name, value, onChange }) => (
-  <section>
+const CampoEdicion = ({ label, name, value, onChange, className }) => (
+  <section className={className}>
     <label className="up-field-label">{label}</label>
     <input
       type="text"
@@ -36,13 +36,13 @@ const formatTelefono = (raw = "") => {
   return `${d.slice(0, 3)} ${d.slice(3, 5)} ${d.slice(5, 7)} ${d.slice(7)}`;
 };
 
-const CampoTelefonoEdicion = ({ label, name, value, onChange }) => {
+const CampoTelefonoEdicion = ({ label, name, value, onChange, className }) => {
   const handleChange = (e) => {
     const soloDigitos = e.target.value.replace(/\D/g, "").slice(0, 9);
     onChange({ target: { name, value: soloDigitos } });
   };
   return (
-    <section>
+    <section className={className}>
       <label className="up-field-label">{label}</label>
       <div className="up-phone-wrap">
         <span className="up-phone-prefix">🇪🇸 +34</span>
@@ -59,8 +59,8 @@ const CampoTelefonoEdicion = ({ label, name, value, onChange }) => {
   );
 };
 
-const CampoTelefonoLectura = ({ label, value }) => (
-  <section>
+const CampoTelefonoLectura = ({ label, value, className }) => (
+  <section className={className}>
     <label className="up-field-label">{label}</label>
     <div className={`up-field-read${value ? "" : " up-field-read--empty"}`}>
       {value
@@ -89,8 +89,8 @@ const PAISES = [
 
 const etiqPais = (code) => PAISES.find(p => p.code === code)?.label ?? code ?? "—";
 
-const SelectEdicion = ({ label, name, value, onChange }) => (
-  <section>
+const SelectEdicion = ({ label, name, value, onChange, className }) => (
+  <section className={className}>
     <label className="up-field-label">{label}</label>
     <select
       name={name}
@@ -339,25 +339,31 @@ export default function UserProfile() {
 
             {error && <p className="up-error">{error}</p>}
 
-            <div className="up-fields">
+            <div className="up-form-grid">
               {editando ? (
                 <>
-                  <CampoEdicion label={t('profile.name')}         name="nombre"        value={datos.nombre}        onChange={alCambiar} />
-                  <CampoEdicion label={t('profile.surnames')}     name="apellidos"     value={datos.apellidos}     onChange={alCambiar} />
-                  <CampoEdicion label={t('profile.nif')}          name="nif"           value={datos.nif}           onChange={alCambiar} />
-                  <SelectEdicion label={t('profile.pais')}        name="pais"          value={datos.pais}          onChange={alCambiar} />
+                  {/* fila 1: nombre | apellidos */}
+                  <CampoEdicion label={t('profile.name')}     name="nombre"    value={datos.nombre}    onChange={alCambiar} />
+                  <CampoEdicion label={t('profile.surnames')} name="apellidos" value={datos.apellidos} onChange={alCambiar} />
+                  {/* fila 2: NIF (ancho completo) */}
+                  <CampoEdicion label={t('profile.nif')} name="nif" value={datos.nif} onChange={alCambiar} className="up-form-full" />
+                  {/* fila 3: país | CP */}
+                  <SelectEdicion label={t('profile.pais')} name="pais" value={datos.pais} onChange={alCambiar} />
                   <div>
                     <CampoEdicion label={t('profile.codigoPostal')} name="codigo_postal" value={datos.codigo_postal} onChange={alCambiar} />
                     {estadoCp === 'loading' && <p className="up-cp-msg up-cp-msg--loading">Validando…</p>}
                     {estadoCp === 'valid'   && <p className="up-cp-msg up-cp-msg--ok">✓ Código postal válido</p>}
                     {estadoCp === 'invalid' && <p className="up-cp-msg up-cp-msg--error">{t('cart.profileCpNotFound')}</p>}
                   </div>
-                  <CampoEdicion label={t('profile.provincia')}    name="provincia"     value={datos.provincia}     onChange={alCambiar} />
-                  <CampoEdicion label={t('profile.municipio')}    name="municipio"     value={datos.municipio}     onChange={alCambiar} />
-                  <CampoEdicion label={t('profile.calle')}        name="calle"         value={datos.calle}         onChange={alCambiar} />
-                  <CampoTelefonoEdicion label={t('profile.phone')} name="telefono"      value={datos.telefono}      onChange={alCambiar} />
-
-                  <div className="up-btn-row">
+                  {/* fila 4: provincia | municipio */}
+                  <CampoEdicion label={t('profile.provincia')} name="provincia" value={datos.provincia} onChange={alCambiar} />
+                  <CampoEdicion label={t('profile.municipio')} name="municipio" value={datos.municipio} onChange={alCambiar} />
+                  {/* fila 5: calle (ancho completo) */}
+                  <CampoEdicion label={t('profile.calle')} name="calle" value={datos.calle} onChange={alCambiar} className="up-form-full" />
+                  {/* fila 6: teléfono (ancho completo) */}
+                  <CampoTelefonoEdicion label={t('profile.phone')} name="telefono" value={datos.telefono} onChange={alCambiar} className="up-form-full" />
+                  {/* fila 7: botones (ancho completo) */}
+                  <div className="up-btn-row up-form-full">
                     <button onClick={guardar} disabled={guardando} className={`up-btn-save${guardando ? " up-btn-save--loading" : ""}`}>
                       {guardando ? t('profile.saving') : t('profile.save')}
                     </button>
@@ -370,13 +376,13 @@ export default function UserProfile() {
                 <>
                   <CampoLectura label={t('profile.name')}         value={cliente?.nombre} />
                   <CampoLectura label={t('profile.surnames')}     value={cliente?.apellidos} />
-                  <CampoLectura label={t('profile.nif')}          value={cliente?.nif} />
+                  <CampoLectura label={t('profile.nif')}          value={cliente?.nif}             className="up-form-full" />
                   <CampoLectura label={t('profile.pais')}         value={etiqPais(cliente?.pais)} />
                   <CampoLectura label={t('profile.codigoPostal')} value={cliente?.codigo_postal} />
                   <CampoLectura label={t('profile.provincia')}    value={cliente?.provincia} />
                   <CampoLectura label={t('profile.municipio')}    value={cliente?.municipio} />
-                  <CampoLectura label={t('profile.calle')}        value={cliente?.calle} />
-                  <CampoTelefonoLectura label={t('profile.phone')} value={cliente?.telefono} />
+                  <CampoLectura label={t('profile.calle')}        value={cliente?.calle}           className="up-form-full" />
+                  <CampoTelefonoLectura label={t('profile.phone')} value={cliente?.telefono}       className="up-form-full" />
                 </>
               )}
             </div>
@@ -449,7 +455,7 @@ export default function UserProfile() {
         /* ── Tarjeta ────────────────────────────────────────── */
         .up-card {
           background: #fff;
-          padding: 2rem;
+          padding: 1.5rem;
           border-radius: 1.5rem;
           border: 1px solid #e2e8f0;
           box-shadow: 0 4px 20px rgba(0,0,0,.03);
@@ -463,55 +469,58 @@ export default function UserProfile() {
 
         /* ── Campos ─────────────────────────────────────────── */
         .up-fields         { display: flex; flex-direction: column; gap: 1rem; }
+        .up-form-grid      { display: grid; grid-template-columns: 1fr 1fr; gap: .625rem; }
+        .up-form-full      { grid-column: 1 / -1; }
         .up-field-label {
-          font-size: .6875rem;
+          font-size: .625rem;
           color: #94a3b8;
           text-transform: uppercase;
           font-weight: 800;
-          letter-spacing: .05em;
+          letter-spacing: .06em;
           display: block;
+          margin-bottom: .25rem;
         }
         .up-field-read {
-          margin-top: .375rem;
-          padding: .75rem 1rem;
+          padding: .5rem .75rem;
           background: #f8fafc;
-          border-radius: .75rem;
+          border-radius: .625rem;
           border: 1px solid #f1f5f9;
-          font-size: .9375rem;
+          font-size: .875rem;
           font-weight: 600;
           color: #1e293b;
+          line-height: 1.4;
         }
         .up-field-read--empty { color: #cbd5e1; }
         .up-field-input {
           display: block;
-          margin-top: .375rem;
-          padding: .75rem 1rem;
+          padding: .5rem .75rem;
           width: 100%;
           box-sizing: border-box;
           background: #fff;
-          border-radius: .75rem;
+          border-radius: .625rem;
           border: 1px solid #0f172a;
-          font-size: .9375rem;
+          font-size: .875rem;
           font-weight: 600;
           color: #1e293b;
           outline: none;
           transition: box-shadow .15s;
+          line-height: 1.4;
         }
         .up-field-input:focus { box-shadow: 0 0 0 3px rgba(15,23,42,.12); }
         .up-field-select {
           display: block;
-          margin-top: .375rem;
-          padding: .75rem 1rem;
+          padding: .5rem .75rem;
           width: 100%;
           box-sizing: border-box;
           background: #fff;
-          border-radius: .75rem;
+          border-radius: .625rem;
           border: 1px solid #0f172a;
-          font-size: .9375rem;
+          font-size: .875rem;
           font-weight: 600;
           color: #94a3b8;
           outline: none;
           cursor: pointer;
+          line-height: 1.4;
         }
         .up-field-select--filled { color: #1e293b; }
 
@@ -557,26 +566,24 @@ export default function UserProfile() {
         .up-phone-wrap {
           display: flex;
           align-items: stretch;
-          margin-top: .375rem;
         }
         .up-phone-prefix {
           display: flex;
           align-items: center;
-          padding: 0 .75rem;
+          padding: 0 .625rem;
           background: #f1f5f9;
           border: 1px solid #0f172a;
           border-right: none;
-          border-radius: .75rem 0 0 .75rem;
-          font-size: .9375rem;
+          border-radius: .625rem 0 0 .625rem;
+          font-size: .8125rem;
           font-weight: 700;
           color: #475569;
           white-space: nowrap;
           user-select: none;
-          gap: .35rem;
+          gap: .3rem;
         }
         .up-phone-input {
-          margin-top: 0 !important;
-          border-radius: 0 .75rem .75rem 0 !important;
+          border-radius: 0 .625rem .625rem 0 !important;
           flex: 1;
         }
         .up-phone-prefix-read {
@@ -634,14 +641,13 @@ export default function UserProfile() {
         }
 
         @media (max-width: 480px) {
-          .up-card      { padding: 1.25rem; border-radius: 1rem; }
-          .up-title     { font-size: 1.25rem; }
-          .up-field-read,
-          .up-field-input,
-          .up-field-select { font-size: .875rem; padding: .625rem .875rem; }
-          .up-btn-row   { flex-direction: column; }
+          .up-card        { padding: 1.125rem; border-radius: 1rem; }
+          .up-title       { font-size: 1.25rem; }
+          .up-form-grid   { grid-template-columns: 1fr; }
+          .up-form-full   { grid-column: auto; }
+          .up-btn-row     { flex-direction: column; }
           .up-btn-save,
-          .up-btn-cancel { padding: .625rem 0; }
+          .up-btn-cancel  { padding: .625rem 0; }
         }
 
       `}</style>

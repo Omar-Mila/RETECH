@@ -765,7 +765,7 @@ function FormPerfil({ usuario, alCambiarDatos, t }) {
     telefono:      t('cart.profilePhoneError'),
   };
 
-  const campoInput = (etiq, campo) => {
+  const campoInput = (etiq, campo, className) => {
     const esValido    = validez[campo];
     const tieneValor  = datos[campo] !== "";
     const fueTocado   = tocados[campo];
@@ -774,7 +774,7 @@ function FormPerfil({ usuario, alCambiarDatos, t }) {
     const estado       = mostrarError ? "error" : mostrarTick ? "valido" : "neutro";
 
     return (
-      <div>
+      <div className={className}>
         <label className="cr-field-label">{etiq}</label>
         <div className="cr-field-wrap">
           <input
@@ -802,11 +802,13 @@ function FormPerfil({ usuario, alCambiarDatos, t }) {
       <h3 className="cr-form-titulo">{t('cart.profileModalTitle')}</h3>
       <p className="cr-form-desc">{t('cart.profileModalDesc')}</p>
       <div className="cr-form-campos">
+        {/* fila 1: nombre | apellidos */}
         {campoInput(t('profile.name'),     "nombre")}
         {campoInput(t('profile.surnames'), "apellidos")}
-        {campoInput(t('profile.nif'),      "nif")}
+        {/* fila 2: NIF (ancho completo) */}
+        {campoInput(t('profile.nif'), "nif", "cr-form-full")}
 
-        {/* País — selector */}
+        {/* fila 3: País | Código postal */}
         <div>
           <label className="cr-field-label">{t('profile.pais')}</label>
           <select
@@ -820,8 +822,6 @@ function FormPerfil({ usuario, alCambiarDatos, t }) {
           </select>
           {tocados.pais && !datos.pais && <p className="cr-field-error">{t('cart.profileFieldRequired')}</p>}
         </div>
-
-        {/* Código postal con validación automática */}
         <div>
           <label className="cr-field-label">{t('profile.codigoPostal')}</label>
           <input
@@ -842,11 +842,13 @@ function FormPerfil({ usuario, alCambiarDatos, t }) {
           {tocados.codigo_postal && !datos.codigo_postal && <p className="cr-field-error">{t('cart.profileFieldRequired')}</p>}
         </div>
 
+        {/* fila 4: provincia | municipio */}
         {campoInput(t('profile.provincia'), "provincia")}
         {campoInput(t('profile.municipio'), "municipio")}
-        {campoInput(t('profile.calle'),     "calle")}
+        {/* fila 5: calle (ancho completo) */}
+        {campoInput(t('profile.calle'), "calle", "cr-form-full")}
 
-        {/* Teléfono con prefijo español */}
+        {/* fila 6: teléfono (ancho completo) */}
         {(() => {
           const campo        = "telefono";
           const esValido     = validez[campo];
@@ -856,7 +858,7 @@ function FormPerfil({ usuario, alCambiarDatos, t }) {
           const mostrarError = fueTocado && !esValido;
           const estado       = mostrarError ? "error" : mostrarTick ? "valido" : "neutro";
           return (
-            <div>
+            <div className="cr-form-full">
               <label className="cr-field-label">{t('profile.phone')}</label>
               <div className="cr-phone-wrap">
                 <span className="cr-phone-prefix">🇪🇸 +34</span>
@@ -1373,7 +1375,7 @@ export default function PaginaCarrito() {
           background: #fff;
           border: 1px solid #e2e8f0;
           border-radius: 20px;
-          padding: 22px;
+          padding: 18px;
           box-shadow: 0 4px 24px rgba(15, 23, 42, .07);
         }
         .cr-form-titulo {
@@ -1382,8 +1384,9 @@ export default function PaginaCarrito() {
           color: #0f172a;
           font-family: 'Sora', sans-serif;
         }
-        .cr-form-desc { margin: 0 0 16px; font-size: 12px; color: #64748b; }
-        .cr-form-campos { display: flex; flex-direction: column; gap: 11px; }
+        .cr-form-desc { margin: 0 0 12px; font-size: 12px; color: #64748b; }
+        .cr-form-campos { display: grid; grid-template-columns: 1fr 1fr; gap: .625rem; }
+        .cr-form-full   { grid-column: 1 / -1; }
 
         .cr-field-label {
           display: block;
@@ -1567,14 +1570,16 @@ export default function PaginaCarrito() {
         }
 
         @media (max-width: 480px) {
-          .cr-page   { padding: 14px 10px 40px; }
-          .cr-title  { font-size: 18px; }
+          .cr-page        { padding: 14px 10px 40px; }
+          .cr-title       { font-size: 18px; }
           .cr-header-icon { width: 32px; height: 32px; }
-          .cr-pay-btns { flex-direction: column; }
-          .cr-btn-pay  { flex: none; }
-          .cr-btn-back { flex: none; }
+          .cr-pay-btns    { flex-direction: column; }
+          .cr-btn-pay     { flex: none; }
+          .cr-btn-back    { flex: none; }
           .cr-item-modelo { font-size: 13px; }
           .cr-subtotal    { font-size: 14px; }
+          .cr-form-campos { grid-template-columns: 1fr; }
+          .cr-form-full   { grid-column: auto; }
         }
 
       `}</style>
