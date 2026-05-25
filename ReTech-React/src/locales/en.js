@@ -271,7 +271,7 @@ const en = {
     batteryLabel: "Battery health",
     selectColorFirst: "Select color first",
     selectBattery: "Select battery",
-    configPrice: "Configuration price",
+    configPrice: "Price",
     recommendedPrice: "Recommended price",
     calculating: "Calculating...",
     unitsAvailable: (n) => `${n} unit${n !== 1 ? "s" : ""} available`,

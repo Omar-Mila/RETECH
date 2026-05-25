@@ -163,11 +163,29 @@ function DropdownUsuario({ user, logout, alCerrar, t }) {
         <p className="nb-drop-user-name">{user?.name}</p>
         <p className="nb-drop-user-email">{user?.email}</p>
       </div>
-      <Link to="/perfil"      onClick={alCerrar} className="nb-drop-link">👤 {t('nav.myProfile')}</Link>
-      <Link to="/mis-pedidos" onClick={alCerrar} className="nb-drop-link">📦 {t('nav.myOrders')}</Link>
+      <Link to="/perfil" onClick={alCerrar} className="nb-drop-link">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <circle cx="12" cy="8" r="4"/>
+          <path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/>
+        </svg>
+        {t('nav.myProfile')}
+      </Link>
+      <Link to="/mis-pedidos" onClick={alCerrar} className="nb-drop-link">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4z"/>
+          <line x1="3" y1="6" x2="21" y2="6"/>
+          <path d="M16 10a4 4 0 01-8 0"/>
+        </svg>
+        {t('nav.myOrders')}
+      </Link>
       <div className="nb-drop-user-sep">
         <button onClick={() => { logout(); alCerrar() }} className="nb-btn-logout">
-          🚪 {t('nav.logout')}
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4"/>
+            <polyline points="16 17 21 12 16 7"/>
+            <line x1="21" y1="12" x2="9" y2="12"/>
+          </svg>
+          {t('nav.logout')}
         </button>
       </div>
     </div>
@@ -621,7 +639,9 @@ export default function Navbar() {
         .nb-drop-user-name  { margin: 0; font-size: 0.8125rem; font-weight: 700; color: #0f172a; }
         .nb-drop-user-email { margin: 0; font-size: 0.6875rem; color: #64748b; }
         .nb-drop-link {
-          display: block;
+          display: flex;
+          align-items: center;
+          gap: 8px;
           padding: 0.625rem 1.125rem;
           text-decoration: none;
           color: #334155;
@@ -637,7 +657,9 @@ export default function Navbar() {
         }
         .nb-btn-logout {
           width: 100%;
-          text-align: left;
+          display: flex;
+          align-items: center;
+          gap: 8px;
           padding: 0.625rem 1.125rem;
           background: none;
           border: none;
@@ -749,12 +771,12 @@ export default function Navbar() {
         .nb-drop-cart-total-val   { font-size: 1rem; font-weight: 800; color: #4f46e5; }
         .nb-btn-go-cart {
           width: 100%; padding: 0.6875rem;
-          background: linear-gradient(135deg, #6366f1, #4f46e5);
+          background: #0f172a;
           color: #fff; border: none; border-radius: 0.625rem;
           font-size: 0.84375rem; font-weight: 700; cursor: pointer;
           transition: opacity 0.15s;
         }
-        .nb-btn-go-cart:hover { opacity: 0.9; }
+        .nb-btn-go-cart:hover { opacity: 0.8; }
 
         /* ── Banderas ───────────────────────────────────────── */
         .nb-bandera { border-radius: 2px; display: block; flex-shrink: 0; }

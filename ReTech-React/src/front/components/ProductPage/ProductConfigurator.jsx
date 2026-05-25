@@ -693,8 +693,9 @@ export default function ProductConfigurator({
         justify-content: space-between;
       }
       .pc-price-label {
-        font-size: 0.875rem;
-        color: #6b7280;
+        font-size: 1.125rem;
+        font-weight: 700;
+        color: #0f172a;
       }
       .pc-price-amount {
         font-size: 1.5rem;

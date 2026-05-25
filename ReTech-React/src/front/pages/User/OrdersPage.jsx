@@ -10,12 +10,30 @@ function generarFacturaHTML(compraId, arts, total, usuario, etiquetas, localeFec
   const fecha      = new Date().toLocaleDateString(localeFecha, { day: "numeric", month: "long", year: "numeric" });
   const numFactura = `FAC-${String(compraId).padStart(5, "0")}`;
 
+  const PAISES_ETIQ = {
+    ES: 'España', PT: 'Portugal', FR: 'Francia', DE: 'Alemania', IT: 'Italia',
+    GB: 'Reino Unido', NL: 'Países Bajos', BE: 'Bélgica', CH: 'Suiza',
+    AT: 'Austria', MX: 'México', AR: 'Argentina', CO: 'Colombia', US: 'Estados Unidos',
+  };
+  const fmtTel = (t) => {
+    if (!t) return null;
+    const d = t.replace(/\D/g, '').slice(0, 9);
+    if (d.length <= 3) return `+34 ${d}`;
+    if (d.length <= 5) return `+34 ${d.slice(0,3)} ${d.slice(3)}`;
+    if (d.length <= 7) return `+34 ${d.slice(0,3)} ${d.slice(3,5)} ${d.slice(5)}`;
+    return `+34 ${d.slice(0,3)} ${d.slice(3,5)} ${d.slice(5,7)} ${d.slice(7)}`;
+  };
+
   const c              = usuario?.cliente ?? {};
-  const clienteNombre  = c.nombre && c.apellidos ? `${c.nombre} ${c.apellidos}` : usuario?.name ?? "—";
-  const clienteEmail   = usuario?.email    ?? "—";
-  const clienteNif     = c.nif             ?? null;
-  const clienteTel     = c.telefono        ?? null;
-  const clienteDireccion = c.direccion     ?? null;
+  const clienteNombre    = c.nombre && c.apellidos ? `${c.nombre} ${c.apellidos}` : usuario?.name ?? "—";
+  const clienteEmail     = usuario?.email      ?? "—";
+  const clienteNif       = c.nif               ?? null;
+  const clienteTel       = fmtTel(c.telefono);
+  const clienteCalle     = c.calle             ?? null;
+  const clienteMunicipio = c.municipio         ?? null;
+  const clienteProvincia = c.provincia         ?? null;
+  const clienteCp        = c.codigo_postal     ?? null;
+  const clienteEtiqPais  = c.pais ? (PAISES_ETIQ[c.pais] ?? c.pais) : null;
 
   const filas = arts.map(art => `
     <tr>
@@ -87,9 +105,11 @@ function generarFacturaHTML(compraId, arts, total, usuario, etiquetas, localeFec
       <h3>${etiquetas.client}</h3>
       <p>
         <strong>${clienteNombre}</strong><br>
-        ${clienteNif        ? `NIF: ${clienteNif}<br>`   : ""}
-        ${clienteDireccion  ? `${clienteDireccion}<br>`  : ""}
-        ${clienteTel        ? `Tel: ${clienteTel}<br>`   : ""}
+        ${clienteNif        ? `NIF: ${clienteNif}<br>`                                                          : ""}
+        ${clienteCalle      ? `${clienteCalle}<br>`                                                             : ""}
+        ${clienteMunicipio  ? `${clienteMunicipio}${clienteProvincia ? `, ${clienteProvincia}` : ''}<br>`       : ""}
+        ${clienteCp         ? `CP ${clienteCp}${clienteEtiqPais ? ` — ${clienteEtiqPais}` : ''}<br>`           : ""}
+        ${clienteTel        ? `Tel: ${clienteTel}<br>`                                                          : ""}
         ${clienteEmail}
       </p>
     </div>

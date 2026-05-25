@@ -271,7 +271,7 @@ const ca = {
     batteryLabel: "Salut de la bateria",
     selectColorFirst: "Primer selecciona el color",
     selectBattery: "Selecciona la bateria",
-    configPrice: "Preu de la configuració",
+    configPrice: "Preu",
     recommendedPrice: "Preu recomanat",
     calculating: "Calculant...",
     unitsAvailable: (n) => `${n} unitat${n !== 1 ? "s" : ""} disponible${n !== 1 ? "s" : ""}`,

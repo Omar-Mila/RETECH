@@ -271,7 +271,7 @@ const es = {
     batteryLabel: "Salud de la batería",
     selectColorFirst: "Primero selecciona el color",
     selectBattery: "Selecciona la batería",
-    configPrice: "Precio de la configuración",
+    configPrice: "Precio",
     recommendedPrice: "Precio recomendado",
     calculating: "Calculando...",
     unitsAvailable: (n) => `${n} ${n === 1 ? "unidad disponible" : "unidades disponibles"}`,

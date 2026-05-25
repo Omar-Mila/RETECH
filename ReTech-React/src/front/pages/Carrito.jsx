@@ -342,11 +342,20 @@ function generarFacturaHTML(compraId, arts, total, usuario, etiquetas, localeFec
   const fecha      = new Date().toLocaleDateString(localeFecha, { day: "numeric", month: "long", year: "numeric" });
   const numFactura = `FAC-${String(compraId).padStart(5, "0")}`;
 
+  const fmtTel = (t) => {
+    if (!t) return null;
+    const d = t.replace(/\D/g, '').slice(0, 9);
+    if (d.length <= 3) return `+34 ${d}`;
+    if (d.length <= 5) return `+34 ${d.slice(0,3)} ${d.slice(3)}`;
+    if (d.length <= 7) return `+34 ${d.slice(0,3)} ${d.slice(3,5)} ${d.slice(5)}`;
+    return `+34 ${d.slice(0,3)} ${d.slice(3,5)} ${d.slice(5,7)} ${d.slice(7)}`;
+  };
+
   const c = usuario?.cliente ?? {};
   const clienteNombre    = c.nombre && c.apellidos ? `${c.nombre} ${c.apellidos}` : usuario?.name ?? "—";
   const clienteEmail     = usuario?.email    ?? "—";
   const clienteNif       = c.nif             ?? null;
-  const clienteTel       = c.telefono        ?? null;
+  const clienteTel       = fmtTel(c.telefono);
   const clienteMunicipio = c.municipio       ?? null;
   const clienteProvincia = c.provincia       ?? null;
   const clienteCp        = c.codigo_postal   ?? null;
@@ -1347,9 +1356,9 @@ export default function PaginaCarrito() {
           transition: transform .15s;
         }
         .cr-btn-comprar.activo {
-          background: linear-gradient(135deg, #6366f1, #4f46e5);
+          background: #0f172a;
           cursor: pointer;
-          box-shadow: 0 4px 14px rgba(99, 102, 241, .4);
+          box-shadow: 0 4px 14px rgba(15, 23, 42, .3);
         }
         .cr-btn-comprar.activo.hover { transform: translateY(-1px); }
         .cr-btn-comprar.inactivo { background: #94a3b8; cursor: not-allowed; }
