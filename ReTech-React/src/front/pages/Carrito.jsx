@@ -244,7 +244,7 @@ function FilaResumen({ etiq, valor, opaco, negrita, grande }) {
   );
 }
 
-function ResumenPedido({ arts, alPagar, cargandoIntento, t, esInvitado }) {
+function ResumenPedido({ arts, alPagar, cargandoIntento, t, esInvitado, enPago }) {
   const total       = arts.reduce((s, a) => s + a.subtotal, 0);
   const totalPiezas = arts.reduce((s, a) => s + a.cantidad, 0);
 
@@ -291,7 +291,7 @@ function ResumenPedido({ arts, alPagar, cargandoIntento, t, esInvitado }) {
         <span className="cr-resumen-envio-texto">{t('cart.freeShipping')}</span>
       </div>
 
-      {esInvitado ? (
+      {!enPago && (esInvitado ? (
         <div className="cr-resumen-guest">
           <div className="cr-resumen-guest-aviso">{t('cart.guestCheckout')}</div>
           <button onClick={alPagar} className="cr-btn-comprar activo">
@@ -316,7 +316,7 @@ function ResumenPedido({ arts, alPagar, cargandoIntento, t, esInvitado }) {
             <span className="cr-resumen-stripe-texto">{t('cart.stripeSecure')}</span>
           </div>
         </>
-      )}
+      ))}
     </div>
   );
 }
@@ -1091,7 +1091,7 @@ export default function PaginaCarrito() {
                   </>
                 )}
               </div>
-              <ResumenPedido arts={arts} alPagar={irAPagar} cargandoIntento={cargandoIntento} t={t} esInvitado={!estaAuth}/>
+              <ResumenPedido arts={arts} alPagar={irAPagar} cargandoIntento={cargandoIntento} t={t} esInvitado={!estaAuth} enPago={!!secretoCliente}/>
             </div>
           )}
         </div>
@@ -1266,9 +1266,9 @@ export default function PaginaCarrito() {
           gap: 8px;
         }
         .cr-btn-pay.activo {
-          background: linear-gradient(135deg, #6366f1, #4f46e5);
+          background: #0f172a;
           cursor: pointer;
-          box-shadow: 0 4px 14px rgba(99, 102, 241, .4);
+          box-shadow: 0 4px 14px rgba(15, 23, 42, .3);
         }
         .cr-btn-pay.inactivo { background: #94a3b8; cursor: not-allowed; }
 
