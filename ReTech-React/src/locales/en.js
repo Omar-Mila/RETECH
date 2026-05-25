@@ -37,7 +37,7 @@ const en = {
     username: "Username",
     email: "Email",
     personalData: "Personal Data",
-    edit: "✏️ Edit",
+    edit: "Edit",
     saving: "Saving...",
     save: "Save changes",
     cancel: "Cancel",

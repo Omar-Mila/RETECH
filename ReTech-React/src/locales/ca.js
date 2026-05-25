@@ -37,7 +37,7 @@ const ca = {
     username: "Nom d'usuari",
     email: "Correu Electrònic",
     personalData: "Dades Personals",
-    edit: "✏️ Editar",
+    edit: "Editar",
     saving: "Desant...",
     save: "Desar canvis",
     cancel: "Cancel·lar",

@@ -37,7 +37,7 @@ const es = {
     username: "Nombre de usuario",
     email: "Correo Electrónico",
     personalData: "Datos Personales",
-    edit: "✏️ Editar",
+    edit: "Editar",
     saving: "Guardando...",
     save: "Guardar cambios",
     cancel: "Cancelar",

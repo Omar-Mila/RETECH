@@ -28,6 +28,48 @@ const CampoEdicion = ({ label, name, value, onChange }) => (
   </section>
 );
 
+const formatTelefono = (raw = "") => {
+  const d = raw.replace(/\D/g, "").slice(0, 9);
+  if (d.length <= 3) return d;
+  if (d.length <= 5) return `${d.slice(0, 3)} ${d.slice(3)}`;
+  if (d.length <= 7) return `${d.slice(0, 3)} ${d.slice(3, 5)} ${d.slice(5)}`;
+  return `${d.slice(0, 3)} ${d.slice(3, 5)} ${d.slice(5, 7)} ${d.slice(7)}`;
+};
+
+const CampoTelefonoEdicion = ({ label, name, value, onChange }) => {
+  const handleChange = (e) => {
+    const soloDigitos = e.target.value.replace(/\D/g, "").slice(0, 9);
+    onChange({ target: { name, value: soloDigitos } });
+  };
+  return (
+    <section>
+      <label className="up-field-label">{label}</label>
+      <div className="up-phone-wrap">
+        <span className="up-phone-prefix">🇪🇸 +34</span>
+        <input
+          type="tel"
+          name={name}
+          value={formatTelefono(value)}
+          onChange={handleChange}
+          className="up-field-input up-phone-input"
+          placeholder="600 00 00 00"
+        />
+      </div>
+    </section>
+  );
+};
+
+const CampoTelefonoLectura = ({ label, value }) => (
+  <section>
+    <label className="up-field-label">{label}</label>
+    <div className={`up-field-read${value ? "" : " up-field-read--empty"}`}>
+      {value
+        ? <><span className="up-phone-prefix-read">🇪🇸 +34</span> {formatTelefono(value)}</>
+        : "—"}
+    </div>
+  </section>
+);
+
 const PAISES = [
   { code: 'ES', label: 'España'        },
   { code: 'PT', label: 'Portugal'      },
@@ -287,7 +329,7 @@ export default function UserProfile() {
           {/* Tarjeta datos personales */}
           <div className="up-card">
             <div className="up-card-head">
-              <TituloSeccion color="#10b981">{t('profile.personalData')}</TituloSeccion>
+              <TituloSeccion>{t('profile.personalData')}</TituloSeccion>
               {!editando && (
                 <button className="up-btn-edit" onClick={() => fijarEditando(true)}>
                   {t('profile.edit')}
@@ -313,7 +355,7 @@ export default function UserProfile() {
                   <CampoEdicion label={t('profile.provincia')}    name="provincia"     value={datos.provincia}     onChange={alCambiar} />
                   <CampoEdicion label={t('profile.municipio')}    name="municipio"     value={datos.municipio}     onChange={alCambiar} />
                   <CampoEdicion label={t('profile.calle')}        name="calle"         value={datos.calle}         onChange={alCambiar} />
-                  <CampoEdicion label={t('profile.phone')}        name="telefono"      value={datos.telefono}      onChange={alCambiar} />
+                  <CampoTelefonoEdicion label={t('profile.phone')} name="telefono"      value={datos.telefono}      onChange={alCambiar} />
 
                   <div className="up-btn-row">
                     <button onClick={guardar} disabled={guardando} className={`up-btn-save${guardando ? " up-btn-save--loading" : ""}`}>
@@ -334,7 +376,7 @@ export default function UserProfile() {
                   <CampoLectura label={t('profile.provincia')}    value={cliente?.provincia} />
                   <CampoLectura label={t('profile.municipio')}    value={cliente?.municipio} />
                   <CampoLectura label={t('profile.calle')}        value={cliente?.calle} />
-                  <CampoLectura label={t('profile.phone')}        value={cliente?.telefono} />
+                  <CampoTelefonoLectura label={t('profile.phone')} value={cliente?.telefono} />
                 </>
               )}
             </div>
@@ -448,14 +490,14 @@ export default function UserProfile() {
           box-sizing: border-box;
           background: #fff;
           border-radius: .75rem;
-          border: 1px solid #6366f1;
+          border: 1px solid #0f172a;
           font-size: .9375rem;
           font-weight: 600;
           color: #1e293b;
           outline: none;
           transition: box-shadow .15s;
         }
-        .up-field-input:focus { box-shadow: 0 0 0 3px rgba(99,102,241,.15); }
+        .up-field-input:focus { box-shadow: 0 0 0 3px rgba(15,23,42,.12); }
         .up-field-select {
           display: block;
           margin-top: .375rem;
@@ -464,7 +506,7 @@ export default function UserProfile() {
           box-sizing: border-box;
           background: #fff;
           border-radius: .75rem;
-          border: 1px solid #6366f1;
+          border: 1px solid #0f172a;
           font-size: .9375rem;
           font-weight: 600;
           color: #94a3b8;
@@ -511,6 +553,41 @@ export default function UserProfile() {
         .up-btn-resend--sending { opacity: .7; }
         .up-resend-error        { margin: .375rem 0 0; font-size: .75rem; color: #ef4444; }
 
+        /* ── Teléfono con prefijo ──────────────────────────────── */
+        .up-phone-wrap {
+          display: flex;
+          align-items: stretch;
+          margin-top: .375rem;
+        }
+        .up-phone-prefix {
+          display: flex;
+          align-items: center;
+          padding: 0 .75rem;
+          background: #f1f5f9;
+          border: 1px solid #0f172a;
+          border-right: none;
+          border-radius: .75rem 0 0 .75rem;
+          font-size: .9375rem;
+          font-weight: 700;
+          color: #475569;
+          white-space: nowrap;
+          user-select: none;
+          gap: .35rem;
+        }
+        .up-phone-input {
+          margin-top: 0 !important;
+          border-radius: 0 .75rem .75rem 0 !important;
+          flex: 1;
+        }
+        .up-phone-prefix-read {
+          display: inline-flex;
+          align-items: center;
+          gap: .3rem;
+          font-weight: 700;
+          color: #475569;
+          margin-right: .25rem;
+        }
+
         /* ── Código postal ──────────────────────────────────── */
         .up-cp-msg          { margin: .1875rem 0 0; font-size: .6875rem; }
         .up-cp-msg--loading { color: #6366f1; }
@@ -520,12 +597,12 @@ export default function UserProfile() {
         /* ── Botón editar ───────────────────────────────────── */
         .up-btn-edit {
           font-size: .75rem; font-weight: 700;
-          color: #6366f1; background: #eef2ff;
-          border: none; border-radius: .5rem;
-          padding: .375rem .875rem; cursor: pointer;
-          transition: background .15s;
+          color: #fff; background: #0f172a;
+          border: 1px solid #0f172a; border-radius: 8px;
+          padding: 6px 10px; cursor: pointer;
+          transition: opacity .15s;
         }
-        .up-btn-edit:hover { background: #e0e7ff; }
+        .up-btn-edit:hover { opacity: .8; }
 
         /* ── Error ──────────────────────────────────────────── */
         .up-error { color: #ef4444; font-size: .8125rem; margin-bottom: .75rem; }

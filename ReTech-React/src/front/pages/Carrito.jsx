@@ -726,6 +726,14 @@ function FormPerfil({ usuario, alCambiarDatos, t }) {
     return () => clearTimeout(temporizador);
   }, [datos.codigo_postal, datos.pais]);
 
+  const formatTelefono = (raw = "") => {
+    const d = raw.replace(/\D/g, "").slice(0, 9);
+    if (d.length <= 3) return d;
+    if (d.length <= 5) return `${d.slice(0, 3)} ${d.slice(3)}`;
+    if (d.length <= 7) return `${d.slice(0, 3)} ${d.slice(3, 5)} ${d.slice(5)}`;
+    return `${d.slice(0, 3)} ${d.slice(3, 5)} ${d.slice(5, 7)} ${d.slice(7)}`;
+  };
+
   const alCambiar = (campo, valor) => {
     const nuevosDatos = { ...datos, [campo]: valor };
     fijarDatos(nuevosDatos);
@@ -828,7 +836,43 @@ function FormPerfil({ usuario, alCambiarDatos, t }) {
         {campoInput(t('profile.provincia'), "provincia")}
         {campoInput(t('profile.municipio'), "municipio")}
         {campoInput(t('profile.calle'),     "calle")}
-        {campoInput(t('profile.phone'),     "telefono")}
+
+        {/* Teléfono con prefijo español */}
+        {(() => {
+          const campo        = "telefono";
+          const esValido     = validez[campo];
+          const tieneValor   = datos[campo] !== "";
+          const fueTocado    = tocados[campo];
+          const mostrarTick  = tieneValor && esValido;
+          const mostrarError = fueTocado && !esValido;
+          const estado       = mostrarError ? "error" : mostrarTick ? "valido" : "neutro";
+          return (
+            <div>
+              <label className="cr-field-label">{t('profile.phone')}</label>
+              <div className="cr-phone-wrap">
+                <span className="cr-phone-prefix">🇪🇸 +34</span>
+                <div className="cr-field-wrap cr-phone-input-wrap">
+                  <input
+                    type="tel"
+                    value={formatTelefono(datos[campo])}
+                    onChange={e => alCambiar(campo, e.target.value.replace(/\D/g, "").slice(0, 9))}
+                    onBlur={() => fijarTocados(p => ({ ...p, [campo]: true }))}
+                    placeholder="600 00 00 00"
+                    className={`cr-field-input cr-phone-input ${estado}`}
+                  />
+                  {mostrarTick && (
+                    <svg className="cr-field-tick" width="15" height="15" viewBox="0 0 20 20" fill="currentColor">
+                      <path fillRule="evenodd" d="M16.704 4.153a.75.75 0 01.143 1.052l-8 10.5a.75.75 0 01-1.127.075l-4.5-4.5a.75.75 0 011.06-1.06l3.894 3.893 7.48-9.817a.75.75 0 011.05-.143z" clipRule="evenodd"/>
+                    </svg>
+                  )}
+                </div>
+              </div>
+              {mostrarError && (
+                <p className="cr-field-error">{MENSAJES_ERROR[campo]}</p>
+              )}
+            </div>
+          );
+        })()}
       </div>
     </div>
   );
@@ -1374,6 +1418,36 @@ export default function PaginaCarrito() {
         .cr-field-select.valido { border: 1px solid #86efac; background: #f0fdf4; color: #0f172a; }
         .cr-field-select.error  { border: 1px solid #fca5a5; background: #fef2f2; color: #0f172a; }
         .cr-field-select.tiene-valor { color: #0f172a; }
+
+        /* ── Teléfono prefijo (checkout) ──────────────────── */
+        .cr-phone-wrap {
+          display: flex;
+          align-items: stretch;
+        }
+        .cr-phone-prefix {
+          display: flex;
+          align-items: center;
+          padding: 0 10px;
+          background: #0f172a;
+          border: 1px solid #0f172a;
+          border-right: none;
+          border-radius: 10px 0 0 10px;
+          font-size: 13px;
+          font-weight: 700;
+          color: #fff;
+          white-space: nowrap;
+          user-select: none;
+          gap: .3rem;
+          flex-shrink: 0;
+        }
+        .cr-phone-input-wrap {
+          flex: 1;
+          position: relative;
+        }
+        .cr-phone-input {
+          border-radius: 0 10px 10px 0 !important;
+          padding-left: 12px !important;
+        }
 
         /* ── Página del carrito ────────────────────────────── */
         .cr-page {

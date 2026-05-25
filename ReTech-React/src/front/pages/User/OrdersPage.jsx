@@ -445,10 +445,10 @@ export default function OrdersPage() {
         .bat-wrap  { display: flex; align-items: center; gap: 5px; }
         .bat-fondo { width: 34px; height: 7px; background: #e5e7eb; border-radius: 4px; overflow: hidden; }
         .bat-relleno { height: 100%; border-radius: 4px; }
-        .bat-alta  { background: #22c55e; color: #22c55e; }
-        .bat-media { background: #f59e0b; color: #f59e0b; }
-        .bat-baja  { background: #ef4444; color: #ef4444; }
-        .bat-valor { font-size: 10px; font-weight: 700; }
+        .bat-alta  { background: #22c55e; color: #0f172a; }
+        .bat-media { background: #f59e0b; color: #0f172a; }
+        .bat-baja  { background: #ef4444; color: #0f172a; }
+        .bat-valor { font-size: 10px; font-weight: 700; background: transparent; }
 
         /* ── Miniatura teléfono ─────────────────────────────── */
         .phone-thumb {
