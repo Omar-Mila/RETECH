@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+﻿import { useState, useEffect } from "react";
 import Navbar from "../../components/Navbar";
 import Footer from "../../components/Footer";
 import { useIdioma } from "../../context/LanguageContext";
@@ -398,7 +398,7 @@ export default function OrdersPage() {
         * { box-sizing: border-box; }
         @keyframes op-spin { to { transform: rotate(360deg); } }
 
-        /* ── Página ─────────────────────────────────────────── */
+        /* Página */
         .op-page {
           min-height: 100vh;
           background: #f8fafc;
@@ -409,7 +409,7 @@ export default function OrdersPage() {
           margin: 0 auto;
         }
 
-        /* ── Cabecera ───────────────────────────────────────── */
+        /* Cabecera */
         .op-header   { margin-bottom: 1.75rem; }
         .op-title {
           margin: 0;
@@ -425,11 +425,11 @@ export default function OrdersPage() {
           color: #64748b;
         }
 
-        /* ── Spinner ────────────────────────────────────────── */
+        /* Spinner */
         .op-spinner { text-align: center; padding: 5rem; }
         .op-spinner-icon { animation: op-spin .8s linear infinite; }
 
-        /* ── Vacío ──────────────────────────────────────────── */
+        /* Vacío */
         .op-empty {
           text-align: center;
           padding: 3.75rem 1.25rem;
@@ -458,10 +458,10 @@ export default function OrdersPage() {
           font-family: 'Sora', sans-serif;
         }
 
-        /* ── Lista ──────────────────────────────────────────── */
+        /* Lista */
         .op-list { display: flex; flex-direction: column; gap: 1rem; }
 
-        /* ── Batería ────────────────────────────────────────── */
+        /* Batería */
         .bat-wrap  { display: flex; align-items: center; gap: 5px; }
         .bat-fondo { width: 34px; height: 7px; background: #e5e7eb; border-radius: 4px; overflow: hidden; }
         .bat-relleno { height: 100%; border-radius: 4px; }
@@ -470,7 +470,7 @@ export default function OrdersPage() {
         .bat-baja  { background: #ef4444; color: #0f172a; }
         .bat-valor { font-size: 10px; font-weight: 700; background: transparent; }
 
-        /* ── Miniatura teléfono ─────────────────────────────── */
+        /* Miniatura teléfono */
         .phone-thumb {
           width: 44px; height: 44px;
           border-radius: 12px;
@@ -489,12 +489,12 @@ export default function OrdersPage() {
           border-radius: 12px; background: #f1f5f9; flex-shrink: 0;
         }
 
-        /* ── Esqueleto ──────────────────────────────────────── */
+        /* Esqueleto */
         .skel-linea { height: 12px; background: #e2e8f0; border-radius: 4px; margin-bottom: 6px; }
         .skel-linea.ancha { width: 140px; }
         .skel-linea.corta { height: 10px; width: 90px; background: #f1f5f9; }
 
-        /* ── Item pedido ────────────────────────────────────── */
+        /* Item pedido */
         .pedido-item {
           display: flex; gap: 14px; padding: 16px 0;
           border-bottom: 1px solid #f8fafc; align-items: flex-start;
@@ -520,13 +520,13 @@ export default function OrdersPage() {
         }
         .pedido-unidades { font-size: 11px; color: #94a3b8; margin-left: auto; }
 
-        /* ── Estados producto ───────────────────────────────── */
+        /* Estados producto */
         .est-excelente { background: #d1fae5; color: #065f46; }
         .est-mbueno    { background: #dbeafe; color: #1e40af; }
         .est-bueno     { background: #fef9c3; color: #854d0e; }
         .est-aceptable { background: #fee2e2; color: #991b1b; }
 
-        /* ── Tarjeta pedido ─────────────────────────────────── */
+        /* Tarjeta pedido */
         .tarjeta-pedido {
           background: #fff;
           border-radius: 1.25rem;
@@ -577,7 +577,7 @@ export default function OrdersPage() {
         .pedido-flecha { transition: transform .2s; flex-shrink: 0; }
         .pedido-flecha.girada { transform: rotate(180deg); }
 
-        /* ── Cuerpo desplegable ─────────────────────────────── */
+        /* Cuerpo desplegable */
         .tarjeta-pedido-body { padding: 0 1.5rem 1.25rem; border-top: 1px solid #f1f5f9; }
         .pedido-productos-titulo {
           margin: 1rem 0 .25rem; font-size: 11px; font-weight: 700;
@@ -606,7 +606,7 @@ export default function OrdersPage() {
         }
         .btn-factura:hover { background: #f1f5f9; }
 
-        /* ── Responsive ─────────────────────────────────────── */
+        /* Responsive */
         @media (max-width: 640px) {
           .op-page           { padding: 1.5rem .75rem 3rem; }
           .op-title          { font-size: 1.375rem; }

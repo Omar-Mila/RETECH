@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react"
+﻿import { useState, useEffect, useRef } from "react"
 import { useAutenticacion } from "../../auth/AuthContext"
 import { useNavigate, useLocation, Link } from "react-router-dom"
 import { buscarProductos } from "../../services/searchService"
@@ -415,13 +415,13 @@ export default function Navbar() {
 
       <style>{`
 
-        /* ── Header ─────────────────────────────────────────── */
+        /* Header */
         .nb-header {
           border-bottom: 1px solid #e5e7eb;
           background: #fff;
         }
 
-        /* ── Barra principal ────────────────────────────────── */
+        /* Barra principal */
         .nb-bar { background: #fff; width: 100%; }
         .nb-bar-inner {
           display: flex;
@@ -432,7 +432,7 @@ export default function Navbar() {
           box-sizing: border-box;
         }
 
-        /* ── Logo ───────────────────────────────────────────── */
+        /* Logo */
         .nb-logo {
           display: flex;
           align-items: center;
@@ -455,7 +455,7 @@ export default function Navbar() {
         }
         .nb-logo-text { white-space: nowrap; }
 
-        /* ── Buscador ───────────────────────────────────────── */
+        /* Buscador */
         .nb-search-wrap {
           flex: 1;
           position: relative;
@@ -519,7 +519,7 @@ export default function Navbar() {
         }
         .nb-search-result:hover { background: #f3f4f6; }
 
-        /* ── Acciones ───────────────────────────────────────── */
+        /* Acciones */
         .nb-actions {
           display: flex;
           align-items: center;
@@ -527,7 +527,7 @@ export default function Navbar() {
           flex-shrink: 0;
         }
 
-        /* ── Selector idioma ────────────────────────────────── */
+        /* Selector idioma */
         .nb-lang-wrap  { position: relative; }
         .nb-btn-lang {
           display: flex;
@@ -578,7 +578,7 @@ export default function Navbar() {
         .nb-drop-lang-code { font-size: 0.75rem; font-weight: 700; color: #0f172a; }
         .nb-drop-lang-name { font-size: 0.6875rem; color: #94a3b8; }
 
-        /* ── Auth ───────────────────────────────────────────── */
+        /* Auth */
         .nb-auth-btns { display: flex; gap: 0.75rem; align-items: center; }
         .nb-btn-login {
           background: none;
@@ -603,7 +603,7 @@ export default function Navbar() {
         }
         .nb-btn-register:hover { background: #1f2937; }
 
-        /* ── Usuario ────────────────────────────────────────── */
+        /* Usuario */
         .nb-user-wrap { position: relative; }
         .nb-btn-user {
           background: none;
@@ -669,7 +669,7 @@ export default function Navbar() {
           font-weight: 600;
         }
 
-        /* ── Carrito ────────────────────────────────────────── */
+        /* Carrito */
         .nb-cart-wrap { position: relative; }
         .nb-btn-cart {
           position: relative;
@@ -778,10 +778,10 @@ export default function Navbar() {
         }
         .nb-btn-go-cart:hover { opacity: 0.8; }
 
-        /* ── Banderas ───────────────────────────────────────── */
+        /* Banderas */
         .nb-bandera { border-radius: 2px; display: block; flex-shrink: 0; }
 
-        /* ── Barra marcas ───────────────────────────────────── */
+        /* Barra marcas */
         .nb-brands-bar {
           background: #fff;
           border-top: 1px solid #f3f4f6;
@@ -823,7 +823,7 @@ export default function Navbar() {
         }
         .nb-brand-btn:hover { background: #f3f4f6; color: #111827; }
 
-        /* ── Responsive ─────────────────────────────────────── */
+        /* Responsive */
 
         /* Tablet (≤768px): ocultar textos no esenciales */
         @media (max-width: 768px) {

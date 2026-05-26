@@ -1,4 +1,4 @@
-import { useState } from "react";
+﻿import { useState } from "react";
 import { ChevronDownIcon } from "@heroicons/react/24/outline";
 import { useIdioma } from "../context/LanguageContext";
 
@@ -43,7 +43,7 @@ export default function FAQSection() {
 
       <style>{`
 
-        /* ── Sección ────────────────────────────────────────── */
+        /* Sección */
         .faq-section {
           width: 100%;
           background: #f9fafb;
@@ -55,7 +55,7 @@ export default function FAQSection() {
           padding: 0 1.5rem;
         }
 
-        /* ── Título ─────────────────────────────────────────── */
+        /* Título */
         .faq-title {
           font-size: 2.25rem;
           font-weight: 700;
@@ -63,14 +63,14 @@ export default function FAQSection() {
           margin: 0 0 3rem 0;
         }
 
-        /* ── Lista ──────────────────────────────────────────── */
+        /* Lista */
         .faq-list {
           display: flex;
           flex-direction: column;
           gap: 1rem;
         }
 
-        /* ── Item ───────────────────────────────────────────── */
+        /* Item */
         .faq-item {
           background: #fff;
           border-radius: 0.75rem;
@@ -78,7 +78,7 @@ export default function FAQSection() {
           overflow: hidden;
         }
 
-        /* ── Botón pregunta ─────────────────────────────────── */
+        /* Botón pregunta */
         .faq-btn {
           width: 100%;
           display: flex;
@@ -100,7 +100,7 @@ export default function FAQSection() {
           flex: 1;
         }
 
-        /* ── Chevron ────────────────────────────────────────── */
+        /* Chevron */
         .faq-chevron {
           width: 1.25rem;
           height: 1.25rem;
@@ -110,7 +110,7 @@ export default function FAQSection() {
         }
         .faq-chevron--open { transform: rotate(180deg); }
 
-        /* ── Respuesta ──────────────────────────────────────── */
+        /* Respuesta */
         .faq-answer {
           padding: 0 1.5rem 1.5rem;
           color: #4b5563;
@@ -118,7 +118,7 @@ export default function FAQSection() {
           line-height: 1.6;
         }
 
-        /* ── Responsive ─────────────────────────────────────── */
+        /* Responsive */
         @media (max-width: 640px) {
           .faq-section   { padding: 3rem 0; }
           .faq-title     { font-size: 1.75rem; margin-bottom: 2rem; }

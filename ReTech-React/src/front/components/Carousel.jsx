@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+﻿import { useEffect, useState } from "react";
 import { useIdioma } from "../context/LanguageContext";
 
 const imagenesSlide = [
@@ -62,7 +62,7 @@ export default function Carousel() {
 
       <style>{`
 
-        /* ── Contenedor ─────────────────────────────────────── */
+        /* Contenedor */
         .car-container {
           position: relative;
           width: 100%;
@@ -70,7 +70,7 @@ export default function Carousel() {
           overflow: hidden;
         }
 
-        /* ── Diapositiva ────────────────────────────────────── */
+        /* Diapositiva */
         .car-slide {
           position: absolute;
           inset: 0;
@@ -79,7 +79,7 @@ export default function Carousel() {
         }
         .car-slide--active { opacity: 1; }
 
-        /* ── Imagen de fondo ────────────────────────────────── */
+        /* Imagen de fondo */
         .car-img {
           width: 100%;
           height: 100%;
@@ -87,14 +87,14 @@ export default function Carousel() {
           display: block;
         }
 
-        /* ── Gradiente oscuro ───────────────────────────────── */
+        /* Gradiente oscuro */
         .car-overlay {
           position: absolute;
           inset: 0;
           background: linear-gradient(to right, rgba(0,0,0,0.80), rgba(0,0,0,0.40), transparent);
         }
 
-        /* ── Contenido de texto ─────────────────────────────── */
+        /* Contenido de texto */
         .car-content-wrap {
           position: absolute;
           inset: 0;
@@ -118,7 +118,7 @@ export default function Carousel() {
           line-height: 1.5;
         }
 
-        /* ── Botones ────────────────────────────────────────── */
+        /* Botones */
         .car-btns {
           display: flex;
           gap: 1rem;
@@ -147,7 +147,7 @@ export default function Carousel() {
         }
         .car-btn-secondary:hover { background: rgba(255,255,255,0.12); }
 
-        /* ── Indicadores ────────────────────────────────────── */
+        /* Indicadores */
         .car-dots {
           position: absolute;
           bottom: 1.25rem;
@@ -168,7 +168,7 @@ export default function Carousel() {
         .car-dot--active  { background: #fff; }
         .car-dot:hover    { background: rgba(255,255,255,0.75); }
 
-        /* ── Responsive ─────────────────────────────────────── */
+        /* Responsive */
 
         /* Tablet grande (≤1024px) */
         @media (max-width: 1024px) {

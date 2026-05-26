@@ -31,9 +31,9 @@ class ComprasPorEstadoWidget extends DoughnutChartWidget
                 [
                     'data'            => [$pagado, $pendiente, $fallido],
                     'backgroundColor' => [
-                        'rgba(16, 185, 129, 0.85)',  // verde — pagado
-                        'rgba(245, 158, 11, 0.85)',  // naranja — pendiente
-                        'rgba(239, 68, 68, 0.85)',   // rojo — fallido
+                        'rgba(16, 185, 129, 0.85)',
+                        'rgba(245, 158, 11, 0.85)',
+                        'rgba(239, 68, 68, 0.85)',
                     ],
                     'borderColor' => [
                         'rgba(16, 185, 129, 1)',

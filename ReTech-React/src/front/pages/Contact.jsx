@@ -1,4 +1,4 @@
-import React from "react";
+﻿import React from "react";
 import Navbar from "../components/Navbar";
 import Footer from "../components/Footer";
 import { useEffect } from "react";
@@ -160,7 +160,7 @@ export default function AboutPage() {
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=Sora:wght@400;600;700;800&family=Inter:wght@400;500;600&display=swap');
 
-        /* ── Variables ──────────────────────────────────────── */
+        /* Variables */
         :root {
           --ct-text:        #0f172a;
           --ct-muted:       #64748b;
@@ -171,14 +171,14 @@ export default function AboutPage() {
           --ct-radius-md:   12px;
         }
 
-        /* ── Página ─────────────────────────────────────────── */
+        /* Página */
         .ct-page {
           font-family: 'Inter', sans-serif;
           background: var(--ct-bg-soft);
           color: var(--ct-text);
         }
 
-        /* ── Hero ───────────────────────────────────────────── */
+        /* Hero */
         .ct-hero {
           padding: 5rem 2rem 4rem;
           max-width: 760px;
@@ -210,7 +210,7 @@ export default function AboutPage() {
           margin: 0 auto;
         }
 
-        /* ── Sección genérica ───────────────────────────────── */
+        /* Sección genérica */
         .ct-section {
           padding: 3rem 2rem;
           max-width: 1000px;
@@ -225,7 +225,7 @@ export default function AboutPage() {
           font-weight: 600;
         }
 
-        /* ── Grid about ─────────────────────────────────────── */
+        /* Grid about */
         .ct-about-grid {
           display: grid;
           grid-template-columns: 1fr 1fr;
@@ -239,7 +239,7 @@ export default function AboutPage() {
           margin-bottom: 1.25rem;
         }
 
-        /* ── Estadísticas ───────────────────────────────────── */
+        /* Estadísticas */
         .ct-stats-row {
           display: grid;
           grid-template-columns: repeat(3, 1fr);
@@ -264,7 +264,7 @@ export default function AboutPage() {
         }
         .ct-stat-label { font-size: 12px; color: var(--ct-muted); margin-top: 4px; }
 
-        /* ── Certificación ──────────────────────────────────── */
+        /* Certificación */
         .ct-cert-box {
           margin-top: 1.5rem;
           padding: 1.5rem;
@@ -275,7 +275,7 @@ export default function AboutPage() {
         .ct-cert-label { font-size: 13px; color: var(--ct-text); font-weight: 700; margin-bottom: 5px; }
         .ct-cert-desc  { font-size: 14px; font-weight: 600; color: var(--ct-text); margin: 0; }
 
-        /* ── Instalaciones ──────────────────────────────────── */
+        /* Instalaciones */
         .ct-history-title,
         .ct-facilities-title,
         .ct-map-title {
@@ -304,7 +304,7 @@ export default function AboutPage() {
         .ct-photo-label { font-size: 12px; font-weight: 700; margin-top: 12px; color: var(--ct-text); }
         .ct-photo-desc  { font-size: 14px; color: var(--ct-muted); margin: 4px 0 0; }
 
-        /* ── Mapa ───────────────────────────────────────────── */
+        /* Mapa */
         .ct-map-section {
           padding: 0 2rem 3rem;
           max-width: 1000px;
@@ -318,7 +318,7 @@ export default function AboutPage() {
         }
         .ct-map { width: 100%; height: 100%; }
 
-        /* ── Premio ─────────────────────────────────────────── */
+        /* Premio */
         .ct-award {
           padding: 4rem 2rem;
           background: #0f172a;
@@ -343,7 +343,7 @@ export default function AboutPage() {
         }
         .ct-award-desc { opacity: 0.8; font-size: 15px; margin: 0; }
 
-        /* ── Reseñas ────────────────────────────────────────── */
+        /* Reseñas */
         .ct-reviews-header { margin-bottom: 0; }
         .ct-reviews-title {
           font-size: 28px;
@@ -385,7 +385,7 @@ export default function AboutPage() {
         .ct-review-name { font-size: 13px; font-weight: 500; margin: 0; }
         .ct-review-date { font-size: 11px; color: var(--ct-muted); margin: 0; }
 
-        /* ── Responsive ─────────────────────────────────────── */
+        /* Responsive */
         @media (max-width: 768px) {
           .ct-about-grid,
           .ct-photos-grid,

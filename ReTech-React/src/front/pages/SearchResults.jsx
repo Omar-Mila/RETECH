@@ -1,4 +1,4 @@
-import { useEffect, useState, useMemo, useRef } from "react"
+﻿import { useEffect, useState, useMemo, useRef } from "react"
 import { useSearchParams, Link } from "react-router-dom"
 import Navbar from "../components/Navbar"
 import Footer from "../components/Footer"
@@ -370,14 +370,14 @@ export default function SearchResults() {
                 to   { opacity: 1; transform: translateY(0); }
               }
 
-              /* ── Página ───────────────────────────────────────── */
+              /* Página */
               .sr-page {
                 min-height: 100vh;
                 display: flex;
                 flex-direction: column;
               }
 
-              /* ── Main ─────────────────────────────────────────── */
+              /* Main */
               .sr-main {
                 flex: 1;
                 display: flex;
@@ -391,7 +391,7 @@ export default function SearchResults() {
                 box-sizing: border-box;
               }
 
-              /* ── Estados de carga ─────────────────────────────── */
+              /* Estados de carga */
               .sr-loading {
                 display: flex;
                 justify-content: center;
@@ -408,7 +408,7 @@ export default function SearchResults() {
                 width: 100%;
               }
 
-              /* ── Imagen de producto ───────────────────────────── */
+              /* Imagen de producto */
               .sr-img-wrap {
                 position: relative;
                 width: 100%;
@@ -440,7 +440,7 @@ export default function SearchResults() {
               }
               .sr-img--loaded { opacity: 1; }
 
-              /* ── Botón ordenar ────────────────────────────────── */
+              /* Botón ordenar */
               .sr-btn-sort {
                 display: inline-flex;
                 align-items: center;
@@ -463,7 +463,7 @@ export default function SearchResults() {
               .sr-btn-sort-icon { font-size: 10px; opacity: 0.4; }
               .sr-btn-sort-icon--visible { opacity: 1; }
 
-              /* ── Panel de filtros ─────────────────────────────── */
+              /* Panel de filtros */
               .sr-filter-panel {
                 width: 236px;
                 min-width: 236px;
@@ -564,7 +564,7 @@ export default function SearchResults() {
               .sr-filter-price-max { font-size: 12px; font-weight: 700; color: #0f172a; }
               .sr-filter-range { width: 100%; accent-color: #0f172a; }
 
-              /* ── Resultados ───────────────────────────────────── */
+              /* Resultados */
               .sr-results { flex: 1; min-width: 0; transition: opacity 0.2s; }
               .sr-results--loading { opacity: 0.5; }
               .sr-results-head {
@@ -605,7 +605,7 @@ export default function SearchResults() {
                 margin-bottom: 20px; margin-top: 2px;
               }
 
-              /* ── Sin resultados ───────────────────────────────── */
+              /* Sin resultados */
               .sr-no-results {
                 text-align: center;
                 padding: 4rem 1rem;
@@ -614,14 +614,14 @@ export default function SearchResults() {
               .sr-no-results-icon { font-size: 2.5rem; margin-bottom: 0.75rem; }
               .sr-no-results-text { font-size: 1.125rem; margin: 0; }
 
-              /* ── Grid de productos ────────────────────────────── */
+              /* Grid de productos */
               .sr-grid {
                 display: grid;
                 grid-template-columns: repeat(4, 1fr);
                 gap: 1rem;
               }
 
-              /* ── Tarjeta de producto ──────────────────────────── */
+              /* Tarjeta de producto */
               .sr-card {
                 border: 1px solid #e5e7eb;
                 border-radius: 12px;
@@ -682,7 +682,7 @@ export default function SearchResults() {
                 padding-top: 8px;
               }
 
-              /* ── Centinela e infinite scroll ──────────────────── */
+              /* Centinela e infinite scroll */
               .sr-sentinel    { height: 1px; }
               .sr-loading-more {
                 text-align: center;
@@ -695,7 +695,7 @@ export default function SearchResults() {
                 color: #cbd5e1; font-size: 12px;
               }
 
-              /* ── Responsive ───────────────────────────────────── */
+              /* Responsive */
               @media (max-width: 1024px) {
                 .sr-grid { grid-template-columns: repeat(3, 1fr); }
               }
@@ -705,6 +705,7 @@ export default function SearchResults() {
                   flex-direction: column;
                   padding: 1rem;
                   gap: 1rem;
+                  align-items: stretch;
                 }
                 .sr-filter-panel {
                   position: static;

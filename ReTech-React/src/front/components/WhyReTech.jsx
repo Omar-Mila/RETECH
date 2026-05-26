@@ -1,4 +1,4 @@
-import {
+﻿import {
   ShieldCheckIcon,
   CurrencyEuroIcon,
   WrenchScrewdriverIcon,
@@ -35,7 +35,7 @@ export default function WhyReTech() {
 
       <style>{`
 
-        /* ── Sección ────────────────────────────────────────── */
+        /* Sección */
         .wr-section {
           width: 100%;
           background: #fff;
@@ -47,7 +47,7 @@ export default function WhyReTech() {
           padding: 0 1.5rem;
         }
 
-        /* ── Título ─────────────────────────────────────────── */
+        /* Título */
         .wr-title {
           font-size: 2.25rem;
           font-weight: 700;
@@ -55,14 +55,14 @@ export default function WhyReTech() {
           margin: 0 0 4rem;
         }
 
-        /* ── Grid ───────────────────────────────────────────── */
+        /* Grid */
         .wr-grid {
           display: grid;
           grid-template-columns: repeat(4, 1fr);
           gap: 2.5rem;
         }
 
-        /* ── Tarjeta ────────────────────────────────────────── */
+        /* Tarjeta */
         .wr-card {
           background: #f9fafb;
           padding: 2rem;
@@ -75,7 +75,7 @@ export default function WhyReTech() {
           transform: translateY(-4px);
         }
 
-        /* ── Icono ──────────────────────────────────────────── */
+        /* Icono */
         .wr-icon {
           width: 2.5rem;
           height: 2.5rem;
@@ -86,7 +86,7 @@ export default function WhyReTech() {
         }
         .wr-card:hover .wr-icon { transform: scale(1.1); }
 
-        /* ── Texto ──────────────────────────────────────────── */
+        /* Texto */
         .wr-card-title {
           font-weight: 600;
           font-size: 1.125rem;
@@ -99,7 +99,7 @@ export default function WhyReTech() {
           margin: 0;
         }
 
-        /* ── Responsive ─────────────────────────────────────── */
+        /* Responsive */
         @media (max-width: 1024px) {
           .wr-grid { grid-template-columns: repeat(2, 1fr); gap: 1.5rem; }
         }

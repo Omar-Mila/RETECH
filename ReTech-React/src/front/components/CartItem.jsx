@@ -1,4 +1,4 @@
-const fmtPrecio = (n) =>
+﻿const fmtPrecio = (n) =>
   new Intl.NumberFormat("es-ES", { style: "currency", currency: "EUR" }).format(n);
 
 export default function CartItem({ art, alQuitar }) {
@@ -34,7 +34,7 @@ export default function CartItem({ art, alQuitar }) {
 
       <style>{`
 
-        /* ── Fila ───────────────────────────────────────────── */
+        /* Fila */
         .ci-row {
           display: flex;
           align-items: center;
@@ -43,7 +43,7 @@ export default function CartItem({ art, alQuitar }) {
           border-bottom: 1px solid #f1f5f9;
         }
 
-        /* ── Miniatura ──────────────────────────────────────── */
+        /* Miniatura */
         .ci-thumb {
           width: 3.25rem;
           height: 3.25rem;
@@ -62,7 +62,7 @@ export default function CartItem({ art, alQuitar }) {
           object-fit: contain;
         }
 
-        /* ── Detalles ───────────────────────────────────────── */
+        /* Detalles */
         .ci-details {
           flex: 1;
           min-width: 0;
@@ -98,7 +98,7 @@ export default function CartItem({ art, alQuitar }) {
           font-weight: 400;
         }
 
-        /* ── Botón quitar ───────────────────────────────────── */
+        /* Botón quitar */
         .ci-btn-remove {
           background: #fee2e2;
           border: none;
@@ -116,7 +116,7 @@ export default function CartItem({ art, alQuitar }) {
         }
         .ci-btn-remove:hover { background: #fecaca; }
 
-        /* ── Responsive ─────────────────────────────────────── */
+        /* Responsive */
         @media (max-width: 400px) {
           .ci-row   { padding: 0.625rem 0.75rem; gap: 0.5rem; }
           .ci-thumb { width: 2.75rem; height: 2.75rem; }

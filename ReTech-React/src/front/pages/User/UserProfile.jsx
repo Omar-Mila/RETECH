@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+﻿import { useState, useEffect } from "react";
 import { useAutenticacion } from "../../../auth/AuthContext";
 import { useNavigate, useLocation } from "react-router-dom";
 import { obtenerUsuarioActual } from "../../../auth/authService";
@@ -395,7 +395,7 @@ export default function UserProfile() {
 
       <style>{`
 
-        /* ── Página ─────────────────────────────────────────── */
+        /* Página */
         .up-page { min-height: 100vh; background: #f8fafc; }
         .up-wrap {
           max-width: 56rem;
@@ -403,7 +403,7 @@ export default function UserProfile() {
           padding: 3.75rem 1.25rem 4rem;
         }
 
-        /* ── Toast ──────────────────────────────────────────── */
+        /* Toast */
         .up-toast {
           margin-bottom: 1.25rem;
           padding: .875rem 1.25rem;
@@ -418,7 +418,7 @@ export default function UserProfile() {
         .up-toast--warn { background: #fef3c7; color: #92400e; border: 1px solid #fde68a; }
         .up-toast-close { background: none; border: none; cursor: pointer; font-size: 1rem; color: inherit; padding: 0 .25rem; }
 
-        /* ── Cabecera ───────────────────────────────────────── */
+        /* Cabecera */
         .up-header { text-align: center; margin-bottom: 2rem; }
         .up-avatar {
           width: 5rem; height: 5rem;
@@ -444,7 +444,7 @@ export default function UserProfile() {
         }
         .up-verified-text { margin: .375rem 0 0; font-size: .8125rem; color: #3b82f6; font-weight: 600; }
 
-        /* ── Grid ───────────────────────────────────────────── */
+        /* Grid */
         .up-grid {
           display: grid;
           grid-template-columns: 1fr 1fr;
@@ -452,7 +452,7 @@ export default function UserProfile() {
           align-items: start;
         }
 
-        /* ── Tarjeta ────────────────────────────────────────── */
+        /* Tarjeta */
         .up-card {
           background: #fff;
           padding: 1.5rem;
@@ -467,7 +467,7 @@ export default function UserProfile() {
           margin-bottom: 1rem;
         }
 
-        /* ── Campos ─────────────────────────────────────────── */
+        /* Campos */
         .up-fields         { display: flex; flex-direction: column; gap: 1rem; }
         .up-form-grid      { display: grid; grid-template-columns: 1fr 1fr; gap: .625rem; }
         .up-form-full      { grid-column: 1 / -1; }
@@ -524,7 +524,7 @@ export default function UserProfile() {
         }
         .up-field-select--filled { color: #1e293b; }
 
-        /* ── Sección título ─────────────────────────────────── */
+        /* Sección título */
         .up-section-title {
           font-size: .75rem;
           font-weight: 800;
@@ -533,7 +533,7 @@ export default function UserProfile() {
           margin: 0 0 1rem;
         }
 
-        /* ── Badge verificado ───────────────────────────────── */
+        /* Badge verificado */
         .up-badge {
           display: inline-flex; align-items: center; gap: .25rem;
           font-size: .6875rem; font-weight: 700;
@@ -542,14 +542,14 @@ export default function UserProfile() {
         .up-badge--verified { background: #dbeafe; color: #1d4ed8; }
         .up-badge--pending  { background: #fef3c7; color: #92400e; }
 
-        /* ── Email fila ─────────────────────────────────────── */
+        /* Email fila */
         .up-email-row {
           display: flex; align-items: center;
           justify-content: space-between;
           margin-bottom: .375rem;
         }
 
-        /* ── Reenviar ───────────────────────────────────────── */
+        /* Reenviar */
         .up-resend-wrap  { margin-top: .625rem; }
         .up-btn-resend {
           font-size: .75rem; font-weight: 700;
@@ -562,7 +562,7 @@ export default function UserProfile() {
         .up-btn-resend--sending { opacity: .7; }
         .up-resend-error        { margin: .375rem 0 0; font-size: .75rem; color: #ef4444; }
 
-        /* ── Teléfono con prefijo ──────────────────────────────── */
+        /* Teléfono con prefijo */
         .up-phone-wrap {
           display: flex;
           align-items: stretch;
@@ -595,13 +595,13 @@ export default function UserProfile() {
           margin-right: .25rem;
         }
 
-        /* ── Código postal ──────────────────────────────────── */
+        /* Código postal */
         .up-cp-msg          { margin: .1875rem 0 0; font-size: .6875rem; }
         .up-cp-msg--loading { color: #6366f1; }
         .up-cp-msg--ok      { color: #22c55e; }
         .up-cp-msg--error   { color: #ef4444; }
 
-        /* ── Botón editar ───────────────────────────────────── */
+        /* Botón editar */
         .up-btn-edit {
           font-size: .75rem; font-weight: 700;
           color: #fff; background: #0f172a;
@@ -611,10 +611,10 @@ export default function UserProfile() {
         }
         .up-btn-edit:hover { opacity: .8; }
 
-        /* ── Error ──────────────────────────────────────────── */
+        /* Error */
         .up-error { color: #ef4444; font-size: .8125rem; margin-bottom: .75rem; }
 
-        /* ── Botones guardar/cancelar ───────────────────────── */
+        /* Botones guardar/cancelar */
         .up-btn-row { display: flex; gap: .625rem; margin-top: .25rem; }
         .up-btn-save {
           flex: 1; background: #10b981; color: #fff;
@@ -634,7 +634,7 @@ export default function UserProfile() {
         }
         .up-btn-cancel:hover { background: #e2e8f0; }
 
-        /* ── Responsive ─────────────────────────────────────── */
+        /* Responsive */
         @media (max-width: 768px) {
           .up-grid { grid-template-columns: 1fr; }
           .up-wrap { padding: 2rem 1rem 3rem; }

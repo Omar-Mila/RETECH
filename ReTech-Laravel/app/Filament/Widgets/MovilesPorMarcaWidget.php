@@ -18,7 +18,6 @@ class MovilesPorMarcaWidget extends BarChartWidget
 
     protected function getData(): array
     {
-        // Agrupa el stock total por marca a través de la relación modelo->marca
         $datos = Movil::join('modelos', 'moviles.modelo_id', '=', 'modelos.id')
             ->join('marcas', 'modelos.marca_id', '=', 'marcas.id')
             ->selectRaw('marcas.nombre as marca, COUNT(*) as total, SUM(moviles.stock) as stock_total')
@@ -27,14 +26,14 @@ class MovilesPorMarcaWidget extends BarChartWidget
             ->get();
 
         $colores = [
-            'rgba(59, 130, 246, 0.8)',   // azul
-            'rgba(16, 185, 129, 0.8)',   // verde
-            'rgba(245, 158, 11, 0.8)',   // naranja
-            'rgba(239, 68, 68, 0.8)',    // rojo
-            'rgba(139, 92, 246, 0.8)',   // púrpura
-            'rgba(236, 72, 153, 0.8)',   // rosa
-            'rgba(20, 184, 166, 0.8)',   // teal
-            'rgba(251, 191, 36, 0.8)',   // amarillo
+            'rgba(59, 130, 246, 0.8)',
+            'rgba(16, 185, 129, 0.8)',
+            'rgba(245, 158, 11, 0.8)',
+            'rgba(239, 68, 68, 0.8)',
+            'rgba(139, 92, 246, 0.8)',
+            'rgba(236, 72, 153, 0.8)',
+            'rgba(20, 184, 166, 0.8)',
+            'rgba(251, 191, 36, 0.8)',
         ];
 
         $labels    = $datos->pluck('marca')->toArray();

@@ -51,14 +51,14 @@ export default function SeccionMoviles() {
 
       <style>{`
 
-          /* ── Cargando ───────────────────────────────────────── */
+          /* Cargando */
           .ps-loading {
             padding: 2.5rem;
             color: #6b7280;
             font-size: 0.9rem;
           }
 
-          /* ── Sección ────────────────────────────────────────── */
+          /* Sección */
           .ps-section {
             width: 100%;
             padding: 3rem 0;
@@ -76,7 +76,7 @@ export default function SeccionMoviles() {
             align-items: stretch;
           }
 
-          /* ── Ambos paneles alineados ───────────────────────── */
+          /* Ambos paneles */
           .ps-promo,
           .ps-bestsellers {
             width: 100%;
@@ -85,7 +85,7 @@ export default function SeccionMoviles() {
             box-sizing: border-box;
           }
 
-          /* ── Panel promo ────────────────────────────────────── */
+          /* Panel promo */
           .ps-promo {
             background: linear-gradient(135deg, #000, #1f2937);
             color: #fff;
@@ -110,7 +110,7 @@ export default function SeccionMoviles() {
             color: #d1d5db;
           }
 
-          /* ── Panel más vendidos ─────────────────────────────── */
+          /* Panel más vendidos */
           .ps-bestsellers {
             background: #f9fafb;
             padding: 1.5rem;
@@ -147,9 +147,9 @@ export default function SeccionMoviles() {
             border-radius: 9999px;
           }
 
-          /* ── Responsive ─────────────────────────────────────── */
+          /* Responsive */
 
-          /* Tablet grande */
+          /* tablet grande */
           @media (max-width: 900px) {
 
             .ps-inner {
@@ -170,7 +170,7 @@ export default function SeccionMoviles() {
             }
           }
 
-          /* Tablet pequeña */
+          /* tablet pequeña */
           @media (max-width: 768px) {
 
             .ps-promo {
@@ -186,7 +186,7 @@ export default function SeccionMoviles() {
             }
           }
 
-          /* Móvil */
+          /* móvil */
           @media (max-width: 640px) {
 
             .ps-cards-list .pcs-card {
@@ -195,7 +195,7 @@ export default function SeccionMoviles() {
             }
           }
 
-          /* Móvil pequeño */
+          /* móvil pequeño */
           @media (max-width: 480px) {
 
             .ps-section {
@@ -239,7 +239,7 @@ export default function SeccionMoviles() {
             }
           }
 
-          /* Móvil muy pequeño */
+          /* móvil muy pequeño */
           @media (max-width: 360px) {
 
             .ps-promo-title {

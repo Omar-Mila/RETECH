@@ -1,4 +1,4 @@
-import { Link } from "react-router-dom";
+﻿import { Link } from "react-router-dom";
 import { useIdioma } from "../context/LanguageContext";
 
 export default function Footer() {
@@ -53,14 +53,14 @@ export default function Footer() {
 
       <style>{`
 
-        /* ── Footer ─────────────────────────────────────────── */
+        /* Footer */
         .ft-footer {
           background: #000;
           color: #fff;
           padding: 4rem 0 2rem;
         }
 
-        /* ── Grid interior ──────────────────────────────────── */
+        /* Grid interior */
         .ft-inner {
           max-width: 80rem;
           margin: 0 auto;
@@ -70,7 +70,7 @@ export default function Footer() {
           gap: 2.5rem;
         }
 
-        /* ── Columna ────────────────────────────────────────── */
+        /* Columna */
         .ft-col { display: flex; flex-direction: column; }
 
         .ft-brand {
@@ -90,7 +90,7 @@ export default function Footer() {
           margin: 0 0 1rem 0;
         }
 
-        /* ── Lista ──────────────────────────────────────────── */
+        /* Lista */
         .ft-list {
           list-style: none;
           margin: 0;
@@ -108,7 +108,7 @@ export default function Footer() {
         }
         .ft-link:hover { color: #fff; }
 
-        /* ── Copyright ──────────────────────────────────────── */
+        /* Copyright */
         .ft-copy {
           text-align: center;
           color: #6b7280;
@@ -117,7 +117,7 @@ export default function Footer() {
           padding: 0 1.5rem;
         }
 
-        /* ── Responsive ─────────────────────────────────────── */
+        /* Responsive */
         @media (max-width: 768px) {
           .ft-inner {
             grid-template-columns: repeat(2, 1fr);

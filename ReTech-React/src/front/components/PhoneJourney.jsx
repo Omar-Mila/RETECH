@@ -1,4 +1,4 @@
-import { useEffect, useState, Fragment } from "react";
+﻿import { useEffect, useState, Fragment } from "react";
 import {
   InboxArrowDownIcon,
   MagnifyingGlassIcon,
@@ -107,7 +107,7 @@ export default function PhoneJourney() {
 
     <style>{`
 
-      /* ── Sección ────────────────────────────────────────── */
+      /* Sección */
       .pj-section {
         width: 100%;
         background: #f9fafb;
@@ -120,7 +120,7 @@ export default function PhoneJourney() {
         padding: 0 1.5rem;
       }
 
-      /* ── Cabecera ───────────────────────────────────────── */
+      /* Cabecera */
       .pj-title {
         font-size: 2rem;
         font-weight: 700;
@@ -134,7 +134,7 @@ export default function PhoneJourney() {
         margin: 0 0 4rem;
       }
 
-      /* ── Desktop ────────────────────────────────────────── */
+      /* Desktop */
       .pj-desktop {
         display: flex;
         align-items: flex-start;
@@ -147,7 +147,7 @@ export default function PhoneJourney() {
         flex-shrink: 0;
       }
 
-      /* ── Círculo ────────────────────────────────────────── */
+      /* Círculo */
       .pj-circle {
         position: relative;
         width: 3.5rem; height: 3.5rem;
@@ -170,7 +170,7 @@ export default function PhoneJourney() {
         border-color: #000;
       }
 
-      /* ── Icono ──────────────────────────────────────────── */
+      /* Icono */
       .pj-icon {
         width: 1.5rem; height: 1.5rem;
         color: #d1d5db;
@@ -178,7 +178,7 @@ export default function PhoneJourney() {
       }
       .pj-icon--on { color: #fff; }
 
-      /* ── Ping animado ───────────────────────────────────── */
+      /* Ping animado */
       .pj-ping {
         position: absolute;
         inset: 0;
@@ -191,7 +191,7 @@ export default function PhoneJourney() {
         75%, 100% { transform: scale(2); opacity: 0; }
       }
 
-      /* ── Texto paso ─────────────────────────────────────── */
+      /* Texto paso */
       .pj-step-title {
         margin: 1rem 0 0;
         font-size: 0.75rem;
@@ -215,7 +215,7 @@ export default function PhoneJourney() {
       }
       .pj-step-desc--active { opacity: 1; }
 
-      /* ── Línea horizontal ───────────────────────────────── */
+      /* Línea horizontal */
       .pj-line {
         flex: 1;
         height: 2px;
@@ -233,7 +233,7 @@ export default function PhoneJourney() {
       }
       .pj-line-fill--active { width: 100%; }
 
-      /* ── Mobile ─────────────────────────────────────────── */
+      /* Mobile */
       .pj-mobile { display: none; flex-direction: column; }
 
       .pj-m-row {
@@ -274,7 +274,7 @@ export default function PhoneJourney() {
         transition: color 0.3s;
       }
 
-      /* ── Línea vertical ─────────────────────────────────── */
+      /* Línea vertical */
       .pj-vline {
         width: 2px;
         background: #e5e7eb;
@@ -293,7 +293,7 @@ export default function PhoneJourney() {
       }
       .pj-vline-fill--active { height: 100%; }
 
-      /* ── Contenido mobile ───────────────────────────────── */
+      /* Contenido mobile */
       .pj-m-content { padding: 0.25rem 0 2rem; }
       .pj-m-title {
         font-size: 0.875rem;
@@ -312,7 +312,7 @@ export default function PhoneJourney() {
       }
       .pj-m-desc.pj-step-desc--active { opacity: 1; }
 
-      /* ── Responsive ─────────────────────────────────────── */
+      /* Responsive */
       @media (max-width: 768px) {
         .pj-desktop { display: none; }
         .pj-mobile  { display: flex; }

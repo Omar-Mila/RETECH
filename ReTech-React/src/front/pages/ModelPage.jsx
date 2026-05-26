@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from "react"
+﻿import { useState, useEffect, useMemo } from "react"
 import { useParams, useSearchParams } from "react-router-dom"
 import { obtenerProducto, obtenerImagenesModelo, obtenerUnidadesModelo } from "../../services/productService"
 
@@ -119,24 +119,24 @@ export default function ModelPage() {
 
       <style>{`
 
-        /* ── Página ─────────────────────────────────────────── */
+        /* Página */
         .mp-page {
           min-height: 100vh;
           display: flex;
           flex-direction: column;
         }
 
-        /* ── Main ───────────────────────────────────────────── */
+        /* Main */
         .mp-main { flex: 1; }
 
-        /* ── Mensajes de estado ─────────────────────────────── */
+        /* Mensajes de estado */
         .mp-state-msg {
           padding: 2.5rem;
           color: #64748b;
           font-size: 0.9rem;
         }
 
-        /* ── Layout principal — grid de 2 columnas ─────────── */
+        /* Layout principal — grid de 2 columnas */
         .mp-layout {
           max-width: 72rem;
           margin: 0 auto;
@@ -156,13 +156,13 @@ export default function ModelPage() {
         .mp-right        { grid-area: config;  min-width: 0; }
         .mp-info-wrap    { grid-area: info;    min-width: 0; }
 
-        /* ── Sticky del configurador ────────────────────────── */
+        /* Sticky del configurador */
         .mp-sticky {
           position: sticky;
           top: 6rem;
         }
 
-        /* ── Responsive ─────────────────────────────────────── */
+        /* Responsive */
 
         /* Tablet / móvil (≤1024px): columna única, orden: galería → config → info */
         @media (max-width: 1024px) {

@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+﻿import { useState, useEffect, useCallback } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { useAutenticacion } from "../../auth/AuthContext";
 import { obtenerCarritoInvitado, guardarCarritoInvitado, limpiarCarritoInvitado } from "../../services/guestCart";
@@ -1106,10 +1106,10 @@ export default function PaginaCarrito() {
         @keyframes cr-spin    { to { transform: rotate(360deg); } }
         @keyframes cr-fadeIn  { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
 
-        /* ── Spinner ───────────────────────────────────────── */
+        /* Spinner */
         .spinner { animation: cr-spin .8s linear infinite; }
 
-        /* ── Batería ───────────────────────────────────────── */
+        /* Batería */
         .cr-bat-wrap  { display: flex; align-items: center; gap: 5px; }
         .cr-bat-fondo { width: 34px; height: 7px; background: #e5e7eb; border-radius: 4px; overflow: hidden; }
         .cr-bat-relleno { height: 100%; border-radius: 4px; transition: width .5s; }
@@ -1118,7 +1118,7 @@ export default function PaginaCarrito() {
         .cr-bat-baja  { background: #ef4444; color: #ef4444; }
         .cr-bat-valor { font-size: 10px; font-weight: 700; background: transparent; }
 
-        /* ── Icono de teléfono ─────────────────────────────── */
+        /* Icono de teléfono */
         .cr-phone-icon {
           width: 52px; height: 52px;
           border-radius: 13px;
@@ -1126,7 +1126,7 @@ export default function PaginaCarrito() {
           flex-shrink: 0;
         }
 
-        /* ── Botón cantidad ────────────────────────────────── */
+        /* Botón cantidad */
         .cr-btn-cant {
           width: 30px; height: 30px;
           border: none; background: none;
@@ -1136,13 +1136,13 @@ export default function PaginaCarrito() {
         .cr-btn-cant.cr-disabled { cursor: not-allowed; color: #cbd5e1; }
         .cr-btn-cant:not(.cr-disabled) { cursor: pointer; color: #475569; }
 
-        /* ── Estados de producto ───────────────────────────── */
+        /* Estados de producto */
         .cr-est-excelente { background: #d1fae5; color: #065f46; }
         .cr-est-mbueno    { background: #dbeafe; color: #1e40af; }
         .cr-est-bueno     { background: #fef9c3; color: #854d0e; }
         .cr-est-aceptable { background: #fee2e2; color: #991b1b; }
 
-        /* ── Item del carrito ──────────────────────────────── */
+        /* Item del carrito */
         .cr-item-row {
           display: flex;
           gap: 14px;
@@ -1235,7 +1235,7 @@ export default function PaginaCarrito() {
         }
         .cr-price-unit { margin: 0; font-size: 10.5px; color: #94a3b8; }
 
-        /* ── Formulario de pago ────────────────────────────── */
+        /* Formulario de pago */
         .cr-error-pago {
           margin-top: 12px;
           padding: 10px 14px;
@@ -1272,7 +1272,7 @@ export default function PaginaCarrito() {
         }
         .cr-btn-pay.inactivo { background: #94a3b8; cursor: not-allowed; }
 
-        /* ── Fila de resumen ───────────────────────────────── */
+        /* Fila de resumen */
         .cr-summary-row { display: flex; justify-content: space-between; align-items: center; }
         .cr-summary-label { font-size: 13px; color: #475569; font-weight: 400; }
         .cr-summary-label.grande  { font-size: 14.5px; }
@@ -1283,7 +1283,7 @@ export default function PaginaCarrito() {
         .cr-summary-value.negrita { color: #4f46e5; font-weight: 800; }
         .cr-summary-value.opaco   { color: #94a3b8; }
 
-        /* ── Resumen del pedido ────────────────────────────── */
+        /* Resumen del pedido */
         .cr-resumen {
           position: sticky; top: 24px;
           background: #fff;
@@ -1345,7 +1345,7 @@ export default function PaginaCarrito() {
           font-size: 12.5px; color: #92400e; line-height: 1.5;
         }
 
-        /* ── Botón comprar ─────────────────────────────────── */
+        /* Botón comprar */
         .cr-btn-comprar {
           width: 100%;
           padding: 15px;
@@ -1370,7 +1370,7 @@ export default function PaginaCarrito() {
         }
         .cr-resumen-stripe-texto { font-size: 10.5px; color: #94a3b8; }
 
-        /* ── Formulario de perfil en checkout ─────────────── */
+        /* Formulario de perfil en checkout */
         .cr-form-perfil {
           background: #fff;
           border: 1px solid #e2e8f0;
@@ -1431,7 +1431,7 @@ export default function PaginaCarrito() {
         .cr-field-select.error  { border: 1px solid #fca5a5; background: #fef2f2; color: #0f172a; }
         .cr-field-select.tiene-valor { color: #0f172a; }
 
-        /* ── Teléfono prefijo (checkout) ──────────────────── */
+        /* Teléfono prefijo (checkout) */
         .cr-phone-wrap {
           display: flex;
           align-items: stretch;
@@ -1461,7 +1461,7 @@ export default function PaginaCarrito() {
           padding-left: 12px !important;
         }
 
-        /* ── Página del carrito ────────────────────────────── */
+        /* Página del carrito */
         .cr-page {
           min-height: 100vh;
           background: #f8fafc;
@@ -1548,7 +1548,7 @@ export default function PaginaCarrito() {
           padding: 0;
         }
 
-        /* ── Responsive ────────────────────────────────────── */
+        /* Responsive */
         @media (max-width: 900px) {
           .cr-grid {
             grid-template-columns: 1fr;

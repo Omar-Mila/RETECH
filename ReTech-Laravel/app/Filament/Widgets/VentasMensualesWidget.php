@@ -25,7 +25,6 @@ class VentasMensualesWidget extends LineChartWidget
 
         $anioActual = now()->year;
 
-        // Ingresos pagados
         $ingresosPagados = Compra::where('estado', 'pagado')
             ->whereYear('created_at', $anioActual)
             ->selectRaw('MONTH(created_at) as mes, SUM(precio_total) as total')
@@ -33,7 +32,6 @@ class VentasMensualesWidget extends LineChartWidget
             ->pluck('total', 'mes')
             ->toArray();
 
-        // Total de pedidos (todos los estados)
         $totalPedidos = Compra::whereYear('created_at', $anioActual)
             ->selectRaw('MONTH(created_at) as mes, COUNT(*) as total')
             ->groupBy('mes')

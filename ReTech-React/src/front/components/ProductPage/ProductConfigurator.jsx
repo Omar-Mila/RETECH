@@ -1,4 +1,4 @@
-import { useMemo, useState, useEffect } from "react"
+﻿import { useMemo, useState, useEffect } from "react"
 import { obtenerCarritoInvitado, guardarCarritoInvitado } from "../../../services/guestCart"
 import { useIdioma } from "../../context/LanguageContext"
 import { useAutenticacion } from "../../../auth/AuthContext"
@@ -505,7 +505,7 @@ export default function ProductConfigurator({
 
     <style>{`
 
-      /* ── Iconos ─────────────────────────────────────────── */
+      /* Iconos */
       .pc-icon-warn {
         width: 0.875rem; height: 0.875rem;
         color: #f59e0b;
@@ -526,14 +526,14 @@ export default function ProductConfigurator({
         flex-shrink: 0;
       }
 
-      /* ── Contenedor principal ───────────────────────────── */
+      /* Contenedor principal */
       .pc-container {
         display: flex;
         flex-direction: column;
         gap: 1.5rem;
       }
 
-      /* ── Cabecera nombre + limpiar ──────────────────────── */
+      /* Cabecera nombre + limpiar */
       .pc-header {
         display: flex;
         align-items: center;
@@ -558,7 +558,7 @@ export default function ProductConfigurator({
         white-space: nowrap;
       }
 
-      /* ── Campos ─────────────────────────────────────────── */
+      /* Campos */
       .pc-fields {
         display: flex;
         flex-direction: column;
@@ -609,7 +609,7 @@ export default function ProductConfigurator({
         border-color: #fbbf24;
       }
 
-      /* ── Preview estado ─────────────────────────────────── */
+      /* Preview estado */
       .pc-estado-preview {
         display: flex;
         gap: 0.75rem;
@@ -645,7 +645,7 @@ export default function ProductConfigurator({
         margin: 0;
       }
 
-      /* ── Tarjeta precio ─────────────────────────────────── */
+      /* Tarjeta precio */
       .pc-price-card {
         border: 1px solid #e5e7eb;
         border-radius: 0.5rem;
@@ -653,7 +653,7 @@ export default function ProductConfigurator({
         background: #f9fafb;
       }
 
-      /* ── Chips resumen ──────────────────────────────────── */
+      /* Chips resumen */
       .pc-summary {
         display: flex;
         flex-wrap: wrap;
@@ -686,7 +686,7 @@ export default function ProductConfigurator({
         color: #1f2937;
       }
 
-      /* ── Fila precio ────────────────────────────────────── */
+      /* Fila precio */
       .pc-price-row {
         display: flex;
         align-items: center;
@@ -707,7 +707,7 @@ export default function ProductConfigurator({
         margin-top: 0.25rem;
       }
 
-      /* ── Botón compra ───────────────────────────────────── */
+      /* Botón compra */
       .pc-btn-buy {
         width: 100%;
         padding: 0.75rem;
@@ -727,7 +727,7 @@ export default function ProductConfigurator({
       }
       .pc-btn-buy--disabled:hover { background: #9ca3af; }
 
-      /* ── Sección confianza ──────────────────────────────── */
+      /* Sección confianza */
       .pc-trust {
         border: 1px solid #e5e7eb;
         border-radius: 0.75rem;
@@ -747,7 +747,7 @@ export default function ProductConfigurator({
         color: #1f2937;
       }
 
-      /* ── Métodos de pago ────────────────────────────────── */
+      /* Métodos de pago */
       .pc-payments-label {
         font-size: 0.75rem;
         color: #9ca3af;
@@ -778,7 +778,7 @@ export default function ProductConfigurator({
       .pc-pay-bizum   { background: #00c2a8; color: #fff; }
       .pc-pay-apple   { background: #000; color: #fff; font-weight: 600; letter-spacing: -0.025em; }
 
-      /* ── Lista info ─────────────────────────────────────── */
+      /* Lista info */
       .pc-info-list {
         display: flex;
         flex-direction: column;
@@ -792,7 +792,7 @@ export default function ProductConfigurator({
         gap: 0.5rem;
       }
 
-      /* ── Modal ──────────────────────────────────────────── */
+      /* Modal */
       .pc-modal-overlay {
         position: fixed;
         inset: 0;
@@ -816,7 +816,7 @@ export default function ProductConfigurator({
         filter: drop-shadow(0 25px 25px rgba(0,0,0,0.15));
       }
 
-      /* ── Responsive ─────────────────────────────────────── */
+      /* Responsive */
       @media (max-width: 480px) {
         .pc-title        { font-size: 1.2rem; }
         .pc-btn-clear    { font-size: 0.7rem; padding: 0.3rem 0.6rem; }
