@@ -114,6 +114,28 @@ Route::middleware('auth:sanctum')->put('/user/cliente', function (Request $reque
     return response()->json($user->load('cliente'));
 });
 
+Route::middleware(['web', 'auth:sanctum'])->put('/user/password', function (Request $request) {
+    $user = $request->user();
+
+    // Usuarios de Google no tienen contraseña propia
+    if ($user->google_id && !$user->password) {
+        return response()->json(['message' => 'google_user'], 422);
+    }
+
+    $request->validate([
+        'current_password'      => 'required|string',
+        'new_password'          => 'required|string|min:8|confirmed',
+    ]);
+
+    if (!\Illuminate\Support\Facades\Hash::check($request->current_password, $user->password)) {
+        return response()->json(['message' => 'wrong_password'], 422);
+    }
+
+    $user->update(['password' => \Illuminate\Support\Facades\Hash::make($request->new_password)]);
+
+    return response()->json(['message' => 'ok']);
+});
+
 Route::post('/register', [RegisterController::class, 'store']);
 Route::middleware(['web'])->post('/auth/google', [GoogleAuthController::class, 'handleGoogle']);
 

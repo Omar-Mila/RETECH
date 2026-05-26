@@ -33,10 +33,11 @@ class ProductosController extends Controller
             ->map(function ($movil) {
                 return [
                     'id'               => $movil->id,
-                    'modelo_id'         => $movil->modelo_id,
+                    'modelo_id'        => $movil->modelo_id,
                     'modelo'           => $movil->modelo->nombre,
                     'marca'            => $movil->modelo->marca->nombre,
                     'color'            => $movil->color->nombre,
+                    'color_id'         => $movil->color_id,
                     'precio'           => $movil->precio,
                     'estado'           => $movil->estado,
                     'salud_bateria'    => $movil->salud_bateria,
