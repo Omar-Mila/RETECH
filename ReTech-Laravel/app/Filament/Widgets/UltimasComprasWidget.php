@@ -11,7 +11,7 @@ class UltimasComprasWidget extends BaseWidget
 {
     protected static ?int $sort = 5;
 
-    protected static ?string $heading = '🧾 Últimas compras';
+    protected static ?string $heading = 'Últimas compras';
 
     protected int | string | array $columnSpan = 'full';
 

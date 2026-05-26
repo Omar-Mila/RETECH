@@ -9,7 +9,7 @@ class ComprasPorEstadoWidget extends DoughnutChartWidget
 {
     protected static ?int $sort = 3;
 
-    protected static ?string $heading = '🛒 Compras por estado';
+    protected static ?string $heading = 'Compras por estado';
 
     protected static ?string $maxHeight = '280px';
 

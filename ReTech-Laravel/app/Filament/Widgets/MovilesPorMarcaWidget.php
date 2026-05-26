@@ -10,7 +10,7 @@ class MovilesPorMarcaWidget extends BarChartWidget
 {
     protected static ?int $sort = 4;
 
-    protected static ?string $heading = '📱 Móviles por marca';
+    protected static ?string $heading = 'Móviles por marca';
 
     protected static ?string $maxHeight = '280px';
 

@@ -9,7 +9,7 @@ class VentasMensualesWidget extends LineChartWidget
 {
     protected static ?int $sort = 2;
 
-    protected static ?string $heading = '📈 Ingresos mensuales (año en curso)';
+    protected static ?string $heading = 'Ingresos mensuales (año en curso)';
 
     protected static ?string $maxHeight = '300px';
 

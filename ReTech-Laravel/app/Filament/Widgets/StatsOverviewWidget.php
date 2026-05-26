@@ -63,23 +63,23 @@ class StatsOverviewWidget extends BaseWidget
             : 'Sin datos del mes anterior';
 
         return [
-            Card::make('💰 Ingresos Totales', '€ ' . number_format($ingresosTotales, 2, ',', '.'))
+            Card::make('Ingresos Totales', '€ ' . number_format($ingresosTotales, 2, ',', '.'))
                 ->description('€ ' . number_format($ingresosMes, 2, ',', '.') . ' este mes · ' . $descIngresos)
                 ->descriptionIcon($ingresosMes >= $ingresosAnterior ? 'heroicon-s-trending-up' : 'heroicon-s-trending-down')
                 ->color($ingresosMes >= $ingresosAnterior ? 'success' : 'danger')
                 ->chart($tendenciaVentas),
 
-            Card::make('🛒 Pedidos este mes', $totalComprasMes)
+            Card::make('Pedidos este mes', $totalComprasMes)
                 ->description($descCompras)
                 ->descriptionIcon($totalComprasMes >= $totalComprasAntes ? 'heroicon-s-trending-up' : 'heroicon-s-trending-down')
                 ->color($totalComprasMes >= $totalComprasAntes ? 'success' : 'danger'),
 
-            Card::make('👥 Clientes registrados', $totalClientes)
+            Card::make('Clientes registrados', $totalClientes)
                 ->description('+' . $clientesMes . ' nuevos este mes')
                 ->descriptionIcon('heroicon-s-user-group')
                 ->color('primary'),
 
-            Card::make('📱 Móviles en stock', $movilesEnStock)
+            Card::make('Móviles en stock', $movilesEnStock)
                 ->description($movilesAgotados . ' sin stock')
                 ->descriptionIcon($movilesAgotados > 0 ? 'heroicon-s-exclamation' : 'heroicon-s-check-circle')
                 ->color($movilesAgotados > 0 ? 'warning' : 'success'),
